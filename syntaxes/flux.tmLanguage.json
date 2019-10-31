@@ -3,6 +3,9 @@
 	"name": "flux lang",
 	"patterns": [
 		{
+			"include": "#comments"
+		},
+		{
 			"include": "#root_parens"
 		},
 		{
@@ -10,9 +13,6 @@
 		},
 		{
 			"include": "#supports"
-		},
-		{
-			"include": "#comments"
 		},
 		{
 			"include": "#strings"
