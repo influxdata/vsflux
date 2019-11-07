@@ -1,56 +1,66 @@
 {
-	"name": "flux",
-	"displayName": "fluxlang",
-	"description": "Flux is a lightweight scripting language for querying databases (like InfluxDB) and working with data. It's part of InfluxDB 1.7 and 2.0, but can be run independently of those. This repo represents the language definition and an implementation of the language core.",
-	"version": "0.0.1",
-	"engines": {
-		"vscode": "^1.39.0"
-	},
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [
-		"onCommand:extension.runFlux"
-	],
-	"main": "./out/extension.js",
-	"contributes": {
-		"languages": [{
-            "id": "flux",
-            "aliases": ["flux lang", "flux"],
-            "extensions": [".flux"],
-            "configuration": "./language-configuration.json"
-        }],
-		"grammars": [{
-            "language": "flux",
-            "scopeName": "flux",
-            "path": "./syntaxes/flux.tmLanguage.json"
-        }],
-		"commands": [
-			{
-				"command": "extension.runFlux",
-				"title": "Run Flux"
-			}
-		]
-	},
-	"scripts": {
-		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -p ./",
-		"watch": "tsc -watch -p ./",
-		"pretest": "npm run compile",
-		"test": "node ./out/test/runTest.js"
-	},
-	"devDependencies": {
-		"@types/glob": "^7.1.1",
-		"@types/mocha": "^5.2.6",
-		"@types/node": "^10.12.21",
-		"@types/vscode": "^1.39.0",
-		"glob": "^7.1.4",
-		"mocha": "^6.1.4",
-		"ts-loader": "^6.2.1",
-		"tslint": "^5.12.1",
-		"typescript": "^3.3.1",
-		"vscode-test": "^1.2.0",
-		"webpack": "^4.41.2",
-		"webpack-cli": "^3.3.9"
-	}
+  "name": "flux",
+  "displayName": "fluxlang",
+  "description": "Flux is a lightweight scripting language for querying databases (like InfluxDB) and working with data. It's part of InfluxDB 1.7 and 2.0, but can be run independently of those. This repo represents the language definition and an implementation of the language core.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.39.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:flux"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "flux",
+        "aliases": [
+          "flux lang",
+          "flux"
+        ],
+        "extensions": [
+          ".flux"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "flux",
+        "scopeName": "flux",
+        "path": "./syntaxes/flux.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "extension.runFlux",
+        "title": "Run Flux"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.1",
+    "@types/mocha": "^5.2.6",
+    "@types/node": "^10.12.21",
+    "@types/vscode": "^1.39.0",
+    "glob": "^7.1.4",
+    "mocha": "^6.1.4",
+    "ts-loader": "^6.2.1",
+    "tslint": "^5.12.1",
+    "typescript": "^3.3.1",
+    "vscode-test": "^1.2.0",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.9",
+    "vscode-languageclient": "^5.2.1"
+  }
 }
