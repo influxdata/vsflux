@@ -23,8 +23,7 @@
         ],
         "extensions": [
           ".flux"
-        ],
-        "configuration": "./language-configuration.json"
+        ]
       }
     ],
     "grammars": [
@@ -39,7 +38,11 @@
         "command": "extension.runFlux",
         "title": "Run Flux"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "flux configuration",
+      "properties": {}
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

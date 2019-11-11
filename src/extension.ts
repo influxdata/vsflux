@@ -2,36 +2,21 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import * as path from "path";
-import { workspace, ExtensionContext } from "vscode";
+import { workspace, ExtensionContext, window } from "vscode";
 
 import {
   LanguageClient,
   LanguageClientOptions,
-  ServerOptions,
-  Executable
+  ServerOptions
 } from "vscode-languageclient";
 
 let client: LanguageClient;
 
+import { DidSaveTextDocumentNotification } from "vscode-languageserver-protocol";
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log('Congratulations, your extension "flux" is now active!');
-
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
-  let disposable = vscode.commands.registerCommand("extension.runFlux", () => {
-    // The code you place here will be executed every time your command is executed
-
-    // Display a message box to the user
-    vscode.window.showInformationMessage("flux runned!");
-    console.log("ok runned flux");
-  });
-
-  context.subscriptions.push(disposable);
   // The server is implemented in rust
   let cmd = "/usr/local/sbin/flux-lsp";
   let debugArgs = ["-l", "/tmp/lsp.log"];
@@ -66,7 +51,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Start the client. This will also launch the server
   client.start();
-  console.log("client started");
+
+  addExecutingActionOnSave(context, client);
+  console.log("flux lsp client started");
 }
 
 // this method is called when your extension is deactivated
@@ -76,4 +63,33 @@ export function deactivate(): Thenable<void> | undefined {
     return undefined;
   }
   return client.stop();
+}
+
+function addExecutingActionOnSave(
+  context: ExtensionContext,
+  client: LanguageClient
+): void {
+  context.subscriptions.push(
+    workspace.onDidSaveTextDocument(document => {
+      if (!window.activeTextEditor) {
+        return;
+      }
+      const activeDocument = window.activeTextEditor.document;
+      if (document !== activeDocument) {
+        return;
+      }
+      if (
+        document.languageId !== "flux" ||
+        !document.fileName.endsWith(".flux")
+      ) {
+        return;
+      }
+      client.sendNotification(DidSaveTextDocumentNotification.type, {
+        textDocument: {
+          uri: document.uri.toString(),
+          version: document.version
+        }
+      });
+    })
+  );
 }
