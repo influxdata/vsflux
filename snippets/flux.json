@@ -1,0 +1,22 @@
+{
+  "single import": {
+    "prefix": "import",
+    "body": "import \"${1:package}\"",
+    "description": "Snippet for import statement"
+  },
+  "from": {
+    "prefix": "from",
+    "body": "from(bucket: \"${1}\")",
+    "descript": "from(...: \"...\")"
+  },
+  "range": {
+    "prefix": "range",
+    "body": "range(start: ${1}, stop: ${2})",
+    "descript": "range(start: ..., stop: ...)"
+  },
+  "filter": {
+    "prefix": "filter",
+    "body": "filter(fn: (r) => ${1})",
+    "descript": "filter(fn: (r) => ...)"
+  }
+}
