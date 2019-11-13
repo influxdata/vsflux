@@ -15,7 +15,7 @@ import {
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   // The server is implemented in rust
-  let cmd = "/usr/local/sbin/flux-lsp";
+  let cmd = "flux-lsp";
   let logFilePath = "/tmp/lsp.log";
 
   client = new Client(cmd, logFilePath);
