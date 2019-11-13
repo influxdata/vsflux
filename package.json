@@ -3,6 +3,11 @@
   "displayName": "fluxlang",
   "description": "Flux is a lightweight scripting language for querying databases (like InfluxDB) and working with data. It's part of InfluxDB 1.7 and 2.0, but can be run independently of those. This repo represents the language definition and an implementation of the language core.",
   "version": "0.0.1",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/influxdata/vsflux"
+  },
   "engines": {
     "vscode": "^1.39.0"
   },
