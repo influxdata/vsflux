@@ -38,6 +38,12 @@
         "path": "./syntaxes/flux.tmLanguage.json"
       }
     ],
+    "snippets": [
+      {
+        "language": "flux",
+        "path": "./snippets/flux.json"
+      }
+    ],
     "commands": [
       {
         "command": "extension.runFlux",
