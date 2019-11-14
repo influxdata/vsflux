@@ -15,10 +15,20 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:flux"
+    "onLanguage:flux",
+    "onView:influxdb",
+    "onCommand:influxdb.addConnection"
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "influxdb",
+          "name": "InfluxDB"
+        }
+      ]
+    },
     "languages": [
       {
         "id": "flux",
@@ -46,10 +56,58 @@
     ],
     "commands": [
       {
-        "command": "extension.runFlux",
-        "title": "Run Flux"
+        "command": "influxdb.refresh",
+        "title": "Refresh",
+        "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.addConnection",
+        "title": "Add Connection",
+        "icon": {
+          "light": "resources/light/add.svg",
+          "dark": "resources/dark/add.svg"
+        },
+        "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.runQuery",
+        "title": "Run Query",
+        "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.deleteConnection",
+        "title": "Delete Connection",
+        "category": "InfluxDB"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "influxdb.addConnection",
+          "when": "view == influxdb",
+          "group": "navigation@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "influxdb.runQuery",
+          "when": "editorLangId == flux",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "influxdb.runQuery",
+          "when": "view == influxdb && viewItem == connection",
+          "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.deleteConnection",
+          "when": "view == influxdb && viewItem == connection",
+          "group": "influxdb@1"
+        }
+      ]
+    },
     "configuration": {
       "title": "flux configuration",
       "properties": {}
@@ -67,6 +125,7 @@
     "@types/mocha": "^5.2.6",
     "@types/node": "^10.12.21",
     "@types/vscode": "^1.39.0",
+    "@types/keytar": "^4.0.1",
     "glob": "^7.1.4",
     "mocha": "^6.1.4",
     "ts-loader": "^6.2.1",
