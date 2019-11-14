@@ -41,7 +41,12 @@ class ConnectionNode implements INode {
   public getTreeItem(): vscode.TreeItem {
     return {
       label: this.name,
-      collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+      collapsibleState: vscode.TreeItemCollapsibleState.None,
+      command: {
+        title: "switchConn",
+        command: "influxdb.switchConn",
+        arguments: [this.toConnection()]
+      },
       contextValue: "connection",
       iconPath: path.join(
         __filename,
@@ -98,15 +103,19 @@ class InfluxDBTreeDataProvider implements vscode.TreeDataProvider<INode> {
 
   constructor(private context: vscode.ExtensionContext) {}
 
-  getTreeItem(element: INode): vscode.TreeItem | Thenable<vscode.TreeItem> {
+  getTreeItem(
+    element: ConnectionNode
+  ): vscode.TreeItem | Thenable<vscode.TreeItem> {
     return element.getTreeItem();
   }
 
-  getChildren(element?: INode | undefined): vscode.ProviderResult<INode[]> {
+  getChildren(
+    element?: ConnectionNode | undefined
+  ): vscode.ProviderResult<INode[]> {
     if (!element) {
       return this.getConnectionNodes();
     }
-    return element.getChildren();
+    return [];
   }
 
   public refresh(element?: INode): void {
@@ -170,6 +179,7 @@ class InfluxDBTreeDataProvider implements vscode.TreeDataProvider<INode> {
       await keytar.setPassword(ExtensionID, id, token);
     }
     await this.context.globalState.update(InfluxDBConectionsKey, connections);
+    ConnectionStatus.Current = connections[id];
     this.refresh();
   }
 
@@ -211,6 +221,36 @@ function getCoreNodeModuleKeyTar() {
   return null;
 }
 
+export class ConnectionStatus {
+  private static _current: InfluxDBConnection;
+  private static _influxdbStatusBarItem: vscode.StatusBarItem;
+
+  static get Current(): InfluxDBConnection {
+    return ConnectionStatus._current;
+  }
+
+  private static getStatusBarItemText(conn: InfluxDBConnection): string {
+    return `$(server) ${conn.name}`;
+  }
+
+  static set Current(conn: InfluxDBConnection) {
+    this._current = conn;
+    if (ConnectionStatus._influxdbStatusBarItem) {
+      ConnectionStatus._influxdbStatusBarItem.text = ConnectionStatus.getStatusBarItemText(
+        conn
+      );
+    } else {
+      ConnectionStatus._influxdbStatusBarItem = vscode.window.createStatusBarItem(
+        vscode.StatusBarAlignment.Left
+      );
+      ConnectionStatus._influxdbStatusBarItem.text = ConnectionStatus.getStatusBarItemText(
+        conn
+      );
+      ConnectionStatus._influxdbStatusBarItem.show();
+    }
+  }
+}
+
 export class Connection {
   private _influxdbCli: InfluxCli;
   public constructor(influxCliPath: string) {
@@ -246,10 +286,16 @@ export class Connection {
     );
 
     context.subscriptions.push(
+      vscode.commands.registerCommand("influxdb.runQuery", () => {
+        this._influxdbCli.Run();
+      })
+    );
+
+    context.subscriptions.push(
       vscode.commands.registerCommand(
-        "influxdb.runQuery",
-        (connectionNode: ConnectionNode) => {
-          this._influxdbCli.Run(connectionNode.toConnection());
+        "influxdb.switchConn",
+        (iConn: InfluxDBConnection) => {
+          ConnectionStatus.Current = iConn;
         }
       )
     );

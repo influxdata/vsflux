@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as child from "child_process";
-import { InfluxDBConnection } from "./Connection";
+import { InfluxDBConnection, ConnectionStatus } from "./Connection";
 
 export class InfluxCli {
   private _path: string;
@@ -14,7 +14,7 @@ export class InfluxCli {
     this._outputChannel = outputChannel;
   }
 
-  public async Run(iConn: InfluxDBConnection, query?: string) {
+  public async Run(iConn?: InfluxDBConnection, query?: string) {
     const activeTextEditor = vscode.window.activeTextEditor;
 
     if (!query && !activeTextEditor) {
@@ -30,8 +30,14 @@ export class InfluxCli {
     }
 
     if (!iConn) {
-      vscode.window.showWarningMessage("No influxDB Server selected");
+      if (ConnectionStatus.Current) {
+        iConn = ConnectionStatus.Current;
+      } else {
+        vscode.window.showWarningMessage("No influxDB Server selected");
+        return;
+      }
     }
+
     let cmd: string =
       this._path +
       " query '" +
@@ -47,11 +53,10 @@ export class InfluxCli {
       let out: string = stdout.toString();
       if (stderr) {
         out = stderr.toString();
+      } else if (err) {
+        out = err.message;
       }
-      this._outputChannel.append(stdout.toString());
-      if (err) {
-        vscode.window.showWarningMessage(err.message);
-      }
+      this._outputChannel.append(out);
     });
   }
 }
