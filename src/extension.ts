@@ -3,22 +3,22 @@
 import * as vscode from "vscode";
 
 import { Client } from "./components/Client";
+import { Connection } from "./components/Connection";
 
 let client: Client;
-
-import {
-  DidSaveTextDocumentNotification,
-  DidOpenTextDocumentNotification
-} from "vscode-languageserver-protocol";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   // The server is implemented in rust
-  let cmd = "flux-lsp";
+  let lspPath = "flux-lsp";
+  let influxCliPath = "influx";
   let logFilePath = "/tmp/lsp.log";
 
-  client = new Client(cmd, logFilePath);
+  const conn = new Connection(influxCliPath);
+  conn.load(context);
+
+  client = new Client(lspPath, logFilePath);
   client.start(context);
 }
 
