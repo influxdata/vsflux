@@ -14,6 +14,11 @@
     "body": "range(start: ${1}, stop: ${2})",
     "descript": "range(start: ..., stop: ...)"
   },
+  "keep": {
+    "prefix": "keep",
+    "body": "keep(columns:[\"${1}\"])",
+    "descript": "keep(columns:[\"...\"])"
+  },
   "filter": {
     "prefix": "filter",
     "body": "filter(fn: (r) => ${1})",
