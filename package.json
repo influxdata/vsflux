@@ -4,9 +4,15 @@
   "description": "Flux language extension for VSCode",
   "version": "0.0.1",
   "icon": "images/icon.png",
+  "author": {
+    "name": "InfluxData"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/influxdata/vsflux"
+  },
+  "bugs": {
+    "url": "https://github.com/influxdata/vsflux/issues"
   },
   "engines": {
     "vscode": "^1.39.0"
