@@ -1,34 +1,34 @@
-![](./images/icon.png)
+# VSFlux
 
-# VSCODE FLUX
+A [Visual Studio Code](https://visualstudio.microsoft.com/) extension with support for the Flux language, with features like syntax highlighting, error messages and autocompletion.
 
-Flux is a lightweight scripting language for querying databases (like InfluxDB) and working with data. It's part of InfluxDB 1.7 and 2.0, but can be run independently of those. This repo represents the language definition and an implementation of the language core.
+## Installation
 
-## Developer Setup
+VSFlux can be installed through the [VSCode Marketplace](https://marketplace.visualstudio.com/vscode).
 
-1. Install flux-lsp
+The extension can be also built from source for development purposes.
 
-```bash
-   cargo install --git git@github.com:influxdata/flux-lsp.git
-```
+### Building in Debug Mode
 
-2. Install influx cli
+VSCode has an extension development mode that can be used for developing and debugging the extension.
 
-```bash
-    go get github.com/influxdata/influxdb
-    go install $GOPATH/src/github.com/influxdata/influxdb/cmd/influx
-```
+1. `cargo install --git https://github.com/influxdata/flux-lsp.git` to install the flux language server.
+1. `git clone https://github.com/influxdata/vsflux`
+1. `cd vsflux`
+1. `code .` to open the project in VSCode
 
-3. get the vscode plugin
+Press `F5` within the editor. This will open a new VSCode window titled `Extension Development Host`. From here, open any folder with flux code.
 
-```bash
-    git clone https://github.com/influxdata/vsflux
-    cd !$
-    code .
-```
+The `Extension Development Host` window can be reloaded with `cmd-r` to pick up new changes to the editor.
 
-Inside vscode, click `F5`, to launch the vscode with client
+Additionally, breakpoints can be added to the extension and will be triggered if executed by the plugin running in `Extension Development Host`.
 
-## Add InfluxDB Connection
+### Sideloading the Extension
 
-![alt text](./images/add_connection.gif "Add an InfluxDB Connection")
+The extension can be sideloaded to test it end to end, instead of running in debug mode.
+
+1. `cargo install --git https://github.com/influxdata/flux-lsp.git` to install the flux language server (if not already done)
+1. `git clone https://github.com/influxdata/vsflux` (if not already done)
+1. `npm install -g vsce` to globally install the [extension manager CLI tool](https://github.com/microsoft/vscode-vsce)
+1. `vsce package` to build the package. This will generate a file ending with `.vsix`
+1. In the [command palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette), run `Extensions: Install from VSIX...` and choose the vsix file that you generated.
