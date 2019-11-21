@@ -32,9 +32,3 @@ The extension can be sideloaded to test it end to end, instead of running in deb
 1. `npm install -g vsce` to globally install the [extension manager CLI tool](https://github.com/microsoft/vscode-vsce)
 1. `vsce package` to build the package. This will generate a file ending with `.vsix`
 1. In the [command palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette), run `Extensions: Install from VSIX...` and choose the vsix file that you generated.
-
-## Optional: Add InfluxDB Connection
-
-Some features require an InfluxDB connection to be configured.
-
-![alt text](./images/add_connection.gif "Add an InfluxDB Connection")
