@@ -11,6 +11,9 @@ export class Executables {
     version: string
   ): Promise<string> {
     let lspPath = "flux-lsp";
+    if (process.platform==="win32"){
+      lspPath=lspPath+".exe";
+    }
     const globalStatePath = context.globalStoragePath;
     const lspPathExtension = globalStatePath + "/" + lspPath;
 
@@ -79,7 +82,7 @@ export class Executables {
     return msg;
   }
 
-  private static async downloadLSPLinux(
+  private static async doDownloadLSP(
     outputChannel: OutputChannel,
     release: string,
     lspPath: string
@@ -87,6 +90,7 @@ export class Executables {
     let out = await FileSystem.downloadFile(release, lspPath);
     if (out) {
       chmodSync(lspPath, "0755");
+      console.log("downloaded to ",lspPath);
       outputChannel.dispose();
       return true;
     }
@@ -103,7 +107,7 @@ export class Executables {
     let cmd: string;
     switch (process.platform) {
       case "darwin":
-        return Executables.downloadLSPLinux(
+        return Executables.doDownloadLSP(
           outputChannel,
           "https://github.com/influxdata/flux-lsp/releases/download/" +
             version +
@@ -111,7 +115,7 @@ export class Executables {
           lspPath
         );
       case "linux":
-        return Executables.downloadLSPLinux(
+        return Executables.doDownloadLSP(
           outputChannel,
           "https://github.com/influxdata/flux-lsp/releases/download/" +
             version +
@@ -119,8 +123,13 @@ export class Executables {
           lspPath
         );
       case "win32":
-        console.log("windows is not supported yet");
-        break;
+        return Executables.doDownloadLSP(
+          outputChannel,
+          "https://github.com/influxdata/flux-lsp/releases/download/" +
+            version +
+            "/flux-lsp.exe",
+          lspPath
+        );
       default:
         console.log(
           "This is not a supported OS, please see https://github.com/influxdata/flux-lsp for debug mode"
