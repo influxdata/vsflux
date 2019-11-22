@@ -55,7 +55,7 @@ export class ServerLoader {
 
         await downloadFile(this.downloadPath(), dest);
 
-        fs.chmodSync(dest, 777)
+        fs.chmodSync(dest, "0755")
     }
 
     private downloadPath(): string {
