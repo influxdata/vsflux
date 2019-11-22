@@ -18,6 +18,8 @@ export function activate(context: vscode.ExtensionContext) {
   serverLoader.download().then(() => {
     client = new Client(lspPath, logFilePath)
     client.start(context)
+  }, (err) => {
+  vscode.window.showErrorMessage(err.message)
   })
 }
 

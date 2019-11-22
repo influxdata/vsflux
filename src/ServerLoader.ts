@@ -1,24 +1,29 @@
 // ServerLoader is responsible for downloading the language server.
 
 import {lspMacURL, lspLinuxURL, lspWindowsURL} from './constants';
-import * as http from 'http';
+import * as https from 'https';
+import axios from 'axios';
 import * as fs from 'fs';
 import * as vscode from "vscode";
 import { URL } from 'url';
 
 function downloadFile(path: string, dest: string): Promise<void> {
-  let ws = fs.createWriteStream(dest)
-  return new Promise(function (resolve, reject) {
-    var request = http.get(path, (response) => {
-      response.pipe(ws);
-      ws.on('finish', function () {
-        resolve();
-      });
-    }).on('error', function (err) { // Handle errors
-      fs.unlinkSync(dest);
-      reject(err);
+    let ws = fs.createWriteStream(dest)
+    return new Promise(function (resolve, reject) {
+        axios({
+            method: "get",
+            url: path,
+            responseType: "stream"
+        })
+        .then((res) => {
+            res.data.pipe(ws)
+            resolve();
+        })
+        .catch((err) => {
+            fs.unlinkSync(dest);
+            reject(err);
+        })
     });
-  });
 }
 
 export class ServerLoader {
