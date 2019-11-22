@@ -6,6 +6,21 @@ import * as fs from 'fs';
 import * as vscode from "vscode";
 import { URL } from 'url';
 
+function downloadFile(path: string, dest: string): Promise<void> {
+  let ws = fs.createWriteStream(dest)
+  return new Promise(function (resolve, reject) {
+    var request = http.get(path, (response) => {
+      response.pipe(ws);
+      ws.on('finish', function () {
+        resolve();
+      });
+    }).on('error', function (err) { // Handle errors
+      fs.unlinkSync(dest);
+      reject(err);
+    });
+  });
+}
+
 export class ServerLoader {
     private storage: fs.PathLike;
 
@@ -33,16 +48,8 @@ export class ServerLoader {
 
         let ws = fs.createWriteStream(dest)
 
-        var request = http.get(this.downloadPath(), (response) => {
-            response.pipe(ws);
-            ws.on('finish', function() {
-              ws.close();
-            });
-          }).on('error', function(err) { // Handle errors
-            fs.unlinkSync(dest);
-            vscode.window.showErrorMessage("failed to download language server")
-          });
-    
+        await downloadFile(this.downloadPath(), dest);
+
         fs.chmodSync(dest, 777)
     }
 
