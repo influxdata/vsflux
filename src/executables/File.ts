@@ -33,24 +33,20 @@ export class FileSystem {
   }
 
   public static async downloadFile(
-    src: string,
+    url: string,
     output: string
   ): Promise<boolean> {
-    return new Promise<boolean>(resolve => {
-      let ok = rp
-        .get({
-          url: src,
-          encoding: null,
-          resolveWithFullResponse: true
-        })
-        .then((res: { body: any }) => {
-          writeFileSync(output, res.body);
-          resolve(true);
-        })
-        .catch(() => {
-          resolve(false);
-        });
-    });
+    try {
+      const { body } = await rp.get({
+        url,
+        encoding: null,
+        resolveWithFullResponse: true
+      });
+      writeFileSync(output, body);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   /**

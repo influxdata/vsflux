@@ -3,12 +3,9 @@
   "displayName": "Flux for VSCode",
   "description": "Flux language extension for VSCode",
   "version": "0.0.1",
-  "icon": "images/icon.png",
+  "icon": "https://github.com/influxdata/vsflux/images/icon.png",
   "author": "InfluxData",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/influxdata/vsflux.git"
-  },
+  "repository": "github:influxdata/vsflux",
   "bugs": {
     "url": "https://github.com/influxdata/vsflux/issues"
   },
@@ -51,28 +48,7 @@
         "language": "flux",
         "path": "./snippets/flux.json"
       }
-    ],
-    "configuration": {
-      "title": "flux configuration",
-      "properties": {
-        "lsp_server_path": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null,
-          "description": "Specifies path to flux language server binary if it's not in PATH"
-        },
-        "influx_path": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null,
-          "description": "Specifies path to influx cli binary if it's not in PATH"
-        }
-      }
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -83,7 +59,6 @@
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
-    "@types/keytar": "^4.0.1",
     "@types/mocha": "^5.2.6",
     "@types/node": "^10.12.21",
     "@types/request-promise": "^4.1.41",
@@ -91,18 +66,17 @@
     "@types/which": "^1.2.14",
     "glob": "^7.1.4",
     "mocha": "^6.1.4",
-    "ts-loader": "^6.2.1",
     "tslint": "^5.12.1",
     "typescript": "^3.3.1",
     "vscode-languageclient": "^5.2.1",
-    "vscode-test": "^1.2.0",
-    "webpack": "^4.41.2",
-    "webpack-cli": "^3.3.9"
+    "vscode-test": "^1.2.0"
   },
   "dependencies": {
+    "which": "2.0.2",
+    "vscode": "1.1.36",
     "request-promise": "4.2.5",
     "request": "2.88.0"
   },
   "homepage": "https://github.com/influxdata/vsflux#readme",
-  "license": "ISC"
+  "license": "MIT"
 }

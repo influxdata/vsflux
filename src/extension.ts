@@ -12,8 +12,10 @@ let client: Client;
 export async function activate(
   context: vscode.ExtensionContext
 ): Promise<void> {
+  const lspVersion = "0.0.3";
+
   // The server is implemented in rust
-  let lspExe = await Executables.getLSP(context, "0.0.3");
+  let lspExe = await Executables.getLSP(context, lspVersion);
   let logFilePath = "/tmp/lsp.log";
   if (process.platform === "win32") {
     logFilePath = context.extensionPath + "/lsp.log";
