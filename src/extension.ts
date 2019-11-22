@@ -3,7 +3,6 @@
 import * as vscode from "vscode";
 
 import { Client } from "./components/Client";
-import { Connection } from "./components/Connection";
 
 let client: Client;
 
@@ -12,11 +11,7 @@ let client: Client;
 export function activate(context: vscode.ExtensionContext) {
   // The server is implemented in rust
   let lspPath = "flux-lsp";
-  let influxCliPath = "influx";
   let logFilePath = "/tmp/lsp.log";
-
-  const conn = new Connection(influxCliPath);
-  conn.load(context);
 
   client = new Client(lspPath, logFilePath);
   client.start(context);
