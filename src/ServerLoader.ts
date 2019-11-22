@@ -33,7 +33,7 @@ export class ServerLoader {
 
         let ws = fs.createWriteStream(dest)
 
-        var request = http.get(this.downloadPath(), function(response) {
+        var request = http.get(this.downloadPath(), (response) => {
             response.pipe(ws);
             ws.on('finish', function() {
               ws.close();
