@@ -12,13 +12,14 @@ export class Client {
   private languageClient: LanguageClient;
 
   // constructor
-  constructor(lspPath: string, logFilePath: string) {
-    let cmd = lspPath;
-    let debugArgs = ["-l", logFilePath];
+  constructor(lspExe: string, logFilePath: string) {
+    let cmd = lspExe;
+    let debugArgs = ["--disable-folding", "-l", logFilePath];
 
     let serverOptions: ServerOptions = {
       run: {
-        command: cmd
+        command: cmd,
+        args: ["--disable-folding"]
       },
       debug: {
         command: cmd,

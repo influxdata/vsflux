@@ -3,17 +3,26 @@
 import * as vscode from "vscode";
 
 import { Client } from "./components/Client";
+import { Executables } from "./executables/Tool";
 
 let client: Client;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
-  // The server is implemented in rust
-  let lspPath = "flux-lsp";
-  let logFilePath = "/tmp/lsp.log";
+export async function activate(
+  context: vscode.ExtensionContext
+): Promise<void> {
+  const lspVersion = "0.0.3";
 
-  client = new Client(lspPath, logFilePath);
+  // The server is implemented in rust
+  let lspExe = await Executables.getLSP(context, lspVersion);
+  let logFilePath = "/tmp/lsp.log";
+  if (process.platform === "win32") {
+    logFilePath = context.extensionPath + "/lsp.log";
+    console.log(logFilePath);
+  }
+
+  client = new Client(lspExe, logFilePath);
   client.start(context);
 }
 
