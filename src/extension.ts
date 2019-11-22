@@ -3,6 +3,7 @@
 import * as vscode from "vscode";
 
 import { Client } from "./components/Client";
+import { Executables } from "./executables/Tool";
 
 let client: Client;
 
@@ -19,7 +20,7 @@ export async function activate(
     console.log(logFilePath);
   }
 
-  client = new Client(lspPath, logFilePath);
+  client = new Client(lspExe, logFilePath);
   client.start(context);
 }
 
