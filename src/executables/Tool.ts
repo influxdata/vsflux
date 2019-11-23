@@ -23,16 +23,12 @@ export class Executables {
     let lspExe2 = await FileSystem.findExecutablePath(lspPathExtension);
     if (!lspExe && !lspExe2) {
       lspPath = lspPathExtension;
-      FileSystem.doesDirExist(globalStatePath).then(existed => {
-        if (!existed) {
-          FileSystem.createDir(globalStatePath).then(success => {
-            if (!success) {
-              window.showErrorMessage("Unable to install language server");
-              return "error";
-            }
-          });
+      if (!(await FileSystem.doesDirExist(globalStatePath))) {
+        if (!(await FileSystem.createDir(globalStatePath))) {
+          window.showErrorMessage("Unable to install language server");
+          return "error";
         }
-      });
+      }
 
       let installed = await this.promoteInstall(
         "flux language server",
@@ -53,26 +49,23 @@ export class Executables {
 
   private static async promoteInstall(
     tool: string,
-    intall: (v: string, p: string) => Promise<boolean>,
+    install: (v: string, p: string) => Promise<boolean>,
     version: string,
     lspPath: string
   ): Promise<boolean> {
     const option = { title: "Install" };
-    let msg = await window
-      .showInformationMessage("You are missing the " + tool, option)
-      .then(async selection => {
-        if (selection !== option) {
-          return false;
-        }
-        let installed = await intall(version, lspPath);
-        if (installed) {
-          return true;
-        }
-      });
-    if (!msg) {
+    try {
+      let selection = await window.showInformationMessage(
+        "You are missing the " + tool,
+        option
+      );
+      if (selection !== option) {
+        return false;
+      }
+      return await install(version, lspPath);
+    } catch (error) {
       return false;
     }
-    return msg;
   }
 
   private static async doDownloadLSP(
