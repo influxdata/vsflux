@@ -6,6 +6,7 @@
   "icon": "https://github.com/influxdata/vsflux/images/icon.png",
   "author": "InfluxData",
   "repository": "github:influxdata/vsflux",
+  "private": true,
   "bugs": {
     "url": "https://github.com/influxdata/vsflux/issues"
   },
