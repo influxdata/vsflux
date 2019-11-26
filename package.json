@@ -1,12 +1,22 @@
 {
   "name": "flux",
+  "version": "0.0.1",
+  "publisher": "influxdata",
   "displayName": "Flux for VSCode",
   "description": "Flux language extension for VSCode",
-  "version": "0.0.1",
+  "author": {
+    "name": "InfluxData"
+  },
   "icon": "https://github.com/influxdata/vsflux/images/icon.png",
-  "author": "InfluxData",
-  "repository": "github:influxdata/vsflux",
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/influxdata/vsflux"
+  },
   "bugs": {
     "url": "https://github.com/influxdata/vsflux/issues"
   },
@@ -17,10 +27,6 @@
   "engines": {
     "vscode": "^1.39.0"
   },
-  "categories": [
-    "Programming Languages",
-    "Snippets"
-  ],
   "activationEvents": [
     "onLanguage:flux"
   ],
