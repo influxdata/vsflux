@@ -4,19 +4,14 @@
   "publisher": "influxdata",
   "displayName": "Flux for VSCode",
   "description": "Flux language extension for VSCode",
-  "author": {
-    "name": "InfluxData"
-  },
+  "author": "InfluxData",
   "icon": "https://github.com/influxdata/vsflux/images/icon.png",
   "categories": [
     "Programming Languages",
     "Snippets"
   ],
   "private": true,
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/influxdata/vsflux"
-  },
+  "repository": "github:influxdata/vsflux",
   "bugs": {
     "url": "https://github.com/influxdata/vsflux/issues"
   },
