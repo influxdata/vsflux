@@ -40,7 +40,7 @@ export class Client {
     // Create the language client and start the client.
     this.languageClient = new LanguageClient(
       "flux lsp server",
-      "Flux Language Server",
+      "flux language",
       serverOptions,
       clientOptions
     );
