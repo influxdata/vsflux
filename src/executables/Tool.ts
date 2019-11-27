@@ -31,7 +31,6 @@ export class Executables {
       }
 
       let installed = await this.promoteInstall(
-        "flux language server",
         this.DownloadLSP,
         version,
         lspPath
@@ -48,7 +47,6 @@ export class Executables {
   }
 
   private static async promoteInstall(
-    tool: string,
     install: (v: string, p: string) => Promise<boolean>,
     version: string,
     lspPath: string
@@ -56,7 +54,7 @@ export class Executables {
     const option = { title: "Install" };
     try {
       let selection = await window.showInformationMessage(
-        "You are missing the " + tool,
+        "Flux requires a language server for some features",
         option
       );
       if (selection !== option) {
