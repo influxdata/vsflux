@@ -1,5 +1,5 @@
 import { FileSystem } from "./File";
-import { window, OutputChannel, commands, ExtensionContext } from "vscode";
+import { window, OutputChannel, ExtensionContext } from "vscode";
 import { chmodSync } from "fs";
 
 const lspRepo = "https://github.com/influxdata/flux-lsp/releases/download/";
@@ -38,9 +38,9 @@ export class Executables {
       );
       if (!installed) {
         window.showErrorMessage("Unable to install language server");
-        return "error";
+        return "";
       }
-      commands.executeCommand("workbench.action.reloadWindow");
+      return lspPath;
     } else if (lspExe2) {
       lspPath = lspPathExtension;
     }

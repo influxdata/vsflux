@@ -16,10 +16,13 @@ export async function activate(
 
   // The server is implemented in rust
   let lspExe = await Executables.getLSP(context, lspVersion);
+  if (lspExe === "") {
+    return;
+  }
+
   let logFilePath = "/tmp/lsp.log";
   if (process.platform === "win32") {
     logFilePath = context.extensionPath + "/lsp.log";
-    console.log(logFilePath);
   }
 
   client = new Client(lspExe, logFilePath);
