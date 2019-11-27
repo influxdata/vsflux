@@ -25,7 +25,7 @@
   "activationEvents": [
     "onLanguage:flux"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/extension",
   "contributes": {
     "languages": [
       {
@@ -53,10 +53,10 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile",
+    "vscode:prepublish": "webpack --mode production",
+    "webpack": "webpack --mode development",
+    "webpack-dev": "webpack --mode development --watch",
+    "test-compile": "tsc -p ./",
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
@@ -68,9 +68,12 @@
     "@types/which": "^1.3.2",
     "glob": "^7.1.5",
     "mocha": "^6.2.2",
+    "ts-loader": "^6.2.1",
     "tslint": "^5.20.0",
     "typescript": "^3.6.4",
-    "vscode-test": "^1.2.2"
+    "vscode-test": "^1.2.2",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10"
   },
   "dependencies": {
     "vscode-languageclient": "^5.2.1",
