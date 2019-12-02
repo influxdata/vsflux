@@ -1,5 +1,9 @@
 # VSFlux
 
+[![VSCode](https://img.shields.io/visual-studio-marketplace/i/influxdata.flux)](https://marketplace.visualstudio.com/items?itemName=influxdata.flux)
+[![LICENSE](https://img.shields.io/github/license/influxdata/vsflux.svg)](https://github.com/influxdata/vsflux/blob/master/LICENSE)
+[![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://www.influxdata.com/slack)
+
 A [Visual Studio Code](https://visualstudio.microsoft.com/) extension with support for the Flux language, with features like syntax highlighting, error messages and autocompletion.
 
 ## Installation
