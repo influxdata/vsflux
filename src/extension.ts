@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 
 import { Client } from "./components/Client";
 import { Executables } from "./executables/Tool";
+import { Connection } from "./components/Connection";
 
 let client: Client;
 
@@ -24,6 +25,10 @@ export async function activate(
   if (process.platform === "win32") {
     logFilePath = context.extensionPath + "/lsp.log";
   }
+
+  let influxCliPath = "influx";
+  const conn = new Connection(influxCliPath);
+  conn.load(context);
 
   client = new Client(lspExe, logFilePath);
   client.start(context);
