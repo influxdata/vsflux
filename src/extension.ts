@@ -1,18 +1,16 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as vscode from "vscode";
+import { ExtensionContext } from "vscode";
 
 import { Client } from "./components/Client";
 import { Executables } from "./executables/Tool";
-import { Connection } from "./components/Connection";
+import { Connection } from "./components/connections/Connection";
 
 let client: Client;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export async function activate(
-  context: vscode.ExtensionContext
-): Promise<void> {
+export async function activate(context: ExtensionContext): Promise<void> {
   const lspVersion = "0.0.3";
 
   // The server is implemented in rust
@@ -26,9 +24,7 @@ export async function activate(
     logFilePath = context.extensionPath + "/lsp.log";
   }
 
-  let influxCliPath = "influx";
-  const conn = new Connection(influxCliPath);
-  conn.load(context);
+  new Connection(context).load();
 
   client = new Client(lspExe, logFilePath);
   client.start(context);
