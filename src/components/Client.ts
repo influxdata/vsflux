@@ -5,24 +5,37 @@ import {
   LanguageClientOptions,
   ServerOptions,
   DidOpenTextDocumentNotification,
-  DidSaveTextDocumentNotification
+  DidSaveTextDocumentNotification,
+  TransportKind
 } from "vscode-languageclient";
 
 export class Client {
   private languageClient: LanguageClient;
+  private context: ExtensionContext;
 
   // constructor
-  constructor(lspExe: string, logFilePath: string) {
-    let cmd = lspExe;
-    let debugArgs = ["--disable-folding", "-l", logFilePath];
+  constructor(logFilePath: string, context: ExtensionContext) {
+    this.context = context;
+    let runArgs = ["--disable-folding", "--ipc"];
+    let debugArgs = [...runArgs, "-l", logFilePath];
+    let dir = "dist/out";
+    let debugDir = "node_modules/@influxdata/flux-lsp-cli/out";
 
     let serverOptions: ServerOptions = {
       run: {
-        command: cmd,
-        args: ["--disable-folding"]
+        module: this.context.asAbsolutePath(`${dir}/bundle.js`),
+        transport: TransportKind.ipc,
+        options: {
+          cwd: this.context.asAbsolutePath(dir)
+        },
+        args: runArgs
       },
       debug: {
-        command: cmd,
+        module: this.context.asAbsolutePath(`${debugDir}/bundle.js`),
+        transport: TransportKind.ipc,
+        options: {
+          cwd: this.context.asAbsolutePath(debugDir)
+        },
         args: debugArgs
       }
     };
@@ -46,16 +59,13 @@ export class Client {
     );
   }
 
-  start(context: ExtensionContext): void {
-    this.actOnOpen(context);
-    this.actOnSave(context);
+  start(): void {
+    this.actOnOpen(this.context);
+    this.actOnSave(this.context);
     this.languageClient.start();
-
-    console.log("flux lsp client started");
   }
 
   stop(): Thenable<void> | undefined {
-    console.log("deactived flux plugin");
     if (!this.languageClient) {
       return undefined;
     }
