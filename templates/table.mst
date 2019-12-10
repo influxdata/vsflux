@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none';">
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+        <style>table{border-collapse:collapse; }table,td,th{border:1px dotted #ccc; padding:5px;}th {background:#444} </style>
+    </head>
+    <body>
+        <table>
+            <tr>
+            {{#Head}}
+            <th>{{.}}</th>
+            {{/Head}}
+            </tr>
+            {{#Rows}}
+            <tr>
+                {{# . }}
+                    <td>{{.}}</td>
+                {{/ .}} 
+            </tr>
+            {{/Rows}}
+        </table>
+    </body>
+</html>

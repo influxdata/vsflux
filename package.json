@@ -23,10 +23,27 @@
     "vscode": "^1.39.0"
   },
   "activationEvents": [
-    "onLanguage:flux"
+    "onLanguage:flux",
+    "onView:influxdb",
+    "onCommand:influxdb.addConnection"
   ],
   "main": "./dist/extension",
   "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "influxdb",
+          "name": "InfluxDB"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "influxdb.runQuery",
+        "key": "ctrl+alt+e",
+        "when": "editorLangId == flux"
+      }
+    ],
     "languages": [
       {
         "id": "flux",
@@ -38,6 +55,60 @@
         ]
       }
     ],
+    "commands": [
+      {
+        "command": "influxdb.refresh",
+        "title": "Refresh",
+        "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.addConnection",
+        "title": "Add Connection",
+        "icon": {
+          "light": "resources/light/add.svg",
+          "dark": "resources/dark/add.svg"
+        },
+        "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.runQuery",
+        "title": "Run Query",
+        "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.deleteConnection",
+        "title": "Delete Connection",
+        "category": "InfluxDB"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "influxdb.addConnection",
+          "when": "view == influxdb",
+          "group": "navigation@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "influxdb.runQuery",
+          "when": "editorLangId == flux",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "influxdb.runQuery",
+          "when": "view == influxdb && viewItem == connection",
+          "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.deleteConnection",
+          "when": "view == influxdb && viewItem == connection",
+          "group": "influxdb@1"
+        }
+      ]
+    },
     "grammars": [
       {
         "language": "flux",
@@ -62,6 +133,7 @@
   "devDependencies": {
     "@types/glob": "^7.1.1",
     "@types/mocha": "^5.2.7",
+    "@types/mustache": "^0.8.32",
     "@types/node": "^12.11.7",
     "@types/request-promise": "^4.1.45",
     "@types/vscode": "^1.39.0",
@@ -76,10 +148,12 @@
     "webpack-cli": "^3.3.10"
   },
   "dependencies": {
-    "vscode-languageclient": "^5.2.1",
-    "which": "2.0.2",
+    "mustache": "^3.1.0",
     "request": "2.88.0",
-    "request-promise": "4.2.5"
+    "request-promise": "4.2.5",
+    "uuid": "^3.3.3",
+    "vscode-languageclient": "^5.2.1",
+    "which": "2.0.2"
   },
   "homepage": "https://github.com/influxdata/vsflux#readme",
   "license": "MIT"
