@@ -56,7 +56,7 @@ export class ViewEngine extends Engine {
       }
     }
 
-    if (!iConn && Status.Current) {
+    if (!iConn && Status.Current !== undefined) {
       iConn = Status.Current;
     } else if (!iConn) {
       window.showWarningMessage("No influxDB Server selected");

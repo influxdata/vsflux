@@ -8,6 +8,7 @@ import {
   OutputChannel
 } from "vscode";
 import { NewBucketNode } from "./BucketNode";
+import { Status } from "./Status";
 
 export const InfluxDBConectionsKey = "influxdb.connections";
 
@@ -23,6 +24,7 @@ export class ConnectionNode implements INode {
 
   public toConnection(): InfluxDBConnection {
     return {
+      id: this.id,
       name: this.name,
       hostNport: this.hostNport,
       token: this.token,
@@ -64,6 +66,9 @@ export class ConnectionNode implements INode {
     }>(InfluxDBConectionsKey);
 
     if (connections) {
+      if (Status.Current !== undefined && Status.Current.id === this.id) {
+        Status.Current = undefined;
+      }
       delete connections[this.id];
     }
 

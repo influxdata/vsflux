@@ -6,6 +6,7 @@ import { ConnectionNode, InfluxDBConectionsKey } from "./ConnectionNode";
 
 const uuidv1 = require("uuid/v1");
 export interface InfluxDBConnection {
+  readonly id: string;
   readonly name: string;
   readonly hostNport: string;
   readonly token: string;
@@ -88,6 +89,7 @@ export class InfluxDBTreeDataProvider
 
     const id = uuidv1();
     connections[id] = {
+      id,
       name,
       hostNport,
       token,
