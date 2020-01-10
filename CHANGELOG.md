@@ -1,4 +1,4 @@
-## 0.1.0 - Unreleased
+## 0.1.0 - 10 January, 2020
 
 ### Features
 1. [51] (https://github.com/influxdata/vsflux/pull/51): Add InfluxDB integration
