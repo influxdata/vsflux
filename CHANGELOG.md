@@ -1,8 +1,10 @@
-## 0.1.0 - 10 January, 2020
+## 0.2.0 - 13 January, 2020
+1. [#61](https://github.com/influxdata/vsflux/pull/61): Update language server dependency to include flux autocompletion
 
+## 0.1.0 - 10 January, 2020
 ### Features
-1. [51] (https://github.com/influxdata/vsflux/pull/51): Add InfluxDB integration
-1. [52] (https://github.com/influxdata/vsflux/pull/52): Manage language server dependency via package.json
+1. [#51](https://github.com/influxdata/vsflux/pull/51): Add InfluxDB integration
+1. [#52](https://github.com/influxdata/vsflux/pull/52): Manage language server dependency via package.json
 
 ## 0.0.1 - 11 November, 2019
 
