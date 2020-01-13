@@ -1,5 +1,5 @@
-## 0.2.0 - Unreleased
-1. [#61](https://github.com/influxdata/vsflux/pull/61): Update LS dependency to include flux autocompletion
+## 0.2.0 - 13 January, 2020
+1. [#61](https://github.com/influxdata/vsflux/pull/61): Update language server dependency to include flux autocompletion
 
 ## 0.1.0 - 10 January, 2020
 ### Features
