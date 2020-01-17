@@ -1,8 +1,12 @@
 ## 0.3.0 - 17 January, 2020
 
+### Features
+
+1. [#67](https://github.com/influxdata/vsflux/pull/67): Add builtins and user defined variables to autocompletion.
+
 ### Bug Fixes
 
-1. [#71](https://github.com/influxdata/vsflux/pull/71): Fix the hard coded bucket name error
+1. [#71](https://github.com/influxdata/vsflux/pull/71): Remove hardcoded bucket name from InfluxDB integration.
 
 ## 0.2.0 - 13 January, 2020
 
