@@ -37,7 +37,9 @@ export class BucketNode implements INode {
     let queryEngine: QueryEngine = new QueryEngine(this.outputChannel);
     return queryEngine.GetTreeChildren(
       this.conn,
-      'import "influxdata/influxdb/v1"\nv1.tagKeys(bucket:"buck1")',
+      'import "influxdata/influxdb/v1"\nv1.tagKeys(bucket:"' +
+        this.bucket +
+        '")',
       "Getting tag keys for bucket: " + this.bucket,
       NewStringNode
     );
