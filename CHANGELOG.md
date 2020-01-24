@@ -1,3 +1,9 @@
+## 0.3.1 - 24 January, 2020
+
+### Bug Fixes
+
+1. [#76](https://github.com/influxdata/vsflux/pull/76): Remove duplicate autocompletion entries.
+
 ## 0.3.0 - 17 January, 2020
 
 ### Features
