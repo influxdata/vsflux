@@ -1,9 +1,35 @@
 import { OutputChannel, ExtensionContext, window } from "vscode";
-import rp = require("request-promise");
 import { InfluxDBConnection } from "./connections/Connection";
 import { TableResult, TableView } from "./TableView";
 import { Status } from "./connections/Status";
 import { INode } from "./connections/INode";
+import axios from "axios";
+
+function now(): string {
+  var d = new Date();
+  function pad(n: number) {
+    return n < 10 ? "0" + n : n;
+  }
+  function timezoneOffset(offset: number): string {
+    var sign;
+    if (offset === 0) {
+      return "Z";
+    }
+    sign = offset > 0 ? "-" : "+";
+    offset = Math.abs(offset);
+    var hh = pad(Math.floor(offset / 60));
+    var mm = pad(offset % 60);
+    return `${sign}${hh}:${mm}`;
+  }
+  let yy = d.getFullYear();
+  let mm = pad(d.getMonth() + 1);
+  let dd = pad(d.getDate());
+  let h = pad(d.getHours());
+  let m = pad(d.getMinutes());
+  let s = pad(d.getSeconds());
+  let z = timezoneOffset(d.getTimezoneOffset());
+  return `${yy}-${mm}-${dd}T${h}:${m}:${s}${z}`;
+}
 
 export class Engine {
   public constructor(protected outputChannel: OutputChannel) {}
@@ -19,10 +45,10 @@ export class Engine {
     ) => INode
   ): Promise<INode[]> {
     this.outputChannel.show();
-    this.outputChannel.appendLine(msg);
+    this.outputChannel.appendLine(`${now()} - ${msg}`);
     let result: Result = await APIRequest.Query(conn, query);
     if (result.Err !== undefined) {
-      this.outputChannel.appendLine("Err: " + result.Err);
+      this.outputChannel.appendLine(`${now()} - Err: ${result.Err}`);
     } else {
       var nodes: Array<INode> = [];
       for (let row of (result.Result as TableResult).Rows) {
@@ -63,7 +89,7 @@ export class ViewEngine extends Engine {
       return;
     }
 
-    this.outputChannel.appendLine("Running Query: '" + query + "'\n\r");
+    this.outputChannel.appendLine(`${now()} - Running Query: '${query}'`);
     this.outputChannel.show();
 
     if (query === undefined) {
@@ -73,7 +99,7 @@ export class ViewEngine extends Engine {
     if (result.Err === undefined) {
       this.tableView.show(result.Result as TableResult, iConn.name);
     } else {
-      this.outputChannel.appendLine(result.Err);
+      this.outputChannel.appendLine(`${now()} - ${result.Err}`);
     }
   }
 }
@@ -83,27 +109,26 @@ interface Result {
   Err: string | undefined;
 }
 
-class APIRequest {
+export class APIRequest {
   public static async Query(
     conn: InfluxDBConnection,
     query: string
   ): Promise<Result> {
     try {
-      const { body } = await rp.post({
+      const resp = await axios({
         method: "POST",
-        url: conn.hostNport + "/api/v2/query?org=" + conn.org,
-        body: query,
+        url: `${conn.hostNport}/api/v2/query?org=${encodeURI(conn.org)}`,
+        data: query,
         headers: {
           "Content-Type": "application/vnd.flux",
           Authorization: "Token " + conn.token
-        },
-        resolveWithFullResponse: true
+        }
       });
       let tableResult: TableResult = {
         Head: [],
         Rows: []
       };
-      let results: Array<string> = body.split("\r\n");
+      let results: Array<string> = resp.data.split("\r\n");
       var isHead: boolean = true;
       for (let row of results) {
         if (row === "") {
@@ -122,9 +147,13 @@ class APIRequest {
         Err: undefined
       };
     } catch (err) {
+      let message = String(err);
+      if (err.response) {
+        message = err.response.data.message;
+      }
       return {
         Result: undefined,
-        Err: String(err)
+        Err: message
       };
     }
   }

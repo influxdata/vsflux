@@ -1,0 +1,163 @@
+body {
+  line-height: 1.4285em;
+  padding: 1rem;
+  background-color: rgba(44, 44, 44, 0.774);
+}
+.hidden {
+  display: none;
+}
+.ui.dividing.header {
+  padding-bottom: 0.21428571rem;
+  border-bottom: 1px solid #eee;
+}
+.ui.header:first-child {
+  margin-top: -0.14285714em;
+}
+.ui.form {
+  position: relative;
+  max-width: 100%;
+  font-size: 0.8rem;
+}
+.ui.form .field {
+  clear: both;
+  margin: 0 0 1em;
+}
+.ui.form .field > label {
+  display: block;
+  margin: 0 0 0.3em 1.4em;
+  font-size: 0.7em;
+  font-weight: 700;
+  text-transform: none;
+}
+.ui.form input:not([type]),
+.ui.form input[type="date"],
+.ui.form input[type="datetime-local"],
+.ui.form input[type="email"],
+.ui.form input[type="file"],
+.ui.form input[type="number"],
+.ui.form input[type="password"],
+.ui.form input[type="search"],
+.ui.form input[type="tel"],
+.ui.form input[type="text"],
+.ui.form input[type="time"],
+.ui.form input[type="url"] {
+  margin: 0 1em;
+  outline: 0;
+  width: 90%;
+  vertical-align: top;
+  -webkit-appearance: none;
+  line-height: 1em;
+  padding: 0.25em 0.5em;
+  font-size: 1em;
+  background: #fff;
+  border: 1px solid rgba(34, 36, 38, 0.15);
+  color: rgba(1, 1, 1, 0.87);
+  border-radius: 0.28571429rem;
+  box-shadow: 0 0 0 0 transparent inset;
+  transition: color 0.1s ease, border-color 0.1s ease;
+}
+
+*,
+:after,
+:before {
+  box-sizing: inherit;
+}
+
+.ui.blue.button {
+  box-shadow: 0 0 0 0 rgba(34, 36, 38, 0.15) inset;
+}
+
+.ui.blue.button,
+.ui.blue.buttons .button {
+  background-color: #2185d0;
+  color: #fff;
+  text-shadow: none;
+  background-image: none;
+}
+.ui.button,
+.ui.buttons .button,
+.ui.buttons .or {
+  font-size: 0.8rem;
+}
+.ui.button {
+  cursor: pointer;
+  display: inline-block;
+  min-height: 1em;
+  outline: 0;
+  border: none;
+  vertical-align: baseline;
+  background: #e0e1e2 none;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0 0.25em 0 1em;
+  padding: 0.3em 1.5em 0.3em;
+  text-transform: none;
+  text-shadow: none;
+  /**font-weight: 700;
+  line-height: 1em;**/
+  font-style: normal;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 0.28571429rem;
+  box-shadow: 0 0 0 1px transparent inset, 0 0 0 0 rgba(34, 36, 38, 0.15) inset;
+  user-select: none;
+  transition: opacity 0.1s ease, background-color 0.1s ease, color 0.1s ease,
+    box-shadow 0.1s ease, background 0.1s ease, -webkit-box-shadow 0.1s ease;
+  will-change: "";
+}
+.ui.form .field.error .input,
+.ui.form .field.error label,
+.ui.form .fields.error .field .input,
+.ui.form .fields.error .field label {
+  color: #9f3a38;
+}
+.ui.form .field.error input:not([type]),
+.ui.form .field.error input[type="date"],
+.ui.form .field.error input[type="datetime-local"],
+.ui.form .field.error input[type="email"],
+.ui.form .field.error input[type="file"],
+.ui.form .field.error input[type="number"],
+.ui.form .field.error input[type="password"],
+.ui.form .field.error input[type="search"],
+.ui.form .field.error input[type="tel"],
+.ui.form .field.error input[type="text"],
+.ui.form .field.error input[type="time"],
+.ui.form .field.error input[type="url"],
+.ui.form .field.error select,
+.ui.form .field.error textarea,
+.ui.form .fields.error .field input:not([type]),
+.ui.form .fields.error .field input[type="date"],
+.ui.form .fields.error .field input[type="datetime-local"],
+.ui.form .fields.error .field input[type="email"],
+.ui.form .fields.error .field input[type="file"],
+.ui.form .fields.error .field input[type="number"],
+.ui.form .fields.error .field input[type="password"],
+.ui.form .fields.error .field input[type="search"],
+.ui.form .fields.error .field input[type="tel"],
+.ui.form .fields.error .field input[type="text"],
+.ui.form .fields.error .field input[type="time"],
+.ui.form .fields.error .field input[type="url"],
+.ui.form .fields.error .field select,
+.ui.form .fields.error .field textarea {
+  background: #fff6f6;
+  border-color: #e0b4b4;
+  color: #9f3a38;
+  box-shadow: none;
+}
+
+/* Error */
+.ui.form .error ::-webkit-input-placeholder {
+  color: #e7bdbc;
+}
+.ui.negative.message {
+  box-shadow: 0 0 0 1px #e0b4b4 inset, 0 0 0 0 transparent;
+  background-color: #fff6f6;
+  color: #9f3a38;
+  position: relative;
+  margin: 0.5em 2em 0.5em 1em;
+  background: #f8f8f9;
+  padding: 0.25em 0.5em;
+  line-height: 1.4285em;
+  transition: opacity 0.1s ease, color 0.1s ease, background 0.1s ease,
+    box-shadow 0.1s ease, -webkit-box-shadow 0.1s ease;
+  border-radius: 0.28571429rem;
+}

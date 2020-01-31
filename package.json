@@ -79,6 +79,11 @@
         "command": "influxdb.deleteConnection",
         "title": "Delete Connection",
         "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.editConnection",
+        "title": "Edit Connection",
+        "category": "InfluxDB"
       }
     ],
     "menus": {
@@ -106,6 +111,11 @@
           "command": "influxdb.deleteConnection",
           "when": "view == influxdb && viewItem == connection",
           "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.editConnection",
+          "when": "view == influxdb && viewItem == connection",
+          "group": "influxdb@1"
         }
       ]
     },
@@ -121,6 +131,17 @@
         "language": "flux",
         "path": "./snippets/flux.json"
       }
+    ],
+    "configuration": [
+      {
+        "title": "FLUX",
+        "properties": {
+          "vsflux.defaultInfluxDBURL": {
+            "default": "http://localhost:9999",
+            "description": "The default URL when adding a new influxdb connection"
+          }
+        }
+      }
     ]
   },
   "scripts": {
@@ -134,7 +155,6 @@
     "@types/mocha": "^5.2.7",
     "@types/mustache": "^0.8.32",
     "@types/node": "^12.11.7",
-    "@types/request-promise": "^4.1.45",
     "@types/vscode": "^1.39.0",
     "glob": "^7.1.5",
     "mocha": "^6.2.2",
@@ -148,8 +168,7 @@
   "dependencies": {
     "@influxdata/flux-lsp-cli": "0.4.3",
     "mustache": "^3.1.0",
-    "request": "2.88.0",
-    "request-promise": "4.2.5",
+    "axios": "0.19.2",
     "uuid": "^3.3.3",
     "vscode-languageclient": "^5.2.1"
   },
