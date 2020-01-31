@@ -9,6 +9,7 @@ import {
 } from "vscode";
 import { NewBucketNode } from "./BucketNode";
 import { Status } from "./Status";
+import { EditConnectionView } from "./EditConnectionView";
 
 export const InfluxDBConectionsKey = "influxdb.connections";
 
@@ -55,6 +56,25 @@ export class ConnectionNode implements INode {
       "Fetching buckets",
       NewBucketNode
     );
+  }
+
+  public async editConnection(
+    context: ExtensionContext,
+    influxDBTreeDataProvider: InfluxDBTreeDataProvider
+  ) {
+    const connections = context.globalState.get<{
+      [key: string]: InfluxDBConnection;
+    }>(InfluxDBConectionsKey);
+    if (connections !== undefined) {
+      let editConnView = new EditConnectionView(context);
+      await editConnView.show(
+        this.hostNport,
+        false,
+        influxDBTreeDataProvider,
+        this.toConnection()
+      );
+      return;
+    }
   }
 
   public async deleteConnection(

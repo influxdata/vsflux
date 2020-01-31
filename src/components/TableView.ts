@@ -1,18 +1,16 @@
+import "./View";
 import { ExtensionContext, window, ViewColumn } from "vscode";
-import fs = require("fs");
 import mustache = require("mustache");
+import { View } from "./View";
 
 export interface TableResult {
   Head: Array<string>;
   Rows: Array<Array<string>>;
 }
 
-export class TableView {
-  private template: string;
+export class TableView extends View {
   public constructor(context: ExtensionContext) {
-    this.template = String(
-      fs.readFileSync(context.asAbsolutePath("templates/table.mst"))
-    );
+    super(context, "templates/table.mst");
   }
   public show(result: TableResult, title: string) {
     const panel = window.createWebviewPanel("InfluxDB", title, ViewColumn.Two, {

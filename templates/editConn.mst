@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+		<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+		<link rel="stylesheet" type="text/css" href="{{cssPath}}">
+	</head>
+	<body>
+		<form class="ui form">
+			<h4 class="ui dividing header">{{title}}</h4>			
+			<div class="field" id="connName">
+    			<label>Name</label>
+    			<input type="text" name="name" placeholder="Give a name of the influxdb connection" value="{{connName}}">
+  			</div>
+  			<div class="field" id="connHost">
+    			<label>Hostname and Port</label>
+    			<input type="url" name="hostNport" placeholder="The hostname and port of the influxdb" value="{{defaultHostNPort}}">
+  			</div>
+			<div class="field" id="connToken">
+    			<label>Token</label>
+    			<input type="password" name="token" placeholder="Token of the influxdb" value="{{connToken}}">
+  			</div>
+			<div class="field" id="connOrg">
+    			<label>Org</label>
+    			<input type="text" name="org" placeholder="Name of the influxdb org" value="{{connOrg}}">
+  			</div>
+			<div class="field" id="connID">
+    			<input type="hidden" name="id" value="{{connID}}">
+			</div>
+			<div class="ui button" id="testConn" tabindex="0">Test Connection</div>
+			<div class="ui blue button" id="save" tabindex="0">Save</div>
+		</form>
+		<script src="{{jsPath}}"></script>
+	</body>
+</html>
