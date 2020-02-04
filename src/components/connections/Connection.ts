@@ -1,8 +1,10 @@
 import * as vscode from "vscode";
-import { ViewEngine as QueryViewEngine } from "../Query";
+import { ViewEngine as QueryViewEngine, APIRequest } from "../Query";
 import { INode } from "./INode";
 import { Status } from "./Status";
 import { ConnectionNode, InfluxDBConectionsKey } from "./ConnectionNode";
+import { EditConnectionView } from "./EditConnectionView";
+import { ExtensionContext } from "vscode";
 
 const uuidv1 = require("uuid/v1");
 export interface InfluxDBConnection {
@@ -42,63 +44,33 @@ export class InfluxDBTreeDataProvider
     this._onDidChangeTreeData.fire(element);
   }
 
-  public async addConnection() {
-    const name = await vscode.window.showInputBox({
-      prompt: "Give a name of the influxdb connection",
-      placeHolder: "name",
-      ignoreFocusOut: true
-    });
-    if (!name) {
-      return;
+  public async addConnection(context: ExtensionContext) {
+    let defaultURL = "";
+    let defaultURLConfig = vscode.workspace.getConfiguration("vsflux");
+    if (
+      defaultURLConfig &&
+      defaultURLConfig.get<string>("defaultInfluxDBURL") !== undefined
+    ) {
+      defaultURL = defaultURLConfig.get<string>("defaultInfluxDBURL") as string;
     }
+    let addConnView = new EditConnectionView(context);
+    await addConnView.showNew(defaultURL, this);
+    return;
+  }
 
-    const hostNport = await vscode.window.showInputBox({
-      prompt: "The hostname and port of the influxdb",
-      placeHolder: "http://localhost:9999",
-      ignoreFocusOut: true
-    });
-    if (!hostNport) {
-      return;
-    }
-
-    const token = await vscode.window.showInputBox({
-      prompt: "token of the influxdb",
-      placeHolder: "token",
-      ignoreFocusOut: true
-    });
-    if (!token) {
-      return;
-    }
-
-    const org = await vscode.window.showInputBox({
-      prompt: "name of the influxdb org",
-      placeHolder: "org name",
-      ignoreFocusOut: true
-    });
-    if (!org) {
-      return;
-    }
-
-    let connections = this.context.globalState.get<{
-      [key: string]: InfluxDBConnection;
-    }>(InfluxDBConectionsKey);
-
-    if (!connections) {
-      connections = {};
-    }
-
-    const id = uuidv1();
-    connections[id] = {
-      id,
-      name,
-      hostNport,
-      token,
-      org
-    };
-
-    await this.context.globalState.update(InfluxDBConectionsKey, connections);
-    Status.Current = connections[id];
-    this.refresh();
+  public static handleMessage(
+    panel: vscode.WebviewPanel,
+    tree: InfluxDBTreeDataProvider
+  ) {
+    // Handle messages from the webview
+    panel.webview.onDidReceiveMessage(async (message: Message) => {
+      switch (message.command) {
+        case messageCmd.Save:
+          this.saveConn(panel, tree, message);
+        case messageCmd.Test:
+          this.testConn(message);
+      }
+    }, null);
   }
 
   private async getConnectionNodes(
@@ -129,6 +101,60 @@ export class InfluxDBTreeDataProvider
     }
     return ConnectionNodes;
   }
+
+  private static async testConn(message: Message) {
+    let conn = {
+      id: uuidv1(),
+      name: message.connName as string,
+      hostNport: message.connHost as string,
+      token: message.connToken as string,
+      org: message.connOrg as string
+    };
+
+    let showBuckets = await APIRequest.Query(conn, "buckets()");
+    if (showBuckets.Err !== undefined) {
+      vscode.window.showErrorMessage(showBuckets.Err);
+      return;
+    }
+    vscode.window.showInformationMessage("Success");
+    return;
+  }
+  private static async saveConn(
+    panel: vscode.WebviewPanel,
+    tree: InfluxDBTreeDataProvider,
+    message: Message
+  ) {
+    let connections = tree.context.globalState.get<{
+      [key: string]: InfluxDBConnection;
+    }>(InfluxDBConectionsKey);
+
+    var hasConnection: Boolean = true;
+    if (!connections) {
+      hasConnection = false;
+      connections = {};
+    }
+
+    let id = message.connID;
+    if (id === "") {
+      id = uuidv1();
+    }
+    connections[id] = {
+      id: id,
+      name: message.connName as string,
+      hostNport: message.connHost as string,
+      token: message.connToken as string,
+      org: message.connOrg as string
+    };
+
+    if (!hasConnection) {
+      // set the default connection, only if this is a new connection
+      await tree.context.globalState.update(InfluxDBConectionsKey, connections);
+      Status.Current = connections[id];
+    }
+    tree.refresh();
+    panel.dispose();
+    return;
+  }
 }
 
 export class Connection {
@@ -158,7 +184,7 @@ export class Connection {
 
     this.context.subscriptions.push(
       vscode.commands.registerCommand("influxdb.addConnection", () => {
-        treeData.addConnection();
+        treeData.addConnection(this.context);
       })
     );
 
@@ -167,6 +193,15 @@ export class Connection {
         "influxdb.deleteConnection",
         (connectionNode: ConnectionNode) => {
           connectionNode.deleteConnection(this.context, treeData);
+        }
+      )
+    );
+
+    this.context.subscriptions.push(
+      vscode.commands.registerCommand(
+        "influxdb.editConnection",
+        (connectionNode: ConnectionNode) => {
+          connectionNode.editConnection(this.context, treeData);
         }
       )
     );
@@ -186,4 +221,18 @@ export class Connection {
       )
     );
   }
+}
+
+interface Message {
+  readonly command: messageCmd;
+  readonly connID: string;
+  readonly connName: string;
+  readonly connHost: string;
+  readonly connToken: string;
+  readonly connOrg: string;
+}
+
+enum messageCmd {
+  Test = "testConn",
+  Save = "save"
 }
