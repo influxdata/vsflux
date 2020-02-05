@@ -43,7 +43,7 @@ export class ConnectionNode implements INode {
         arguments: [this.toConnection()]
       },
       contextValue: "connection",
-      iconPath: context.asAbsolutePath("resources/server.png")
+      iconPath: context.asAbsolutePath("resources/influx-logo.svg")
     };
   }
 
