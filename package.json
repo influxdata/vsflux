@@ -11,7 +11,10 @@
     "Snippets"
   ],
   "private": true,
-  "repository": "github:influxdata/vsflux",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/influxdata/vsflux.git"
+  },
   "bugs": {
     "url": "https://github.com/influxdata/vsflux/issues"
   },
