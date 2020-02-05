@@ -13,14 +13,14 @@ export class EditConnectionView extends View {
     tree: InfluxDBTreeDataProvider,
     conn: InfluxDBConnection
   ) {
-    this.show(conn.hostNport, "Edit the Connection", tree, conn);
+    this.show(conn.hostNport, "Edit Connection", tree, conn);
   }
 
   public async showNew(
     defaultHostNPort: string,
     tree: InfluxDBTreeDataProvider
   ) {
-    this.show(defaultHostNPort, "Add a Connection", tree, undefined);
+    this.show(defaultHostNPort, "Add Connection", tree, undefined);
   }
 
   private async show(
