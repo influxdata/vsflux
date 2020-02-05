@@ -14,4 +14,4 @@ VSFlux can be installed through the [VSCode Marketplace](https://marketplace.vis
 
 ## Contributing
 
-Contribution guidelines and instructions on how to build from source can be found in the [Contributing Guide](https://github.com/influxdata/vsflux/blob/master/CONTRIBUTING.md)  
+Contribution guidelines and instructions on how to build from source can be found in the [Contributing Guide](https://github.com/influxdata/vsflux/blob/master/CONTRIBUTING.md).
