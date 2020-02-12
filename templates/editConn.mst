@@ -24,6 +24,10 @@
     			<label>Org</label>
     			<input type="text" name="org" placeholder="Name of the influxdb org" value="{{connOrg}}">
   			</div>
+			<div class="ui checkbox">
+				<input type="checkbox" id="connDefault" {{isDefault}}>
+				<label>Make this default connection</label>
+			</div>
 			<input type="hidden" id="connID" value="{{connID}}">
 			<div class="ui negative hidden message" id="errMsgs">
   			</div>
