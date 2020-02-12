@@ -15,7 +15,8 @@ function save() {
       connName: data.connName,
       connHost: data.connHost,
       connToken: data.connToken,
-      connOrg: data.connOrg
+      connOrg: data.connOrg,
+      connDefault: data.connDefault
     });
   });
 }
@@ -39,6 +40,7 @@ function testConn() {
 function getData() {
   err = [];
   let connID = document.getElementById("connID").value;
+  let isDefault = document.getElementById("connDefault").checked;
   let connName = validTextInput("connName", "Name is empty for the connection");
   let connHost = validTextInput(
     "connHost",
@@ -70,7 +72,8 @@ function getData() {
     connName: connName,
     connHost: connHost,
     connToken: connToken,
-    connOrg: connOrg
+    connOrg: connOrg,
+    connDefault: isDefault
   };
 }
 

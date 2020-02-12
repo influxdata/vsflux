@@ -13,6 +13,7 @@ export interface InfluxDBConnection {
   readonly hostNport: string;
   readonly token: string;
   readonly org: string;
+  isDefault: boolean;
 }
 
 export class InfluxDBTreeDataProvider
@@ -46,12 +47,9 @@ export class InfluxDBTreeDataProvider
 
   public async addConnection(context: ExtensionContext) {
     let defaultURL = "";
-    let defaultURLConfig = vscode.workspace.getConfiguration("vsflux");
-    if (
-      defaultURLConfig &&
-      defaultURLConfig.get<string>("defaultInfluxDBURL") !== undefined
-    ) {
-      defaultURL = defaultURLConfig.get<string>("defaultInfluxDBURL") as string;
+    let workspaceConfig = vscode.workspace.getConfiguration("vsflux");
+    if (workspaceConfig?.get<string>("defaultInfluxDBURL")) {
+      defaultURL = workspaceConfig.get<string>("defaultInfluxDBURL") as string;
     }
     let addConnView = new EditConnectionView(context);
     await addConnView.showNew(defaultURL, this);
@@ -81,35 +79,31 @@ export class InfluxDBTreeDataProvider
     }>(InfluxDBConectionsKey);
     const ConnectionNodes = [];
     if (connections) {
+      const activeID = Status.Current?.id;
       for (const id of Object.keys(connections)) {
+        let active = false;
+        if (
+          activeID === id ||
+          (activeID === undefined && connections[id].isDefault)
+        ) {
+          active = true;
+        }
         ConnectionNodes.push(
-          new ConnectionNode(
-            id,
-            connections[id].name,
-            connections[id].hostNport,
-            connections[id].token,
-            connections[id].org,
-            outputChannel
-          )
+          new ConnectionNode(connections[id], active, outputChannel)
         );
       }
 
-      // if there is only one connection, set it to default.
+      // if there is only one connection, set it to active.
       if (ConnectionNodes.length === 1) {
-        Status.Current = ConnectionNodes[0].toConnection();
+        ConnectionNodes[0].Active = true;
+        Status.Current = ConnectionNodes[0].iConn;
       }
     }
     return ConnectionNodes;
   }
 
   private static async testConn(message: Message) {
-    let conn = {
-      id: uuidv1(),
-      name: message.connName as string,
-      hostNport: message.connHost as string,
-      token: message.connToken as string,
-      org: message.connOrg as string
-    };
+    let conn: InfluxDBConnection = msg2Connection(message, uuidv1());
 
     let showBuckets = await APIRequest.Query(conn, "buckets()");
     if (showBuckets.Err !== undefined) {
@@ -138,19 +132,22 @@ export class InfluxDBTreeDataProvider
     if (id === "") {
       id = uuidv1();
     }
-    connections[id] = {
-      id: id,
-      name: message.connName as string,
-      hostNport: message.connHost as string,
-      token: message.connToken as string,
-      org: message.connOrg as string
-    };
+    connections[id] = msg2Connection(message, id, true);
+
+    // flags other connections in case of default connections
+    if (message.connDefault && hasConnection) {
+      for (const connID of Object.keys(connections)) {
+        if (id !== connID && connections[connID].isDefault) {
+          connections[connID].isDefault = false;
+        }
+      }
+    }
 
     if (!hasConnection) {
-      // set the default connection, only if this is a new connection
-      await tree.context.globalState.update(InfluxDBConectionsKey, connections);
+      // set the current connection, only if this is a new connection
       Status.Current = connections[id];
     }
+    await tree.context.globalState.update(InfluxDBConectionsKey, connections);
     tree.refresh();
     panel.dispose();
     return;
@@ -215,8 +212,10 @@ export class Connection {
     this.context.subscriptions.push(
       vscode.commands.registerCommand(
         "influxdb.switchConn",
-        (iConn: InfluxDBConnection) => {
-          Status.Current = iConn;
+        (connNode: ConnectionNode) => {
+          Status.Current = connNode.iConn;
+          connNode.Active = true;
+          treeData.refresh();
         }
       )
     );
@@ -230,6 +229,23 @@ interface Message {
   readonly connHost: string;
   readonly connToken: string;
   readonly connOrg: string;
+  readonly connDefault: boolean;
+}
+
+function msg2Connection(
+  message: Message,
+  id: string,
+  useDefault?: boolean
+): InfluxDBConnection {
+  let isDefault: boolean = useDefault ? message.connDefault : false;
+  return {
+    id: id,
+    name: message.connName,
+    hostNport: message.connHost,
+    token: message.connToken,
+    org: message.connOrg,
+    isDefault: isDefault
+  };
 }
 
 enum messageCmd {

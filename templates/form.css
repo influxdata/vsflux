@@ -92,8 +92,6 @@ body {
   padding: 0.3em 1.5em 0.3em;
   text-transform: none;
   text-shadow: none;
-  /**font-weight: 700;
-  line-height: 1em;**/
   font-style: normal;
   text-align: center;
   text-decoration: none;
@@ -142,6 +140,18 @@ body {
   border-color: #e0b4b4;
   color: #9f3a38;
   box-shadow: none;
+}
+.ui.checkbox {
+  position: relative;
+  display: block;
+  backface-visibility: hidden;
+  outline: 0;
+  font-style: normal;
+  min-height: 17px;
+  font-size: 1rem;
+  line-height: 17px;
+  min-width: 17px;
+  margin: 0.5em 2em 0.5em 0.6em;
 }
 
 /* Error */

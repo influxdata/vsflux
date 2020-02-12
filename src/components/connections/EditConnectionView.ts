@@ -56,7 +56,8 @@ export class EditConnectionView extends View {
       connName: conn !== undefined ? conn.name : "",
       defaultHostNPort: defaultHostNPort,
       connToken: conn !== undefined ? conn.token : "",
-      connOrg: conn !== undefined ? conn.org : ""
+      connOrg: conn !== undefined ? conn.org : "",
+      isDefault: conn !== undefined && conn.isDefault ? "checked" : ""
     });
     await InfluxDBTreeDataProvider.handleMessage(panel, tree);
   }
