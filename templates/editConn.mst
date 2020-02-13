@@ -10,27 +10,33 @@
 			<h4 class="ui dividing header">{{title}}</h4>			
 			<div class="field" id="connName">
     			<label>Name</label>
-    			<input type="text" name="name" placeholder="Give a name of the influxdb connection" value="{{connName}}">
-  			</div>
+    			<input type="text" name="name" placeholder="Give a name of the influxdb connection" value="{{connName}}">				
+  				<div class="ui negative hidden errMsg message">
+				</div>
+			</div>
   			<div class="field" id="connHost">
     			<label>Hostname and Port</label>
     			<input type="url" name="hostNport" placeholder="The hostname and port of the influxdb" value="{{defaultHostNPort}}">
+				<div class="ui negative hidden message errMsg">
+  				</div>
   			</div>
 			<div class="field" id="connToken">
     			<label>Token</label>
     			<input type="password" name="token" placeholder="Token of the influxdb" value="{{connToken}}">
+				<div class="ui negative hidden message errMsg">
+  				</div>
   			</div>
 			<div class="field" id="connOrg">
     			<label>Org</label>
     			<input type="text" name="org" placeholder="Name of the influxdb org" value="{{connOrg}}">
+				<div class="ui negative hidden message errMsg">
+  				</div>
   			</div>
 			<div class="ui checkbox">
 				<input type="checkbox" id="connDefault" {{isDefault}}>
 				<label>Make this default connection</label>
 			</div>
 			<input type="hidden" id="connID" value="{{connID}}">
-			<div class="ui negative hidden message" id="errMsgs">
-  			</div>
 			<div class="ui button" id="testConn" tabindex="0">Test Connection</div>
 			<div class="ui blue button" id="save" tabindex="0">Save</div>
 		</form>

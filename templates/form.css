@@ -159,15 +159,10 @@ body {
   color: #e7bdbc;
 }
 .ui.negative.message {
-  box-shadow: 0 0 0 1px #e0b4b4 inset, 0 0 0 0 transparent;
-  background-color: #fff6f6;
   color: #9f3a38;
+  font-size: x-small;
   position: relative;
-  margin: 0.5em 2em 0.5em 1em;
-  background: #f8f8f9;
-  padding: 0.25em 0.5em;
+  top: -1em;
+  padding: 0 1.3em;
   line-height: 1.4285em;
-  transition: opacity 0.1s ease, color 0.1s ease, background 0.1s ease,
-    box-shadow 0.1s ease, -webkit-box-shadow 0.1s ease;
-  border-radius: 0.28571429rem;
 }
