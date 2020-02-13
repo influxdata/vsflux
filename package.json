@@ -106,17 +106,12 @@
       ],
       "view/item/context": [
         {
-          "command": "influxdb.runQuery",
+          "command": "influxdb.editConnection",
           "when": "view == influxdb && viewItem == connection",
           "group": "influxdb@1"
         },
         {
           "command": "influxdb.deleteConnection",
-          "when": "view == influxdb && viewItem == connection",
-          "group": "influxdb@1"
-        },
-        {
-          "command": "influxdb.editConnection",
           "when": "view == influxdb && viewItem == connection",
           "group": "influxdb@1"
         }

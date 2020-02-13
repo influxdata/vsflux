@@ -188,7 +188,15 @@ export class Connection {
     this.context.subscriptions.push(
       vscode.commands.registerCommand(
         "influxdb.deleteConnection",
-        (connectionNode: ConnectionNode) => {
+        async (connectionNode: ConnectionNode) => {
+          let option = { title: "Confrim" };
+          const selection = await vscode.window.showInformationMessage(
+            "You are about to delete the connection.",
+            option
+          );
+          if (selection !== option) {
+            return;
+          }
           connectionNode.deleteConnection(this.context, treeData);
         }
       )
