@@ -87,6 +87,7 @@ export class InfluxDBTreeDataProvider
           (activeID === undefined && connections[id].isDefault)
         ) {
           active = true;
+          Status.Current = connections[id];
         }
         ConnectionNodes.push(
           new ConnectionNode(connections[id], active, outputChannel)

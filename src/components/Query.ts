@@ -119,6 +119,7 @@ export class APIRequest {
         method: "POST",
         url: `${conn.hostNport}/api/v2/query?org=${encodeURI(conn.org)}`,
         data: query,
+        maxContentLength: Infinity,
         headers: {
           "Content-Type": "application/vnd.flux",
           Authorization: "Token " + conn.token
@@ -130,8 +131,11 @@ export class APIRequest {
       };
       let results: Array<string> = resp.data.split("\r\n");
       var isHead: boolean = true;
-      for (let row of results) {
+      for (var i = 0; i < results.length; i++) {
+        let row = results[i];
         if (row === "") {
+          // cut next header
+          i++;
           continue;
         }
         let fields = row.split(",").slice(3);
