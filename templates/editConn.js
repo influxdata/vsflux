@@ -4,6 +4,32 @@ class Actions {
     this.vscode = vscode;
   }
 
+  toggleOptions() {
+    let connVersionEle = document.getElementById("connVersion");
+    if (connVersionEle.value == 1) {
+      document.getElementById("connToken").classList.add("hidden");
+      document.getElementById("connOrg").classList.add("hidden");
+    }
+    connVersionEle.addEventListener("change", () => {
+      if (connVersionEle.value == 1) {
+        document.getElementById("connToken").classList.add("hidden");
+        document.getElementById("connOrg").classList.add("hidden");
+      } else {
+        document.getElementById("connToken").classList.remove("hidden");
+        document.getElementById("connOrg").classList.remove("hidden");
+      }
+      let temp = document
+        .getElementById("connHost")
+        .getElementsByTagName("input")[0].value;
+      document
+        .getElementById("connHost")
+        .getElementsByTagName("input")[0].value = document.getElementById(
+        "alternativeHostNPort"
+      ).innerText;
+      document.getElementById("alternativeHostNPort").innerText = temp;
+    });
+  }
+
   save() {
     document.getElementById("save").addEventListener("click", () => {
       let data = this.getData();
@@ -12,6 +38,7 @@ class Actions {
       }
       this.vscode.postMessage({
         command: "save",
+        connVersion: data.connVersion,
         connID: data.connID,
         connName: data.connName,
         connHost: data.connHost,
@@ -30,6 +57,7 @@ class Actions {
       }
       this.vscode.postMessage({
         command: "testConn",
+        connVersion: data.connVersion,
         connName: data.connName,
         connHost: data.connHost,
         connToken: data.connToken,
@@ -50,20 +78,29 @@ class Actions {
       "connHost",
       "Host URI is empty for the connection"
     );
-    let connToken = this.validTextInput(
-      "connToken",
-      "Token is empty for the connection",
-      "^[-A-Za-z0-9+=]{1,50}|=[^=]|={3,}$",
-      "Token should be a valid base64 encoded string"
-    );
-    let connOrg = this.validTextInput(
-      "connOrg",
-      "Org is empty for the connection"
-    );
+    let connToken, connOrg;
+    let connVersion = document.getElementById("connVersion").value;
+    if (connVersion == 1) {
+      connToken = "";
+      connOrg = "";
+    } else {
+      connToken = this.validTextInput(
+        "connToken",
+        "Token is empty for the connection",
+        "^[-A-Za-z0-9+=]{1,50}|=[^=]|={3,}$",
+        "Token should be a valid base64 encoded string"
+      );
+      connOrg = this.validTextInput(
+        "connOrg",
+        "Org is empty for the connection"
+      );
+    }
+
     if (this.hasErr) {
       return {};
     }
     return {
+      connVersion: connVersion,
       connID: connID,
       connName: connName,
       connHost: connHost,
@@ -112,5 +149,6 @@ class Actions {
 
 const vscode = acquireVsCodeApi();
 let act = new Actions(false, vscode);
+act.toggleOptions();
 act.save();
 act.testConn();

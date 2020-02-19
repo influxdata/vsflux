@@ -8,27 +8,33 @@ import {
 } from "vscode";
 import { InfluxDBConnection, InfluxConnectionVersion } from "./Connection";
 import { NewStringNode } from "./StringNode";
-import { NewMeasurementNode } from "./MeasurementNode";
 
-export function NewBucketNode(
-  bucket: string,
+export function NewMeasurementNode(
+  measurement: string,
   outputChannel: OutputChannel,
-  conn: InfluxDBConnection
-): BucketNode {
-  return new BucketNode(bucket, outputChannel, conn);
+  conn: InfluxDBConnection,
+  bucket?: string
+): MeasurementNode {
+  return new MeasurementNode(
+    bucket as string,
+    measurement,
+    outputChannel,
+    conn
+  );
 }
 
-export class BucketNode implements INode {
+export class MeasurementNode implements INode {
   constructor(
     private readonly bucket: string,
+    private readonly measurement: string,
     private readonly outputChannel: OutputChannel,
     private readonly conn: InfluxDBConnection
   ) {}
 
   public getTreeItem(_: ExtensionContext): TreeItem {
     return {
-      label: this.bucket,
-      contextValue: this.bucket,
+      label: this.measurement,
+      contextValue: this.measurement,
       collapsibleState: TreeItemCollapsibleState.Collapsed
     };
   }
@@ -37,15 +43,15 @@ export class BucketNode implements INode {
   public async getChildren(): Promise<INode[]> {
     let queryEngine: QueryEngine = new QueryEngine(this.outputChannel);
     let query = `import "influxdata/influxdb/v1"
-    v1.measurements(bucket:"${this.bucket}")`;
+    v1.measurementTagKeys(bucket:"${this.bucket}", measurement: "${this.measurement}")`;
     if (this.conn.version === InfluxConnectionVersion.V1) {
-      query = "show measurements";
+      query = `show tag keys from ${this.measurement}`;
     }
     return queryEngine.GetTreeChildren(
       this.conn,
       query,
-      "Getting measurements for bucket: " + this.bucket,
-      NewMeasurementNode,
+      `Getting tag keys for bucket: ${this.bucket}, measurement: ${this.measurement}: `,
+      NewStringNode,
       this.bucket
     );
   }

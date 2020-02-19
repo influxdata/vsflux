@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ViewEngine as QueryViewEngine, APIRequest } from "../Query";
+import { ViewEngine as QueryViewEngine, APIRequest, Result } from "../Query";
 import { INode } from "./INode";
 import { Status } from "./Status";
 import { ConnectionNode, InfluxDBConectionsKey } from "./ConnectionNode";
@@ -8,12 +8,25 @@ import { ExtensionContext } from "vscode";
 
 const uuidv1 = require("uuid/v1");
 export interface InfluxDBConnection {
+  readonly version: InfluxConnectionVersion;
   readonly id: string;
   readonly name: string;
   readonly hostNport: string;
   readonly token: string;
   readonly org: string;
   isDefault: boolean;
+}
+
+export function emptyInfluxDBConnection(): InfluxDBConnection {
+  return {
+    version: InfluxConnectionVersion.V2,
+    id: "",
+    name: "",
+    hostNport: "",
+    token: "",
+    org: "",
+    isDefault: false
+  };
 }
 
 export class InfluxDBTreeDataProvider
@@ -46,13 +59,17 @@ export class InfluxDBTreeDataProvider
   }
 
   public async addConnection(context: ExtensionContext) {
-    let defaultURL = "";
+    let defaultURL = "",
+      defaultURLV1 = "";
     let workspaceConfig = vscode.workspace.getConfiguration("vsflux");
     if (workspaceConfig?.get<string>("defaultInfluxDBURL")) {
-      defaultURL = workspaceConfig.get<string>("defaultInfluxDBURL") as string;
+      defaultURL = workspaceConfig.get<string>("defaultInfluxDBURL", "");
+    }
+    if (workspaceConfig?.get<string>("defaultInfluxDBV1URL")) {
+      defaultURLV1 = workspaceConfig?.get<string>("defaultInfluxDBV1URL", "");
     }
     let addConnView = new EditConnectionView(context);
-    await addConnView.showNew(defaultURL, this);
+    await addConnView.showNew(defaultURL, defaultURLV1, this);
     return;
   }
 
@@ -106,7 +123,12 @@ export class InfluxDBTreeDataProvider
   private static async testConn(message: Message) {
     let conn: InfluxDBConnection = msg2Connection(message, uuidv1());
 
-    let showBuckets = await APIRequest.Query(conn, "buckets()");
+    let showBuckets: Result;
+    if (conn.version === InfluxConnectionVersion.V2) {
+      showBuckets = await APIRequest.Query(conn, "buckets()");
+    } else {
+      showBuckets = await APIRequest.Query(conn, "show databases");
+    }
     if (showBuckets.Err !== undefined) {
       vscode.window.showErrorMessage(showBuckets.Err);
       return;
@@ -143,7 +165,6 @@ export class InfluxDBTreeDataProvider
         }
       }
     }
-
     if (!hasConnection) {
       // set the current connection, only if this is a new connection
       Status.Current = connections[id];
@@ -234,6 +255,7 @@ export class Connection {
 interface Message {
   readonly command: messageCmd;
   readonly connID: string;
+  readonly connVersion: number;
   readonly connName: string;
   readonly connHost: string;
   readonly connToken: string;
@@ -248,6 +270,10 @@ function msg2Connection(
 ): InfluxDBConnection {
   let isDefault: boolean = useDefault ? message.connDefault : false;
   return {
+    version:
+      message.connVersion > 0
+        ? InfluxConnectionVersion.V1
+        : InfluxConnectionVersion.V2,
     id: id,
     name: message.connName,
     hostNport: message.connHost,
@@ -260,4 +286,9 @@ function msg2Connection(
 enum messageCmd {
   Test = "testConn",
   Save = "save"
+}
+
+export enum InfluxConnectionVersion {
+  V2 = 0,
+  V1 = 1
 }
