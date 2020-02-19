@@ -40,7 +40,8 @@ body {
 .ui.form input[type="tel"],
 .ui.form input[type="text"],
 .ui.form input[type="time"],
-.ui.form input[type="url"] {
+.ui.form input[type="url"],
+.ui.form select {
   margin: 0 1em;
   outline: 0;
   width: 90%;

@@ -2,7 +2,12 @@ import { ExtensionContext, window, ViewColumn, Uri } from "vscode";
 import mustache = require("mustache");
 import * as path from "path";
 import { View } from "../View";
-import { InfluxDBTreeDataProvider, InfluxDBConnection } from "./Connection";
+import {
+  InfluxDBTreeDataProvider,
+  InfluxDBConnection,
+  InfluxConnectionVersion,
+  emptyInfluxDBConnection
+} from "./Connection";
 
 export class EditConnectionView extends View {
   public constructor(context: ExtensionContext) {
@@ -13,21 +18,23 @@ export class EditConnectionView extends View {
     tree: InfluxDBTreeDataProvider,
     conn: InfluxDBConnection
   ) {
-    this.show(conn.hostNport, "Edit Connection", tree, conn);
+    this.show(conn.hostNport, "", "Edit Connection", tree, conn);
   }
 
   public async showNew(
     defaultHostNPort: string,
+    defaultHostNPortV1: string,
     tree: InfluxDBTreeDataProvider
   ) {
-    this.show(defaultHostNPort, "Add Connection", tree, undefined);
+    this.show(defaultHostNPort, defaultHostNPortV1, "Add Connection", tree);
   }
 
   private async show(
     defaultHostNPort: string,
+    defaultHostNPortV1: string,
     title: string,
     tree: InfluxDBTreeDataProvider,
-    conn: InfluxDBConnection | undefined
+    conn: InfluxDBConnection = emptyInfluxDBConnection()
   ) {
     const panel = window.createWebviewPanel(
       "InfluxDB",
@@ -51,13 +58,15 @@ export class EditConnectionView extends View {
           path.join(this.context.extensionPath, "templates", "editConn.js")
         )
       ),
+      isV1: conn.version === InfluxConnectionVersion.V1,
       title: title,
-      connID: conn !== undefined ? conn.id : "",
-      connName: conn !== undefined ? conn.name : "",
+      connID: conn.id,
+      connName: conn.name,
+      defaultHostNPortV1: defaultHostNPortV1,
       defaultHostNPort: defaultHostNPort,
-      connToken: conn !== undefined ? conn.token : "",
-      connOrg: conn !== undefined ? conn.org : "",
-      isDefault: conn !== undefined && conn.isDefault ? "checked" : ""
+      connToken: conn.token,
+      connOrg: conn.org,
+      isDefault: conn.isDefault ? "checked" : ""
     });
     await InfluxDBTreeDataProvider.handleMessage(panel, tree);
   }

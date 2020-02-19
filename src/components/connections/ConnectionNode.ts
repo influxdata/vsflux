@@ -1,6 +1,10 @@
 import { INode } from "./INode";
 import { Engine as QueryEngine } from "../Query";
-import { InfluxDBConnection, InfluxDBTreeDataProvider } from "./Connection";
+import {
+  InfluxDBConnection,
+  InfluxDBTreeDataProvider,
+  InfluxConnectionVersion
+} from "./Connection";
 import {
   ExtensionContext,
   TreeItem,
@@ -39,9 +43,13 @@ export class ConnectionNode implements INode {
   // get all buckets
   public async getChildren(): Promise<INode[]> {
     let queryEngine: QueryEngine = new QueryEngine(this.outputChannel);
+    let query = "buckets()";
+    if (this.iConn.version === InfluxConnectionVersion.V1) {
+      query = "show databases";
+    }
     return queryEngine.GetTreeChildren(
       this.iConn,
-      "buckets()",
+      query,
       "Fetching buckets",
       NewBucketNode
     );

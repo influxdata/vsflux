@@ -1,5 +1,8 @@
 import { OutputChannel, ExtensionContext, window } from "vscode";
-import { InfluxDBConnection } from "./connections/Connection";
+import {
+  InfluxDBConnection,
+  InfluxConnectionVersion
+} from "./connections/Connection";
 import { TableResult, TableView } from "./TableView";
 import { Status } from "./connections/Status";
 import { INode } from "./connections/INode";
@@ -41,18 +44,28 @@ export class Engine {
     newNodeFn: (
       name: string,
       outputChannel: OutputChannel,
-      iConn: InfluxDBConnection
-    ) => INode
+      iConn: InfluxDBConnection,
+      parent?: string
+    ) => INode,
+    pp = ""
   ): Promise<INode[]> {
     this.outputChannel.show();
     this.outputChannel.appendLine(`${now()} - ${msg}`);
-    let result: Result = await APIRequest.Query(conn, query);
+    let result: Result;
+    if (conn.version !== InfluxConnectionVersion.V1) {
+      result = await APIRequest.Query(conn, query);
+    } else {
+      result = await APIRequest.QueryV1(conn, query, pp);
+    }
+
     if (result.Err !== undefined) {
       this.outputChannel.appendLine(`${now()} - Err: ${result.Err}`);
+    } else if (!result.Result) {
+      return [];
     } else {
       var nodes: Array<INode> = [];
-      for (let row of (result.Result as TableResult).Rows) {
-        nodes.push(newNodeFn(row[0], this.outputChannel, conn));
+      for (let row of result.Result.Rows) {
+        nodes.push(newNodeFn(row[0], this.outputChannel, conn, pp));
       }
       return nodes;
     }
@@ -104,12 +117,72 @@ export class ViewEngine extends Engine {
   }
 }
 
-interface Result {
+export interface Result {
   Result: TableResult | undefined;
   Err: string | undefined;
 }
 
+interface V1Result {
+  series: Array<V1Row>;
+  error: string;
+}
+
+interface V1Row {
+  columns: Array<string>;
+  values: Array<Array<string>>;
+}
+
 export class APIRequest {
+  public static async QueryV1(
+    conn: InfluxDBConnection,
+    query: string,
+    bucket: string
+  ): Promise<Result> {
+    try {
+      const resp = await axios({
+        method: "GET",
+        url: `${conn.hostNport}/query?db=${encodeURI(bucket)}&q=${encodeURI(
+          query
+        )}`
+      });
+      let tableResult: TableResult = {
+        Head: [],
+        Rows: []
+      };
+      let results: Array<V1Result> = resp.data.results;
+      if (results.length === 0) {
+        return {
+          Result: tableResult,
+          Err: undefined
+        };
+      }
+      if (results[0]?.error) {
+        return {
+          Result: tableResult,
+          Err: results[0].error
+        };
+      }
+      tableResult.Head = results[0].series[0].columns;
+      for (let i = 0; i < results[0].series[0].values.length; i++) {
+        tableResult.Rows[i] = results[0].series[0].values[i];
+      }
+
+      return {
+        Result: tableResult,
+        Err: undefined
+      };
+    } catch (err) {
+      let message = String(err);
+      if (err.response) {
+        message = err.response.data.message;
+      }
+      return {
+        Result: undefined,
+        Err: message
+      };
+    }
+  }
+
   public static async Query(
     conn: InfluxDBConnection,
     query: string
