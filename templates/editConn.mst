@@ -40,10 +40,6 @@
 				<div class="ui negative hidden message errMsg">
   				</div>
   			</div>
-			<div class="ui checkbox">
-				<input type="checkbox" id="connDefault" {{isDefault}}>
-				<label>Make this default connection</label>
-			</div>
 			<input type="hidden" id="connID" value="{{connID}}">
 			<div class="ui button" id="testConn" tabindex="0">Test Connection</div>
 			<div class="ui blue button" id="save" tabindex="0">Save</div>

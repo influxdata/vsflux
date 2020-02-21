@@ -20,15 +20,13 @@ export const InfluxDBConectionsKey = "influxdb.connections";
 export class ConnectionNode implements INode {
   constructor(
     public iConn: InfluxDBConnection,
-    public Active: boolean,
     private readonly outputChannel: OutputChannel
   ) {}
 
   public getTreeItem(context: ExtensionContext): TreeItem {
-    let status = this.Active ? "" : "-gray";
-    let postfix = this.iConn.isDefault ? " (default)" : "";
+    let status = this.iConn.isActive ? "" : "-gray";
     return {
-      label: this.iConn.name + postfix,
+      label: this.iConn.name,
       collapsibleState: TreeItemCollapsibleState.Collapsed,
       command: {
         title: "switchConn",
