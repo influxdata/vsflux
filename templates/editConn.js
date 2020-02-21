@@ -43,8 +43,7 @@ class Actions {
         connName: data.connName,
         connHost: data.connHost,
         connToken: data.connToken,
-        connOrg: data.connOrg,
-        connDefault: data.connDefault
+        connOrg: data.connOrg
       });
     });
   }
@@ -69,7 +68,6 @@ class Actions {
   getData() {
     this.hasErr = false;
     let connID = document.getElementById("connID").value;
-    let isDefault = document.getElementById("connDefault").checked;
     let connName = this.validTextInput(
       "connName",
       "Name is empty for the connection"
@@ -105,8 +103,7 @@ class Actions {
       connName: connName,
       connHost: connHost,
       connToken: connToken,
-      connOrg: connOrg,
-      connDefault: isDefault
+      connOrg: connOrg
     };
   }
 

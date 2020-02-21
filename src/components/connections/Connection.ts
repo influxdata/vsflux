@@ -14,7 +14,7 @@ export interface InfluxDBConnection {
   readonly hostNport: string;
   readonly token: string;
   readonly org: string;
-  isDefault: boolean;
+  isActive: boolean;
 }
 
 export function emptyInfluxDBConnection(): InfluxDBConnection {
@@ -25,7 +25,7 @@ export function emptyInfluxDBConnection(): InfluxDBConnection {
     hostNport: "",
     token: "",
     org: "",
-    isDefault: false
+    isActive: false
   };
 }
 
@@ -98,22 +98,18 @@ export class InfluxDBTreeDataProvider
     if (connections) {
       const activeID = Status.Current?.id;
       for (const id of Object.keys(connections)) {
-        let active = false;
-        if (
-          activeID === id ||
-          (activeID === undefined && connections[id].isDefault)
-        ) {
-          active = true;
+        connections[id].isActive = activeID === id || connections[id].isActive;
+        if (connections[id].isActive) {
           Status.Current = connections[id];
         }
         ConnectionNodes.push(
-          new ConnectionNode(connections[id], active, outputChannel)
+          new ConnectionNode(connections[id], outputChannel)
         );
       }
 
       // if there is only one connection, set it to active.
       if (ConnectionNodes.length === 1) {
-        ConnectionNodes[0].Active = true;
+        ConnectionNodes[0].iConn.isActive = true;
         Status.Current = ConnectionNodes[0].iConn;
       }
     }
@@ -136,41 +132,42 @@ export class InfluxDBTreeDataProvider
     vscode.window.showInformationMessage("Success");
     return;
   }
-  private static async saveConn(
-    panel: vscode.WebviewPanel,
+
+  public static async SwitchConn(
     tree: InfluxDBTreeDataProvider,
-    message: Message
+    target: InfluxDBConnection
   ) {
     let connections = tree.context.globalState.get<{
       [key: string]: InfluxDBConnection;
     }>(InfluxDBConectionsKey);
-
     var hasConnection: Boolean = true;
     if (!connections) {
       hasConnection = false;
       connections = {};
     }
-
-    let id = message.connID;
-    if (id === "") {
-      id = uuidv1();
-    }
-    connections[id] = msg2Connection(message, id, true);
-
-    // flags other connections in case of default connections
-    if (message.connDefault && hasConnection) {
+    connections[target.id] = target;
+    // flags other connections in case of active connections
+    if (hasConnection) {
       for (const connID of Object.keys(connections)) {
-        if (id !== connID && connections[connID].isDefault) {
-          connections[connID].isDefault = false;
+        if (target.id !== connID && connections[connID].isActive) {
+          connections[connID].isActive = false;
         }
       }
     }
-    if (!hasConnection) {
-      // set the current connection, only if this is a new connection
-      Status.Current = connections[id];
-    }
+    Status.Current = connections[target.id];
     await tree.context.globalState.update(InfluxDBConectionsKey, connections);
     tree.refresh();
+  }
+
+  private static async saveConn(
+    panel: vscode.WebviewPanel,
+    tree: InfluxDBTreeDataProvider,
+    message: Message
+  ) {
+    let id = message.connID || uuidv1();
+    let target = msg2Connection(message, id, true);
+    await this.SwitchConn(tree, target);
+
     panel.dispose();
     return;
   }
@@ -242,10 +239,10 @@ export class Connection {
     this.context.subscriptions.push(
       vscode.commands.registerCommand(
         "influxdb.switchConn",
-        (connNode: ConnectionNode) => {
+        async (connNode: ConnectionNode) => {
           Status.Current = connNode.iConn;
-          connNode.Active = true;
-          treeData.refresh();
+          connNode.iConn.isActive = true;
+          await InfluxDBTreeDataProvider.SwitchConn(treeData, connNode.iConn);
         }
       )
     );
@@ -260,15 +257,13 @@ interface Message {
   readonly connHost: string;
   readonly connToken: string;
   readonly connOrg: string;
-  readonly connDefault: boolean;
 }
 
 function msg2Connection(
   message: Message,
   id: string,
-  useDefault?: boolean
+  isActive: boolean = false
 ): InfluxDBConnection {
-  let isDefault: boolean = useDefault ? message.connDefault : false;
   return {
     version:
       message.connVersion > 0
@@ -279,7 +274,7 @@ function msg2Connection(
     hostNport: message.connHost,
     token: message.connToken,
     org: message.connOrg,
-    isDefault: isDefault
+    isActive: isActive
   };
 }
 
