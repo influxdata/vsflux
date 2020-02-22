@@ -11,7 +11,7 @@ import {
 
 export class EditConnectionView extends View {
   public constructor(context: ExtensionContext) {
-    super(context, "templates/editConn.mst");
+    super(context, "templates/editConn.html");
   }
 
   public async showEdit(
@@ -22,16 +22,16 @@ export class EditConnectionView extends View {
   }
 
   public async showNew(
-    defaultHostNPort: string,
-    defaultHostNPortV1: string,
+    defaultHost: string,
+    defaultHostV1: string,
     tree: InfluxDBTreeDataProvider
   ) {
-    this.show(defaultHostNPort, defaultHostNPortV1, "Add Connection", tree);
+    this.show(defaultHost, defaultHostV1, "Add Connection", tree);
   }
 
   private async show(
-    defaultHostNPort: string,
-    defaultHostNPortV1: string,
+    defaultHost: string,
+    defaultHostV1: string,
     title: string,
     tree: InfluxDBTreeDataProvider,
     conn: InfluxDBConnection = emptyInfluxDBConnection()
@@ -62,8 +62,8 @@ export class EditConnectionView extends View {
       title: title,
       connID: conn.id,
       connName: conn.name,
-      defaultHostNPortV1: defaultHostNPortV1,
-      defaultHostNPort: defaultHostNPort,
+      defaultHostV1: defaultHostV1,
+      defaultHost: defaultHost,
       connToken: conn.token,
       connOrg: conn.org
     });

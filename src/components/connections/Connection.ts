@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ViewEngine as QueryViewEngine, APIRequest, Result } from "../Query";
+import { ViewEngine as QueryViewEngine, APIRequest, Queries } from "../Query";
 import { INode } from "./INode";
 import { Status } from "./Status";
 import { ConnectionNode, InfluxDBConectionsKey } from "./ConnectionNode";
@@ -48,10 +48,10 @@ export class InfluxDBTreeDataProvider
   }
 
   getChildren(element?: INode): Thenable<INode[]> | INode[] {
-    if (!element) {
-      return this.getConnectionNodes(this.outputChannel);
+    if (element) {
+      return element.getChildren(this.outputChannel);
     }
-    return element.getChildren(this.outputChannel);
+    return this.getConnectionNodes(this.outputChannel);
   }
 
   public refresh(element?: INode): void {
@@ -80,9 +80,9 @@ export class InfluxDBTreeDataProvider
     // Handle messages from the webview
     panel.webview.onDidReceiveMessage(async (message: Message) => {
       switch (message.command) {
-        case messageCmd.Save:
+        case MessageType.Save:
           this.saveConn(panel, tree, message);
-        case messageCmd.Test:
+        case MessageType.Test:
           this.testConn(message);
       }
     }, null);
@@ -102,6 +102,7 @@ export class InfluxDBTreeDataProvider
         if (connections[id].isActive) {
           Status.Current = connections[id];
         }
+
         ConnectionNodes.push(
           new ConnectionNode(connections[id], outputChannel)
         );
@@ -117,20 +118,18 @@ export class InfluxDBTreeDataProvider
   }
 
   private static async testConn(message: Message) {
-    let conn: InfluxDBConnection = msg2Connection(message, uuidv1());
+    let conn: InfluxDBConnection = convertMessageToConnection(message, uuidv1());
 
-    let showBuckets: Result;
-    if (conn.version === InfluxConnectionVersion.V2) {
-      showBuckets = await APIRequest.Query(conn, "buckets()");
-    } else {
-      showBuckets = await APIRequest.Query(conn, "show databases");
-    }
-    if (showBuckets.Err !== undefined) {
-      vscode.window.showErrorMessage(showBuckets.Err);
+    try {
+      let buckets = Queries.buckets(conn);
+
+      vscode.window.showInformationMessage("Success");
+      return;
+    } catch (e) {
+      vscode.window.showErrorMessage(e);
       return;
     }
-    vscode.window.showInformationMessage("Success");
-    return;
+
   }
 
   public static async SwitchConn(
@@ -139,21 +138,17 @@ export class InfluxDBTreeDataProvider
   ) {
     let connections = tree.context.globalState.get<{
       [key: string]: InfluxDBConnection;
-    }>(InfluxDBConectionsKey);
-    var hasConnection: Boolean = true;
-    if (!connections) {
-      hasConnection = false;
-      connections = {};
-    }
+    }>(InfluxDBConectionsKey) || {};
+
+    target.isActive = true
     connections[target.id] = target;
-    // flags other connections in case of active connections
-    if (hasConnection) {
-      for (const connID of Object.keys(connections)) {
-        if (target.id !== connID && connections[connID].isActive) {
-          connections[connID].isActive = false;
-        }
+
+    for (const connID of Object.keys(connections)) {
+      if (target.id !== connID) {
+        connections[connID].isActive = false;
       }
     }
+
     Status.Current = connections[target.id];
     await tree.context.globalState.update(InfluxDBConectionsKey, connections);
     tree.refresh();
@@ -165,7 +160,7 @@ export class InfluxDBTreeDataProvider
     message: Message
   ) {
     let id = message.connID || uuidv1();
-    let target = msg2Connection(message, id, true);
+    let target = convertMessageToConnection(message, id, true);
     await this.SwitchConn(tree, target);
 
     panel.dispose();
@@ -250,7 +245,7 @@ export class Connection {
 }
 
 interface Message {
-  readonly command: messageCmd;
+  readonly command: MessageType;
   readonly connID: string;
   readonly connVersion: number;
   readonly connName: string;
@@ -259,7 +254,7 @@ interface Message {
   readonly connOrg: string;
 }
 
-function msg2Connection(
+function convertMessageToConnection(
   message: Message,
   id: string,
   isActive: boolean = false
@@ -278,7 +273,7 @@ function msg2Connection(
   };
 }
 
-enum messageCmd {
+enum MessageType {
   Test = "testConn",
   Save = "save"
 }

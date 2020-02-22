@@ -10,7 +10,7 @@ export interface TableResult {
 
 export class TableView extends View {
   public constructor(context: ExtensionContext) {
-    super(context, "templates/table.mst");
+    super(context, "templates/table.html");
   }
   public show(result: TableResult, title: string) {
     const panel = window.createWebviewPanel("InfluxDB", title, ViewColumn.Two, {

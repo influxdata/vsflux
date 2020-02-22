@@ -24,9 +24,9 @@ class Actions {
       document
         .getElementById("connHost")
         .getElementsByTagName("input")[0].value = document.getElementById(
-        "alternativeHostNPort"
+        "alternativeHost"
       ).innerText;
-      document.getElementById("alternativeHostNPort").innerText = temp;
+      document.getElementById("alternativeHost").innerText = temp;
     });
   }
 
