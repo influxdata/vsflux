@@ -147,31 +147,34 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "webpack --mode production && cp -rf node_modules/@influxdata/flux-lsp-cli/out dist/.",
-    "webpack": "webpack --mode development",
+    "copy-wasm": "rm -f dist/flux-lsp-node_bg.wasm && cp node_modules/@influxdata/flux-lsp-node/flux-lsp-node_bg.wasm dist/",
+    "vscode:prepublish": "npm run webpack-prod && npm run copy-wasm",
     "webpack-dev": "webpack --mode development --watch",
+    "webpack-prod": "webpack --mode production",
     "test-compile": "tsc -p ./"
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
     "@types/mocha": "^5.2.7",
     "@types/mustache": "^0.8.32",
-    "@types/node": "^12.11.7",
-    "@types/vscode": "^1.39.0",
+    "@types/node": "^12.12.28",
+    "@types/through2": "^2.0.34",
+    "@types/vscode": "^1.42.0",
     "glob": "^7.1.5",
     "mocha": "^6.2.2",
     "ts-loader": "^6.2.1",
     "tslint": "^5.20.0",
-    "typescript": "^3.6.4",
+    "typescript": "^3.8.2",
     "vscode-test": "^1.2.2",
-    "webpack": "^4.41.2",
-    "webpack-cli": "^3.3.10"
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@influxdata/flux-lsp-cli": "0.4.3",
-    "mustache": "^3.1.0",
+    "@influxdata/flux-lsp-cli": "0.5.3",
     "axios": "0.19.2",
-    "uuid": "^3.3.3",
+    "mustache": "^3.2.1",
+    "through2": "^3.0.1",
+    "uuid": "^3.4.0",
     "vscode-languageclient": "^5.2.1"
   },
   "homepage": "https://github.com/influxdata/vsflux#readme",

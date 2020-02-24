@@ -8,30 +8,33 @@ import { Status } from "./connections/Status";
 import { INode } from "./connections/INode";
 import axios from "axios";
 
+function pad(n: number) {
+  return n < 10 ? "0" + n : n;
+}
+
+function timezoneOffset(offset: number): string {
+  var sign;
+  if (offset === 0) {
+    return "Z";
+  }
+
+  sign = offset > 0 ? "-" : "+";
+  offset = Math.abs(offset);
+  var hh = pad(Math.floor(offset / 60));
+  var mm = pad(offset % 60);
+  return `${sign}${hh}:${mm}`;
+}
+
 function now(): string {
   var d = new Date();
-  function pad(n: number) {
-    return n < 10 ? "0" + n : n;
-  }
-  function timezoneOffset(offset: number): string {
-    var sign;
-    if (offset === 0) {
-      return "Z";
-    }
-    sign = offset > 0 ? "-" : "+";
-    offset = Math.abs(offset);
-    var hh = pad(Math.floor(offset / 60));
-    var mm = pad(offset % 60);
-    return `${sign}${hh}:${mm}`;
-  }
-  let yy = d.getFullYear();
-  let mm = pad(d.getMonth() + 1);
-  let dd = pad(d.getDate());
-  let h = pad(d.getHours());
-  let m = pad(d.getMinutes());
-  let s = pad(d.getSeconds());
-  let z = timezoneOffset(d.getTimezoneOffset());
-  return `${yy}-${mm}-${dd}T${h}:${m}:${s}${z}`;
+  let year = d.getFullYear();
+  let month = pad(d.getMonth() + 1);
+  let day = pad(d.getDate());
+  let hour = pad(d.getHours());
+  let minutes = pad(d.getMinutes());
+  let seconds = pad(d.getSeconds());
+  let timezone = timezoneOffset(d.getTimezoneOffset());
+  return `${year}-${month}-${day}T${hour}:${minutes}:${seconds}${timezone}`;
 }
 
 export class Engine {
@@ -51,25 +54,22 @@ export class Engine {
   ): Promise<INode[]> {
     this.outputChannel.show();
     this.outputChannel.appendLine(`${now()} - ${msg}`);
-    let result: Result;
-    if (conn.version !== InfluxConnectionVersion.V1) {
-      result = await APIRequest.Query(conn, query);
-    } else {
-      result = await APIRequest.QueryV1(conn, query, pp);
+
+    let result: TableResult;
+    try {
+      if (conn.version === InfluxConnectionVersion.V1) {
+        result = await APIRequest.queryV1(conn, query, pp);
+      } else {
+        result = await APIRequest.queryV2(conn, query);
+      }
+    } catch (e) {
+      this.outputChannel.appendLine(`${now()} - Error: ${e}`);
+      return [];
     }
 
-    if (result.Err !== undefined) {
-      this.outputChannel.appendLine(`${now()} - Err: ${result.Err}`);
-    } else if (!result.Result) {
-      return [];
-    } else {
-      var nodes: Array<INode> = [];
-      for (let row of result.Result.Rows) {
-        nodes.push(newNodeFn(row[0], this.outputChannel, conn, pp));
-      }
-      return nodes;
-    }
-    return [];
+    return (result?.Rows || {}).map((row) => {
+      return newNodeFn(row[0], this.outputChannel, conn, pp);
+    })
   }
 }
 
@@ -81,11 +81,19 @@ export class ViewEngine extends Engine {
     this.tableView = new TableView(context);
   }
 
-  public async TableView(iConn?: InfluxDBConnection, query?: string) {
+  public async TableView(connection?: InfluxDBConnection, query?: string) {
     if (!query && !window.activeTextEditor) {
-      window.showWarningMessage("No Flux file selected");
+      return window.showWarningMessage("No Flux file selected");
+    }
+
+    connection = connection || Status.Current;
+
+    if (!connection) {
+      window.showWarningMessage("No influxDB Server selected");
       return;
-    } else if (!query && window.activeTextEditor) {
+    }
+
+    if (!query && window.activeTextEditor) {
       if (window.activeTextEditor.selection.isEmpty) {
         query = window.activeTextEditor.document.getText();
       } else {
@@ -95,31 +103,38 @@ export class ViewEngine extends Engine {
       }
     }
 
-    if (!iConn && Status.Current !== undefined) {
-      iConn = Status.Current;
-    } else if (!iConn) {
-      window.showWarningMessage("No influxDB Server selected");
-      return;
-    }
+    query = query || "";
 
     this.outputChannel.appendLine(`${now()} - Running Query: '${query}'`);
     this.outputChannel.show();
 
-    if (query === undefined) {
-      query = "";
-    }
-    let result = await APIRequest.Query(iConn, query);
-    if (result.Err === undefined) {
-      this.tableView.show(result.Result as TableResult, iConn.name);
-    } else {
-      this.outputChannel.appendLine(`${now()} - ${result.Err}`);
+    try {
+      let result = await APIRequest.queryV2(connection, query);
+      return this.tableView.show(result, connection.name);
+    } catch (e) {
+      this.outputChannel.appendLine(`${now()} - ${e}`);
     }
   }
 }
 
-export interface Result {
-  Result: TableResult | undefined;
-  Err: string | undefined;
+export class Queries {
+  public static async buckets(connection: InfluxDBConnection): Promise<TableResult> {
+    if (connection.version == InfluxConnectionVersion.V1) {
+      return await this.bucketsV1(connection);
+    } else {
+      return await this.bucketsV2(connection);
+    }
+  }
+
+  private static async bucketsV1(connection: InfluxDBConnection): Promise<TableResult> {
+    const query = "show databases";
+    return await APIRequest.queryV1(connection, query);
+  }
+
+  private static async bucketsV2(connection: InfluxDBConnection): Promise<TableResult> {
+    const query = "buckets()";
+    return await APIRequest.queryV2(connection, query);
+  }
 }
 
 interface V1Result {
@@ -133,105 +148,87 @@ interface V1Row {
 }
 
 export class APIRequest {
-  public static async QueryV1(
+  public static async queryV1(
     conn: InfluxDBConnection,
     query: string,
-    bucket: string
-  ): Promise<Result> {
+    bucket: string = "",
+  ): Promise<TableResult> {
     try {
-      const resp = await axios({
-        method: "GET",
-        url: `${conn.hostNport}/query?db=${encodeURI(bucket)}&q=${encodeURI(
-          query
-        )}`
-      });
-      let tableResult: TableResult = {
-        Head: [],
-        Rows: []
-      };
-      let results: Array<V1Result> = resp.data.results;
-      if (results.length === 0) {
-        return {
-          Result: tableResult,
-          Err: undefined
-        };
-      }
-      if (results[0]?.error) {
-        return {
-          Result: tableResult,
-          Err: results[0].error
-        };
-      }
-      tableResult.Head = results[0].series[0].columns;
-      for (let i = 0; i < results[0].series[0].values.length; i++) {
-        tableResult.Rows[i] = results[0].series[0].values[i];
-      }
+      const encodedQuery = encodeURI(query);
+      const url = `${conn.hostNport}/query?db=${encodeURI(bucket)}&q=${encodedQuery}`;
+      const resp = await axios({ method: "GET", url });
 
-      return {
-        Result: tableResult,
-        Err: undefined
-      };
+      return v1QueryResponseToTableResult(resp.data)
     } catch (err) {
-      let message = String(err);
-      if (err.response) {
-        message = err.response.data.message;
-      }
-      return {
-        Result: undefined,
-        Err: message
-      };
+      let message = err.response?.data?.message || err.toString()
+      throw new Error(message);
     }
   }
 
-  public static async Query(
+  public static defaultParams = {
+    method: "POST",
+  };
+
+  public static async queryV2(
     conn: InfluxDBConnection,
     query: string
-  ): Promise<Result> {
+  ): Promise<TableResult> {
     try {
-      const resp = await axios({
+      const {data} = await axios({
         method: "POST",
         url: `${conn.hostNport}/api/v2/query?org=${encodeURI(conn.org)}`,
         data: query,
         maxContentLength: Infinity,
         headers: {
           "Content-Type": "application/vnd.flux",
-          Authorization: "Token " + conn.token
+          Authorization: `Token ${conn.token}`,
         }
       });
-      let tableResult: TableResult = {
-        Head: [],
-        Rows: []
-      };
-      let results: Array<string> = resp.data.split("\r\n");
-      var isHead: boolean = true;
-      for (var i = 0; i < results.length; i++) {
-        let row = results[i];
-        if (row === "") {
-          // cut next header
-          i++;
-          continue;
-        }
-        let fields = row.split(",").slice(3);
-        if (isHead) {
-          tableResult.Head.push(...fields);
-          isHead = false;
-          continue;
-        }
-        tableResult.Rows.push(fields);
-      }
-      return {
-        Result: tableResult,
-        Err: undefined
-      };
+
+      return queryResponseToTableResult(data);
     } catch (err) {
-      let message = String(err);
-      if (err.response) {
-        message = err.response.data.message;
-      }
-      return {
-        Result: undefined,
-        Err: message
-      };
+      const message = err?.response?.data?.message || err.toString();
+
+      throw new Error(message);
     }
   }
+}
+
+function queryResponseToTableResult(body: string): TableResult {
+  return body.split("\r\n").filter(v => v !== "").reduce((table, row, index) => {
+    let fields = row.split(",").slice(3);
+
+    if (index === 0) {
+      table.Head.push(...fields);
+    } else {
+      table.Rows.push(fields);
+    }
+
+    return table;
+  }, {
+    Head: [],
+    Rows: [],
+  } as TableResult);
+}
+
+function v1QueryResponseToTableResult(body: { results: V1Result[] }): TableResult {
+    let tableResult: TableResult = {
+    Head: [],
+    Rows: []
+  };
+
+  let results: Array<V1Result> = body.results;
+
+  if (results.length === 0) {
+    return tableResult
+  }
+
+  if (results[0]?.error) {
+    throw new Error(results[0].error)
+  }
+
+  tableResult.Head = results[0].series[0].columns;
+  tableResult.Rows = results[0].series[0].values
+
+  return tableResult;
 }

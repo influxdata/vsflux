@@ -2,15 +2,15 @@ import { InfluxDBConnection } from "./Connection";
 import { StatusBarItem, window, StatusBarAlignment } from "vscode";
 
 export class Status {
-  private static _current: InfluxDBConnection | undefined;
+  private static _current?: InfluxDBConnection;
   private static _influxdbStatusBarItem: StatusBarItem;
 
-  static get Current(): InfluxDBConnection | undefined {
+  static get Current() {
     return Status._current;
   }
 
   private static getStatusBarItemText(
-    conn: InfluxDBConnection | undefined
+    conn?: InfluxDBConnection
   ): string {
     if (conn === undefined) {
       return "";

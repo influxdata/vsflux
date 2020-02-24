@@ -1,44 +1,84 @@
+import fs, { write } from 'fs';
 import { workspace, ExtensionContext, window } from "vscode";
+import through from 'through2';
 
 import {
   LanguageClient,
   LanguageClientOptions,
-  ServerOptions,
   DidOpenTextDocumentNotification,
   DidSaveTextDocumentNotification,
-  TransportKind
+  StreamInfo
 } from "vscode-languageclient";
+
+import CLI from "@influxdata/flux-lsp-cli";
+import { Status } from './connections/Status';
+import { Queries } from '../components/Query';
+
+const createTransform = () => {
+  let count = 0;
+  let data = "";
+
+  // NOTE: LSP server expects the content header and message as one message
+  const transform = through(function (message, _encoding, done) {
+    const line = message.toString();
+    count += 1;
+    data += line;
+
+    function reset() {
+      count = 0;
+      data = "";
+    }
+
+    if (count % 2 === 0) {
+      try {
+        this.push(data);
+      } catch (e) {
+        console.log(e);
+      }
+      reset();
+    }
+
+    done();
+  });
+
+  return transform;
+};
+
+async function getBuckets() {
+  if (Status.Current) {
+    const buckets = await Queries.buckets(Status.Current);
+    return (buckets?.Rows || []).map((row) => row[0]);
+  }
+
+  return []
+}
+
+const createStreamInfo: (context: ExtensionContext, cli: CLI) => () => Thenable<StreamInfo> = (context, cli) => {
+  return function () {
+    const stream = cli.createStream();
+
+    cli.registerBucketsCallback(getBuckets);
+
+    const writer = createTransform();
+    writer.pipe(stream);
+
+    return new Promise((resolve, _reject) => {
+      resolve({
+        writer,
+        reader: stream,
+      });
+    });
+  };
+};
 
 export class Client {
   private languageClient: LanguageClient;
   private context: ExtensionContext;
+  private cli: CLI
 
   // constructor
   constructor(logFilePath: string, context: ExtensionContext) {
     this.context = context;
-    let runArgs = ["--disable-folding", "--ipc"];
-    let debugArgs = [...runArgs, "-l", logFilePath];
-    let dir = "dist/out";
-    let debugDir = "node_modules/@influxdata/flux-lsp-cli/out";
-
-    let serverOptions: ServerOptions = {
-      run: {
-        module: this.context.asAbsolutePath(`${dir}/bundle.js`),
-        transport: TransportKind.ipc,
-        options: {
-          cwd: this.context.asAbsolutePath(dir)
-        },
-        args: runArgs
-      },
-      debug: {
-        module: this.context.asAbsolutePath(`${debugDir}/bundle.js`),
-        transport: TransportKind.ipc,
-        options: {
-          cwd: this.context.asAbsolutePath(debugDir)
-        },
-        args: debugArgs
-      }
-    };
 
     // Options to control the language client
     let clientOptions: LanguageClientOptions = {
@@ -50,11 +90,15 @@ export class Client {
       }
     };
 
+    this.cli = new CLI({ "disable-folding": true });
+    this.cli.on("log", console.debug);
+
+
     // Create the language client and start the client.
     this.languageClient = new LanguageClient(
       "flux lsp server",
       "flux language",
-      serverOptions,
+      createStreamInfo(context, this.cli),
       clientOptions
     );
   }
