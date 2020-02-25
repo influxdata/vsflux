@@ -9,19 +9,14 @@ let client: Client;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export async function activate(context: ExtensionContext): Promise<void> {
-  let logFilePath = "/tmp/lsp.log";
-  if (process.platform === "win32") {
-    logFilePath = context.extensionPath + "/lsp.log";
-  }
-
+export async function activate(context: ExtensionContext) {
   new Connection(context).load();
 
-  client = new Client(logFilePath, context);
-  client.start();
+  client = new Client(context);
+  await client.start();
 }
 
 // this method is called when your extension is deactivated
-export function deactivate(): Thenable<void> | undefined {
-  return client.stop();
+export async function deactivate() {
+  await client.stop();
 }

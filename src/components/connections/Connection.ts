@@ -1,12 +1,17 @@
 import * as vscode from "vscode";
-import { ViewEngine as QueryViewEngine, APIRequest, Queries } from "../Query";
+import { ViewEngine as QueryViewEngine, Queries } from "../Query";
 import { INode } from "./INode";
 import { Status } from "./Status";
 import { ConnectionNode, InfluxDBConectionsKey } from "./ConnectionNode";
 import { EditConnectionView } from "./EditConnectionView";
-import { ExtensionContext } from "vscode";
+import {outputChannel} from "../../util"
 
 const uuidv1 = require("uuid/v1");
+
+export enum InfluxConnectionVersion {
+  V2 = 0,
+  V1 = 1
+}
 export interface InfluxDBConnection {
   readonly version: InfluxConnectionVersion;
   readonly id: string;
@@ -17,16 +22,14 @@ export interface InfluxDBConnection {
   isActive: boolean;
 }
 
-export function emptyInfluxDBConnection(): InfluxDBConnection {
-  return {
-    version: InfluxConnectionVersion.V2,
-    id: "",
-    name: "",
-    hostNport: "",
-    token: "",
-    org: "",
-    isActive: false
-  };
+export const emptyInfluxDBConnection: InfluxDBConnection = {
+  version: InfluxConnectionVersion.V2,
+  id: "",
+  name: "",
+  hostNport: "",
+  token: "",
+  org: "",
+  isActive: false
 }
 
 export class InfluxDBTreeDataProvider
@@ -40,7 +43,6 @@ export class InfluxDBTreeDataProvider
 
   constructor(
     private context: vscode.ExtensionContext,
-    private outputChannel: vscode.OutputChannel
   ) {}
 
   getTreeItem(element: INode): vscode.TreeItem | Thenable<vscode.TreeItem> {
@@ -49,41 +51,33 @@ export class InfluxDBTreeDataProvider
 
   getChildren(element?: INode): Thenable<INode[]> | INode[] {
     if (element) {
-      return element.getChildren(this.outputChannel);
+      return element.getChildren(outputChannel);
     }
-    return this.getConnectionNodes(this.outputChannel);
+    return this.getConnectionNodes(outputChannel);
   }
 
   public refresh(element?: INode): void {
     this._onDidChangeTreeData.fire(element);
   }
 
-  public async addConnection(context: ExtensionContext) {
-    let defaultURL = "",
-      defaultURLV1 = "";
-    let workspaceConfig = vscode.workspace.getConfiguration("vsflux");
-    if (workspaceConfig?.get<string>("defaultInfluxDBURL")) {
-      defaultURL = workspaceConfig.get<string>("defaultInfluxDBURL", "");
-    }
-    if (workspaceConfig?.get<string>("defaultInfluxDBV1URL")) {
-      defaultURLV1 = workspaceConfig?.get<string>("defaultInfluxDBV1URL", "");
-    }
-    let addConnView = new EditConnectionView(context);
-    await addConnView.showNew(defaultURL, defaultURLV1, this);
+  public async addConnection() {
+    let addConnView = new EditConnectionView(this.context);
+    await addConnView.showNew(this);
     return;
   }
 
-  public static handleMessage(
+  public static setMessageHandler(
     panel: vscode.WebviewPanel,
     tree: InfluxDBTreeDataProvider
   ) {
     // Handle messages from the webview
     panel.webview.onDidReceiveMessage(async (message: Message) => {
+      const conn = convertMessageToConnection(message, uuidv1());
       switch (message.command) {
         case MessageType.Save:
-          this.saveConn(panel, tree, message);
+          tree.saveConnection(panel, message);
         case MessageType.Test:
-          this.testConn(message);
+          this.testConnection(conn);
       }
     }, null);
   }
@@ -104,25 +98,22 @@ export class InfluxDBTreeDataProvider
         }
 
         ConnectionNodes.push(
-          new ConnectionNode(connections[id], outputChannel)
+          new ConnectionNode(connections[id])
         );
       }
 
       // if there is only one connection, set it to active.
       if (ConnectionNodes.length === 1) {
-        ConnectionNodes[0].iConn.isActive = true;
-        Status.Current = ConnectionNodes[0].iConn;
+        ConnectionNodes[0].connection.isActive = true;
+        Status.Current = ConnectionNodes[0].connection;
       }
     }
     return ConnectionNodes;
   }
 
-  private static async testConn(message: Message) {
-    let conn: InfluxDBConnection = convertMessageToConnection(message, uuidv1());
-
+  private static async testConnection(conn: InfluxDBConnection) {
     try {
-      let buckets = Queries.buckets(conn);
-
+      await Queries.buckets(conn);
       vscode.window.showInformationMessage("Success");
       return;
     } catch (e) {
@@ -132,11 +123,10 @@ export class InfluxDBTreeDataProvider
 
   }
 
-  public static async SwitchConn(
-    tree: InfluxDBTreeDataProvider,
+  public async switchConnection(
     target: InfluxDBConnection
   ) {
-    let connections = tree.context.globalState.get<{
+    let connections = this.context.globalState.get<{
       [key: string]: InfluxDBConnection;
     }>(InfluxDBConectionsKey) || {};
 
@@ -150,18 +140,17 @@ export class InfluxDBTreeDataProvider
     }
 
     Status.Current = connections[target.id];
-    await tree.context.globalState.update(InfluxDBConectionsKey, connections);
-    tree.refresh();
+    await this.context.globalState.update(InfluxDBConectionsKey, connections);
+    this.refresh();
   }
 
-  private static async saveConn(
+  private async saveConnection(
     panel: vscode.WebviewPanel,
-    tree: InfluxDBTreeDataProvider,
     message: Message
   ) {
     let id = message.connID || uuidv1();
     let target = convertMessageToConnection(message, id, true);
-    await this.SwitchConn(tree, target);
+    await this.switchConnection(target);
 
     panel.dispose();
     return;
@@ -170,77 +159,96 @@ export class InfluxDBTreeDataProvider
 
 export class Connection {
   private queryViewEngine: QueryViewEngine;
-  private outputChannel: vscode.OutputChannel;
   private context: vscode.ExtensionContext;
+  private treeData: InfluxDBTreeDataProvider;
+
   public constructor(context: vscode.ExtensionContext) {
     this.context = context;
-    this.outputChannel = vscode.window.createOutputChannel("InfluxDB");
-    this.queryViewEngine = new QueryViewEngine(context, this.outputChannel);
+    this.queryViewEngine = new QueryViewEngine(context);
+    this.treeData = new InfluxDBTreeDataProvider(
+      this.context,
+    );
   }
 
   public load() {
-    const treeData = new InfluxDBTreeDataProvider(
-      this.context,
-      this.outputChannel
-    );
     this.context.subscriptions.push(
-      vscode.window.registerTreeDataProvider("influxdb", treeData)
+      vscode.window.registerTreeDataProvider("influxdb", this.treeData)
     );
 
     this.context.subscriptions.push(
-      vscode.commands.registerCommand("influxdb.refresh", () => {
-        treeData.refresh();
-      })
+      vscode.commands.registerCommand(
+        "influxdb.refresh", 
+        this.refresh
+      )
     );
 
     this.context.subscriptions.push(
-      vscode.commands.registerCommand("influxdb.addConnection", () => {
-        treeData.addConnection(this.context);
-      })
+      vscode.commands.registerCommand(
+        "influxdb.addConnection", 
+        this.addConnection,
+      ),
     );
 
     this.context.subscriptions.push(
       vscode.commands.registerCommand(
         "influxdb.deleteConnection",
-        async (connectionNode: ConnectionNode) => {
-          let option = { title: "Confrim" };
-          const selection = await vscode.window.showInformationMessage(
-            "You are about to delete the connection.",
-            option
-          );
-          if (selection !== option) {
-            return;
-          }
-          connectionNode.deleteConnection(this.context, treeData);
-        }
+        this.deleteConnection,
       )
     );
 
     this.context.subscriptions.push(
       vscode.commands.registerCommand(
         "influxdb.editConnection",
-        (connectionNode: ConnectionNode) => {
-          connectionNode.editConnection(this.context, treeData);
-        }
+        this.editConnection
       )
     );
 
     this.context.subscriptions.push(
-      vscode.commands.registerCommand("influxdb.runQuery", () => {
-        this.queryViewEngine.TableView();
-      })
+      vscode.commands.registerCommand(
+        "influxdb.runQuery", 
+        this.runQuery
+      )
     );
 
     this.context.subscriptions.push(
       vscode.commands.registerCommand(
         "influxdb.switchConn",
-        async (connNode: ConnectionNode) => {
-          Status.Current = connNode.iConn;
-          connNode.iConn.isActive = true;
-          await InfluxDBTreeDataProvider.SwitchConn(treeData, connNode.iConn);
-        }
+        this.switchConnection
       )
     );
+  }
+
+  private refresh = () => {
+    this.treeData.refresh();
+  }
+
+  private addConnection = () => {
+    this.treeData.addConnection();
+  }
+
+  private editConnection = async (node: ConnectionNode) => {
+    await node.editConnection(this.context, this.treeData);
+  }
+
+  private deleteConnection = async (node: ConnectionNode) => {
+    const confirmation = await vscode.window.showInformationMessage(
+      "You are about to delete the connection.",
+      { title: "Confirm" }
+    );
+
+    if (!confirmation) {
+      return;
+    }
+
+    node.deleteConnection(this.context, this.treeData);
+  }
+
+  private runQuery = () => {
+    this.queryViewEngine.TableView();
+  }
+
+  private switchConnection = async (node: ConnectionNode) => {
+    await this.treeData.switchConnection(node.connection);
   }
 }
 
@@ -276,9 +284,4 @@ function convertMessageToConnection(
 enum MessageType {
   Test = "testConn",
   Save = "save"
-}
-
-export enum InfluxConnectionVersion {
-  V2 = 0,
-  V1 = 1
 }

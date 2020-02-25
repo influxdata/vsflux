@@ -18,6 +18,7 @@
 	},
 	"exclude": [
     "dist",
+    "out",
     "node_modules",
     ".vscode-test",
     "webpack.config.js",

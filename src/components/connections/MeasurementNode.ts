@@ -1,33 +1,19 @@
 import { INode } from "./INode";
-import { Engine as QueryEngine } from "../Query";
+import { Queries } from "../Query";
 import {
   ExtensionContext,
   TreeItem,
   TreeItemCollapsibleState,
   OutputChannel
 } from "vscode";
-import { InfluxDBConnection, InfluxConnectionVersion } from "./Connection";
-import { NewStringNode } from "./StringNode";
-
-export function NewMeasurementNode(
-  measurement: string,
-  outputChannel: OutputChannel,
-  conn: InfluxDBConnection,
-  bucket?: string
-): MeasurementNode {
-  return new MeasurementNode(
-    bucket as string,
-    measurement,
-    outputChannel,
-    conn
-  );
-}
+import { InfluxDBConnection } from "./Connection";
+import { StringNode } from "./StringNode";
+import { now, outputChannel } from "../../util";
 
 export class MeasurementNode implements INode {
   constructor(
     private readonly bucket: string,
     private readonly measurement: string,
-    private readonly outputChannel: OutputChannel,
     private readonly conn: InfluxDBConnection
   ) {}
 
@@ -41,18 +27,21 @@ export class MeasurementNode implements INode {
 
   // get all the measurements
   public async getChildren(): Promise<INode[]> {
-    let queryEngine: QueryEngine = new QueryEngine(this.outputChannel);
-    let query = `import "influxdata/influxdb/v1"
-    v1.measurementTagKeys(bucket:"${this.bucket}", measurement: "${this.measurement}")`;
-    if (this.conn.version === InfluxConnectionVersion.V1) {
-      query = `show tag keys from ${this.measurement}`;
+    try {
+      const msg = 
+        `Getting tag keys for bucket: ${this.bucket}, measurement: ${this.measurement}: `;
+
+      outputChannel.show();
+      outputChannel.appendLine(`${now()} - ${msg}`);
+
+      const results = await Queries.tagKeys(this.conn, this.bucket, this.measurement);
+
+      return (results?.rows || []).map((row) => {
+        return new StringNode(row[0]);
+      });
+    } catch (e) {
+      outputChannel.appendLine(`${now()} - Error: ${e}`);
+      return [];
     }
-    return queryEngine.GetTreeChildren(
-      this.conn,
-      query,
-      `Getting tag keys for bucket: ${this.bucket}, measurement: ${this.measurement}: `,
-      NewStringNode,
-      this.bucket
-    );
   }
 }

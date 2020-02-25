@@ -1,9 +1,8 @@
 import { INode } from "./INode";
-import { Engine as QueryEngine } from "../Query";
+import { Queries } from "../Query";
 import {
   InfluxDBConnection,
   InfluxDBTreeDataProvider,
-  InfluxConnectionVersion
 } from "./Connection";
 import {
   ExtensionContext,
@@ -14,19 +13,19 @@ import {
 import { NewBucketNode } from "./BucketNode";
 import { Status } from "./Status";
 import { EditConnectionView } from "./EditConnectionView";
+import { now, outputChannel } from "../../util";
 
 export const InfluxDBConectionsKey = "influxdb.connections";
 
 export class ConnectionNode implements INode {
   constructor(
-    public iConn: InfluxDBConnection,
-    private readonly outputChannel: OutputChannel
+    public connection: InfluxDBConnection,
   ) {}
 
   public getTreeItem(context: ExtensionContext): TreeItem {
-    let status = this.iConn.isActive ? "" : "-gray";
+    let status = this.connection.isActive ? "" : "-gray";
     return {
-      label: this.iConn.name,
+      label: this.connection.name,
       collapsibleState: TreeItemCollapsibleState.Collapsed,
       command: {
         title: "switchConn",
@@ -40,17 +39,20 @@ export class ConnectionNode implements INode {
 
   // get all buckets
   public async getChildren(): Promise<INode[]> {
-    let queryEngine: QueryEngine = new QueryEngine(this.outputChannel);
-    let query = "buckets()";
-    if (this.iConn.version === InfluxConnectionVersion.V1) {
-      query = "show databases";
+    try {
+      const msg = "Fetching buckets";
+      outputChannel.show();
+      outputChannel.appendLine(`${now()} - ${msg}`);
+
+      const results = await Queries.buckets(this.connection);
+
+      return (results?.rows || []).map((row) => {
+        return NewBucketNode(row[0], this.connection);
+      });
+    } catch (e) {
+      outputChannel.appendLine(`${now()} - Error: ${e}`);
+      return [];
     }
-    return queryEngine.GetTreeChildren(
-      this.iConn,
-      query,
-      "Fetching buckets",
-      NewBucketNode
-    );
   }
 
   public async editConnection(
@@ -62,7 +64,7 @@ export class ConnectionNode implements INode {
     }>(InfluxDBConectionsKey);
     if (connections !== undefined) {
       let editConnView = new EditConnectionView(context);
-      await editConnView.showEdit(influxDBTreeDataProvider, this.iConn);
+      await editConnView.showEdit(influxDBTreeDataProvider, this.connection);
       return;
     }
   }
@@ -76,10 +78,10 @@ export class ConnectionNode implements INode {
     }>(InfluxDBConectionsKey);
 
     if (connections) {
-      if (Status.Current !== undefined && Status.Current.id === this.iConn.id) {
+      if (Status.Current !== undefined && Status.Current.id === this.connection.id) {
         Status.Current = undefined;
       }
-      delete connections[this.iConn.id];
+      delete connections[this.connection.id];
     }
 
     await context.globalState.update(InfluxDBConectionsKey, connections);

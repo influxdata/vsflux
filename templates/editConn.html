@@ -17,30 +17,30 @@
 			</div>		
 			<div class="field" id="connName">
     			<label>Name</label>
-    			<input type="text" name="name" placeholder="Give a name of the influxdb connection" value="{{connName}}">				
+    			<input type="text" name="name" placeholder="Give a name of the influxdb connection" value="{{name}}">				
   				<div class="ui negative hidden errMsg message">
 				</div>
 			</div>
   			<div class="field" id="connHost">
     			<label>Hostname and Port</label>
     			<input type="url" name="host" placeholder="The hostname and port of the influxdb" value="{{defaultHost}}">
-				<p id="host" class="hidden">{{defaultHostV1}}</p>
+				<p id="alternativeHost" class="hidden">{{defaultHostV1}}</p>
 				<div class="ui negative hidden message errMsg">
   				</div>
   			</div>
 			<div class="field" id="connToken">
     			<label>Token</label>
-    			<input type="password" name="token" placeholder="Token of the influxdb" value="{{connToken}}">
+    			<input type="password" name="token" placeholder="Token of the influxdb" value="{{token}}">
 				<div class="ui negative hidden message errMsg">
   				</div>
   			</div>
 			<div class="field" id="connOrg">
     			<label>Org</label>
-    			<input type="text" name="org" placeholder="Name of the influxdb org" value="{{connOrg}}">
+    			<input type="text" name="org" placeholder="Name of the influxdb org" value="{{org}}">
 				<div class="ui negative hidden message errMsg">
   				</div>
   			</div>
-			<input type="hidden" id="connID" value="{{connID}}">
+			<input type="hidden" id="connID" value="{{ID}}">
 			<div class="ui button" id="testConn" tabindex="0">Test Connection</div>
 			<div class="ui blue button" id="save" tabindex="0">Save</div>
 		</form>

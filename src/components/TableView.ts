@@ -3,20 +3,23 @@ import { ExtensionContext, window, ViewColumn } from "vscode";
 import mustache = require("mustache");
 import { View } from "./View";
 
+type Rows = string[][]
+
 export interface TableResult {
-  Head: Array<string>;
-  Rows: Array<Array<string>>;
+  head: string[];
+  rows: Rows;
 }
 
 export class TableView extends View {
   public constructor(context: ExtensionContext) {
     super(context, "templates/table.html");
   }
-  public show(result: TableResult, title: string) {
+  public async show(result: TableResult, title: string) {
     const panel = window.createWebviewPanel("InfluxDB", title, ViewColumn.Two, {
       retainContextWhenHidden: true
     });
 
-    panel.webview.html = mustache.to_html(this.template, result);
+    const template = await this.getTemplate();
+    panel.webview.html = mustache.to_html(template, result);
   }
 }
