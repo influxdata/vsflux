@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-export const outputChannel = vscode.window.createOutputChannel("influxdb")
+export const outputChannel = vscode.window.createOutputChannel("influxdb");
 
 export function getConfig() {
   return vscode.workspace.getConfiguration("vsflux");
@@ -10,8 +10,8 @@ export function defaultV1URL(): string {
   return getConfig()?.get<string>("defaultInfluxDBV1URL", "");
 }
 
-export function defaultV2URL(): string {
-  return getConfig()?.get<string>("defaultInfluxDBURL", "");
+export function defaultV2URLList(): string[] {
+  return getConfig()?.get<string[]>("defaultInfluxDBURLs", [""]);
 }
 
 export function pad(n: number) {

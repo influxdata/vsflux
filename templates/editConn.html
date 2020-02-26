@@ -23,7 +23,12 @@
 			</div>
   			<div class="field" id="connHost">
     			<label>Hostname and Port</label>
-    			<input type="url" name="host" placeholder="The hostname and port of the influxdb" value="{{defaultHost}}">
+    			<input list="hosts" type="url" name="host" placeholder="The hostname and port of the influxdb" value="{{defaultHost}}">
+				<datalist id="hosts">
+					{{#defaultHostLists}}
+					<option value="{{.}}">
+					{{/defaultHostLists}}
+				</datalist>
 				<p id="alternativeHost" class="hidden">{{defaultHostV1}}</p>
 				<div class="ui negative hidden message errMsg">
   				</div>
