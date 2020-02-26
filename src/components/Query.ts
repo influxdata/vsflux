@@ -8,7 +8,7 @@ import { Status } from "./connections/Status";
 import { INode } from "./connections/INode";
 import axios from "axios";
 
-import {now, outputChannel} from "../util";
+import { now, outputChannel } from "../util";
 
 export class Engine {
   public constructor() {}
@@ -40,9 +40,9 @@ export class Engine {
       return [];
     }
 
-    return (result?.rows || []).map((row) => {
+    return (result?.rows || []).map(row => {
       return newNodeFn(row[0], outputChannel, conn, pp);
-    })
+    });
   }
 }
 
@@ -55,7 +55,7 @@ export class ViewEngine extends Engine {
   }
 
   public async TableView(connection?: InfluxDBConnection, query?: string) {
-    const {activeTextEditor} = window
+    const { activeTextEditor } = window;
 
     if (!query && !activeTextEditor) {
       return window.showWarningMessage("No Flux file selected");
@@ -72,9 +72,7 @@ export class ViewEngine extends Engine {
       if (activeTextEditor.selection.isEmpty) {
         query = activeTextEditor.document.getText();
       } else {
-        query = activeTextEditor.document.getText(
-          activeTextEditor.selection
-        );
+        query = activeTextEditor.document.getText(activeTextEditor.selection);
       }
     }
 
@@ -93,7 +91,9 @@ export class ViewEngine extends Engine {
 }
 
 export class Queries {
-  public static async buckets(connection: InfluxDBConnection): Promise<TableResult> {
+  public static async buckets(
+    connection: InfluxDBConnection
+  ): Promise<TableResult> {
     if (connection.version === InfluxConnectionVersion.V1) {
       return await this.bucketsV1(connection);
     } else {
@@ -101,7 +101,10 @@ export class Queries {
     }
   }
 
-  public static async measurements(connection: InfluxDBConnection, bucket: string): Promise<TableResult> {
+  public static async measurements(
+    connection: InfluxDBConnection,
+    bucket: string
+  ): Promise<TableResult> {
     if (connection.version === InfluxConnectionVersion.V1) {
       return await this.measurementsV1(connection, bucket);
     } else {
@@ -109,7 +112,11 @@ export class Queries {
     }
   }
 
-  public static async tagKeys(connection: InfluxDBConnection, bucket: string, measurement: string): Promise<TableResult> {
+  public static async tagKeys(
+    connection: InfluxDBConnection,
+    bucket: string,
+    measurement: string
+  ): Promise<TableResult> {
     if (connection.version === InfluxConnectionVersion.V1) {
       return this.tagKeysV1(connection, bucket, measurement);
     } else {
@@ -117,12 +124,20 @@ export class Queries {
     }
   }
 
-  private static async tagKeysV1(connection: InfluxDBConnection, bucket: string, measurement: string): Promise<TableResult> {
+  private static async tagKeysV1(
+    connection: InfluxDBConnection,
+    bucket: string,
+    measurement: string
+  ): Promise<TableResult> {
     const query = `show tag keys from ${measurement}`;
     return await APIRequest.queryV1(connection, query, bucket);
   }
 
-  private static async tagKeysV2(connection: InfluxDBConnection, bucket: string, measurement: string): Promise<TableResult> {
+  private static async tagKeysV2(
+    connection: InfluxDBConnection,
+    bucket: string,
+    measurement: string
+  ): Promise<TableResult> {
     const query = `
       import "influxdata/influxdb/v1"
       v1.measurementTagKeys(bucket:"${bucket}", measurement: "${measurement}")`;
@@ -130,24 +145,33 @@ export class Queries {
     return await APIRequest.queryV2(connection, query);
   }
 
-  private static async measurementsV1(connection: InfluxDBConnection, bucket: string): Promise<TableResult> {
+  private static async measurementsV1(
+    connection: InfluxDBConnection,
+    bucket: string
+  ): Promise<TableResult> {
     const query = "show measurements";
     return await APIRequest.queryV1(connection, query, bucket);
   }
 
-  private static async measurementsV2(connection: InfluxDBConnection, bucket: string): Promise<TableResult> {
-    const query = 
-      `import "influxdata/influxdb/v1"
+  private static async measurementsV2(
+    connection: InfluxDBConnection,
+    bucket: string
+  ): Promise<TableResult> {
+    const query = `import "influxdata/influxdb/v1"
       v1.measurements(bucket:"${bucket}")`;
-    return await APIRequest.queryV2(connection, query)
+    return await APIRequest.queryV2(connection, query);
   }
 
-  private static async bucketsV1(connection: InfluxDBConnection): Promise<TableResult> {
+  private static async bucketsV1(
+    connection: InfluxDBConnection
+  ): Promise<TableResult> {
     const query = "show databases";
     return await APIRequest.queryV1(connection, query);
   }
 
-  private static async bucketsV2(connection: InfluxDBConnection): Promise<TableResult> {
+  private static async bucketsV2(
+    connection: InfluxDBConnection
+  ): Promise<TableResult> {
     const query = "buckets()";
     return await APIRequest.queryV2(connection, query);
   }
@@ -167,22 +191,24 @@ export class APIRequest {
   public static async queryV1(
     conn: InfluxDBConnection,
     query: string,
-    bucket: string = "",
+    bucket: string = ""
   ): Promise<TableResult> {
     try {
       const encodedQuery = encodeURI(query);
-      const url = `${conn.hostNport}/query?db=${encodeURI(bucket)}&q=${encodedQuery}`;
+      const url = `${conn.hostNport}/query?db=${encodeURI(
+        bucket
+      )}&q=${encodedQuery}`;
       const resp = await axios({ method: "GET", url });
 
-      return v1QueryResponseToTableResult(resp.data)
+      return v1QueryResponseToTableResult(resp.data);
     } catch (err) {
-      let message = err.response?.data?.message || err.toString()
+      let message = err.response?.data?.message || err.toString();
       throw new Error(message);
     }
   }
 
   public static defaultParams = {
-    method: "POST",
+    method: "POST"
   };
 
   public static async queryV2(
@@ -190,14 +216,14 @@ export class APIRequest {
     query: string
   ): Promise<TableResult> {
     try {
-      const {data} = await axios({
+      const { data } = await axios({
         method: "POST",
         url: `${conn.hostNport}/api/v2/query?org=${encodeURI(conn.org)}`,
         data: query,
         maxContentLength: Infinity,
         headers: {
           "Content-Type": "application/vnd.flux",
-          Authorization: `Token ${conn.token}`,
+          Authorization: `Token ${conn.token}`
         }
       });
 
@@ -211,21 +237,21 @@ export class APIRequest {
 }
 
 export function queryResponseToTableResult(body: string): TableResult {
-  let initial: TableResult = {head: [], rows: []};
+  let initial: TableResult = { head: [], rows: [] };
   let accum: TableResult[] = [];
   return body
     .replace("\r", "")
     .split("\n\n")
     .reduce((acc, group) => {
-      const rows = group.split("\n").filter(v => !v.startsWith("#") && v)
+      const rows = group.split("\n").filter(v => !v.startsWith("#") && v);
       const result: TableResult = {
-        head: rows[0].split(",").slice(3), 
-        rows: rows.slice(1).map(v => v.split(",").slice(3)),
+        head: rows[0].split(",").slice(3),
+        rows: rows.slice(1).map(v => v.split(",").slice(3))
       };
 
-      acc.push(result)
+      acc.push(result);
 
-      return acc
+      return acc;
     }, accum)
     .reduce((table, result, index) => {
       if (index === 0) {
@@ -238,8 +264,10 @@ export function queryResponseToTableResult(body: string): TableResult {
     }, initial);
 }
 
-function v1QueryResponseToTableResult(body: { results: V1Result[] }): TableResult {
-    let tableResult: TableResult = {
+function v1QueryResponseToTableResult(body: {
+  results: V1Result[];
+}): TableResult {
+  let tableResult: TableResult = {
     head: [],
     rows: []
   };
@@ -247,15 +275,15 @@ function v1QueryResponseToTableResult(body: { results: V1Result[] }): TableResul
   let results: Array<V1Result> = body.results;
 
   if (results.length === 0) {
-    return tableResult
+    return tableResult;
   }
 
   if (results[0]?.error) {
-    throw new Error(results[0].error)
+    throw new Error(results[0].error);
   }
 
   tableResult.head = results[0].series[0].columns;
-  tableResult.rows = results[0].series[0].values
+  tableResult.rows = results[0].series[0].values;
 
   return tableResult;
 }
