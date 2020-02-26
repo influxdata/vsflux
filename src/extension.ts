@@ -1,22 +1,22 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { ExtensionContext } from "vscode";
+import { ExtensionContext } from 'vscode'
 
-import { Client } from "./components/Client";
-import { Connection } from "./components/connections/Connection";
+import { Client } from './components/Client'
+import { Connection } from './components/connections/Connection'
 
-let client: Client;
+let client: Client
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export async function activate(context: ExtensionContext) {
-  new Connection(context).load();
+export async function activate (context: ExtensionContext) {
+  new Connection(context).load()
 
-  client = new Client(context);
-  await client.start();
+  client = new Client(context)
+  await client.start()
 }
 
 // this method is called when your extension is deactivated
-export async function deactivate() {
-  await client.stop();
+export async function deactivate () {
+  await client.stop()
 }

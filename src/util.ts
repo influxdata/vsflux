@@ -1,44 +1,42 @@
-import * as vscode from "vscode";
+import * as vscode from 'vscode'
 
-export const outputChannel = vscode.window.createOutputChannel("influxdb");
+export const outputChannel = vscode.window.createOutputChannel('influxdb')
 
-export function getConfig() {
-  return vscode.workspace.getConfiguration("vsflux");
+export function getConfig () {
+  return vscode.workspace.getConfiguration('vsflux')
 }
 
-export function defaultV1URL(): string {
-  return getConfig()?.get<string>("defaultInfluxDBV1URL", "");
+export function defaultV1URL (): string {
+  return getConfig()?.get<string>('defaultInfluxDBV1URL', '')
 }
 
-export function defaultV2URLList(): string[] {
-  return getConfig()?.get<string[]>("defaultInfluxDBURLs", [""]);
+export function defaultV2URLList (): string[] {
+  return getConfig()?.get<string[]>('defaultInfluxDBURLs', [''])
 }
 
-export function pad(n: number) {
-  return n < 10 ? "0" + n : n;
+export function pad (n: number) {
+  return n < 10 ? '0' + n : n
 }
-
-export function timezoneOffset(offset: number): string {
-  var sign;
+export function timezoneOffset (offset: number): string {
   if (offset === 0) {
-    return "Z";
+    return 'Z'
   }
 
-  sign = offset > 0 ? "-" : "+";
-  offset = Math.abs(offset);
-  var hh = pad(Math.floor(offset / 60));
-  var mm = pad(offset % 60);
-  return `${sign}${hh}:${mm}`;
+  const sign = offset > 0 ? '-' : '+'
+  offset = Math.abs(offset)
+  const hours = pad(Math.floor(offset / 60))
+  const minutes = pad(offset % 60)
+  return `${sign}${hours}:${minutes}}`
 }
+export function now (): string {
+  const d = new Date()
+  const year = d.getFullYear()
+  const month = pad(d.getMonth() + 1)
+  const day = pad(d.getDate())
+  const hour = pad(d.getHours())
+  const minutes = pad(d.getMinutes())
+  const seconds = pad(d.getSeconds())
+  const timezone = timezoneOffset(d.getTimezoneOffset())
 
-export function now(): string {
-  var d = new Date();
-  let year = d.getFullYear();
-  let month = pad(d.getMonth() + 1);
-  let day = pad(d.getDate());
-  let hour = pad(d.getHours());
-  let minutes = pad(d.getMinutes());
-  let seconds = pad(d.getSeconds());
-  let timezone = timezoneOffset(d.getTimezoneOffset());
-  return `${year}-${month}-${day}T${hour}:${minutes}:${seconds}${timezone}`;
+  return `${year}-${month}-${day}T${hour}:${minutes}:${seconds}${timezone}}`
 }
