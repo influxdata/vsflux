@@ -1,19 +1,19 @@
-import { OutputChannel, ExtensionContext, window } from "vscode";
+import { OutputChannel, ExtensionContext, window } from 'vscode'
 import {
   InfluxDBConnection,
   InfluxConnectionVersion
-} from "./connections/Connection";
-import { TableResult, TableView } from "./TableView";
-import { Status } from "./connections/Status";
-import { INode } from "./connections/INode";
-import axios from "axios";
+} from './connections/Connection'
+import { TableResult, TableView } from './TableView'
+import { Status } from './connections/Status'
+import { INode } from './connections/INode'
+import axios from 'axios'
 
-import { now, outputChannel } from "../util";
+import { now, outputChannel } from '../util'
 
 export class Engine {
-  public constructor() {}
+  public constructor () {}
 
-  public async GetTreeChildren(
+  public async GetTreeChildren (
     conn: InfluxDBConnection,
     query: string,
     msg: string,
@@ -23,157 +23,157 @@ export class Engine {
       iConn: InfluxDBConnection,
       parent?: string
     ) => INode,
-    pp = ""
+    pp = ''
   ): Promise<INode[]> {
-    outputChannel.show();
-    outputChannel.appendLine(`${now()} - ${msg}`);
+    outputChannel.show()
+    outputChannel.appendLine(`${now()} - ${msg}`)
 
-    let result: TableResult;
+    let result: TableResult
     try {
       if (conn.version === InfluxConnectionVersion.V1) {
-        result = await APIRequest.queryV1(conn, query, pp);
+        result = await APIRequest.queryV1(conn, query, pp)
       } else {
-        result = await APIRequest.queryV2(conn, query);
+        result = await APIRequest.queryV2(conn, query)
       }
     } catch (e) {
-      outputChannel.appendLine(`${now()} - Error: ${e}`);
-      return [];
+      outputChannel.appendLine(`${now()} - Error: ${e}`)
+      return []
     }
 
     return (result?.rows || []).map(row => {
-      return newNodeFn(row[0], outputChannel, conn, pp);
-    });
+      return newNodeFn(row[0], outputChannel, conn, pp)
+    })
   }
 }
 
 export class ViewEngine extends Engine {
   private tableView: TableView;
 
-  public constructor(context: ExtensionContext) {
-    super();
-    this.tableView = new TableView(context);
+  public constructor (context: ExtensionContext) {
+    super()
+    this.tableView = new TableView(context)
   }
 
-  public async TableView(connection?: InfluxDBConnection, query?: string) {
-    const { activeTextEditor } = window;
+  public async TableView (connection?: InfluxDBConnection, query?: string) {
+    const { activeTextEditor } = window
 
     if (!query && !activeTextEditor) {
-      return window.showWarningMessage("No Flux file selected");
+      return window.showWarningMessage('No Flux file selected')
     }
 
-    connection = connection || Status.Current;
+    connection = connection || Status.Current
 
     if (!connection) {
-      window.showWarningMessage("No influxDB Server selected");
-      return;
+      window.showWarningMessage('No influxDB Server selected')
+      return
     }
 
     if (!query && activeTextEditor) {
       if (activeTextEditor.selection.isEmpty) {
-        query = activeTextEditor.document.getText();
+        query = activeTextEditor.document.getText()
       } else {
-        query = activeTextEditor.document.getText(activeTextEditor.selection);
+        query = activeTextEditor.document.getText(activeTextEditor.selection)
       }
     }
 
-    query = query || "";
+    query = query || ''
 
-    outputChannel.appendLine(`${now()} - Running Query: '${query}'`);
-    outputChannel.show();
+    outputChannel.appendLine(`${now()} - Running Query: '${query}'`)
+    outputChannel.show()
 
     try {
-      let result = await APIRequest.queryV2(connection, query);
-      return this.tableView.show(result, connection.name);
+      const result = await APIRequest.queryV2(connection, query)
+      return this.tableView.show(result, connection.name)
     } catch (e) {
-      outputChannel.appendLine(`${now()} - ${e}`);
+      outputChannel.appendLine(`${now()} - ${e}`)
     }
   }
 }
 
 export class Queries {
-  public static async buckets(
+  public static async buckets (
     connection: InfluxDBConnection
   ): Promise<TableResult> {
     if (connection.version === InfluxConnectionVersion.V1) {
-      return await this.bucketsV1(connection);
+      return await this.bucketsV1(connection)
     } else {
-      return await this.bucketsV2(connection);
+      return await this.bucketsV2(connection)
     }
   }
 
-  public static async measurements(
+  public static async measurements (
     connection: InfluxDBConnection,
     bucket: string
   ): Promise<TableResult> {
     if (connection.version === InfluxConnectionVersion.V1) {
-      return await this.measurementsV1(connection, bucket);
+      return await this.measurementsV1(connection, bucket)
     } else {
-      return await this.measurementsV2(connection, bucket);
+      return await this.measurementsV2(connection, bucket)
     }
   }
 
-  public static async tagKeys(
+  public static async tagKeys (
     connection: InfluxDBConnection,
     bucket: string,
     measurement: string
   ): Promise<TableResult> {
     if (connection.version === InfluxConnectionVersion.V1) {
-      return this.tagKeysV1(connection, bucket, measurement);
+      return this.tagKeysV1(connection, bucket, measurement)
     } else {
-      return this.tagKeysV2(connection, bucket, measurement);
+      return this.tagKeysV2(connection, bucket, measurement)
     }
   }
 
-  private static async tagKeysV1(
+  private static async tagKeysV1 (
     connection: InfluxDBConnection,
     bucket: string,
     measurement: string
   ): Promise<TableResult> {
-    const query = `show tag keys from ${measurement}`;
-    return await APIRequest.queryV1(connection, query, bucket);
+    const query = `show tag keys from ${measurement}`
+    return await APIRequest.queryV1(connection, query, bucket)
   }
 
-  private static async tagKeysV2(
+  private static async tagKeysV2 (
     connection: InfluxDBConnection,
     bucket: string,
     measurement: string
   ): Promise<TableResult> {
     const query = `
       import "influxdata/influxdb/v1"
-      v1.measurementTagKeys(bucket:"${bucket}", measurement: "${measurement}")`;
+      v1.measurementTagKeys(bucket:"${bucket}", measurement: "${measurement}")`
 
-    return await APIRequest.queryV2(connection, query);
+    return await APIRequest.queryV2(connection, query)
   }
 
-  private static async measurementsV1(
+  private static async measurementsV1 (
     connection: InfluxDBConnection,
     bucket: string
   ): Promise<TableResult> {
-    const query = "show measurements";
-    return await APIRequest.queryV1(connection, query, bucket);
+    const query = 'show measurements'
+    return await APIRequest.queryV1(connection, query, bucket)
   }
 
-  private static async measurementsV2(
+  private static async measurementsV2 (
     connection: InfluxDBConnection,
     bucket: string
   ): Promise<TableResult> {
     const query = `import "influxdata/influxdb/v1"
-      v1.measurements(bucket:"${bucket}")`;
-    return await APIRequest.queryV2(connection, query);
+      v1.measurements(bucket:"${bucket}")`
+    return await APIRequest.queryV2(connection, query)
   }
 
-  private static async bucketsV1(
+  private static async bucketsV1 (
     connection: InfluxDBConnection
   ): Promise<TableResult> {
-    const query = "show databases";
-    return await APIRequest.queryV1(connection, query);
+    const query = 'show databases'
+    return await APIRequest.queryV1(connection, query)
   }
 
-  private static async bucketsV2(
+  private static async bucketsV2 (
     connection: InfluxDBConnection
   ): Promise<TableResult> {
-    const query = "buckets()";
-    return await APIRequest.queryV2(connection, query);
+    const query = 'buckets()'
+    return await APIRequest.queryV2(connection, query)
   }
 }
 
@@ -188,102 +188,102 @@ interface V1Row {
 }
 
 export class APIRequest {
-  public static async queryV1(
+  public static async queryV1 (
     conn: InfluxDBConnection,
     query: string,
-    bucket: string = ""
+    bucket: string = ''
   ): Promise<TableResult> {
     try {
-      const encodedQuery = encodeURI(query);
+      const encodedQuery = encodeURI(query)
       const url = `${conn.hostNport}/query?db=${encodeURI(
         bucket
-      )}&q=${encodedQuery}`;
-      const resp = await axios({ method: "GET", url });
+      )}&q=${encodedQuery}`
+      const resp = await axios({ method: 'GET', url })
 
-      return v1QueryResponseToTableResult(resp.data);
+      return v1QueryResponseToTableResult(resp.data)
     } catch (err) {
-      let message = err.response?.data?.message || err.toString();
-      throw new Error(message);
+      const message = err.response?.data?.message || err.toString()
+      throw new Error(message)
     }
   }
 
   public static defaultParams = {
-    method: "POST"
+    method: 'POST'
   };
 
-  public static async queryV2(
+  public static async queryV2 (
     conn: InfluxDBConnection,
     query: string
   ): Promise<TableResult> {
     try {
       const { data } = await axios({
-        method: "POST",
+        method: 'POST',
         url: `${conn.hostNport}/api/v2/query?org=${encodeURI(conn.org)}`,
         data: query,
         maxContentLength: Infinity,
         headers: {
-          "Content-Type": "application/vnd.flux",
+          'Content-Type': 'application/vnd.flux',
           Authorization: `Token ${conn.token}`
         }
-      });
+      })
 
-      return queryResponseToTableResult(data);
+      return queryResponseToTableResult(data)
     } catch (err) {
-      const message = err?.response?.data?.message || err.toString();
+      const message = err?.response?.data?.message || err.toString()
 
-      throw new Error(message);
+      throw new Error(message)
     }
   }
 }
 
-export function queryResponseToTableResult(body: string): TableResult {
-  let initial: TableResult = { head: [], rows: [] };
-  let accum: TableResult[] = [];
+export function queryResponseToTableResult (body: string): TableResult {
+  const initial: TableResult = { head: [], rows: [] }
+  const accum: TableResult[] = []
   return body
-    .replace("\r", "")
-    .split("\n\n")
+    .replace('\r', '')
+    .split('\n\n')
     .reduce((acc, group) => {
-      const rows = group.split("\n").filter(v => !v.startsWith("#") && v);
+      const rows = group.split('\n').filter(v => !v.startsWith('#') && v)
       const result: TableResult = {
-        head: rows[0].split(",").slice(3),
-        rows: rows.slice(1).map(v => v.split(",").slice(3))
-      };
+        head: rows[0].split(',').slice(3),
+        rows: rows.slice(1).map(v => v.split(',').slice(3))
+      }
 
-      acc.push(result);
+      acc.push(result)
 
-      return acc;
+      return acc
     }, accum)
     .reduce((table, result, index) => {
       if (index === 0) {
-        table.head = result.head;
+        table.head = result.head
       }
 
-      table.rows.push(...result.rows);
+      table.rows.push(...result.rows)
 
-      return table;
-    }, initial);
+      return table
+    }, initial)
 }
 
-function v1QueryResponseToTableResult(body: {
+function v1QueryResponseToTableResult (body: {
   results: V1Result[];
 }): TableResult {
-  let tableResult: TableResult = {
+  const tableResult: TableResult = {
     head: [],
     rows: []
-  };
+  }
 
-  let results: Array<V1Result> = body.results;
+  const results: Array<V1Result> = body.results
 
   if (results.length === 0) {
-    return tableResult;
+    return tableResult
   }
 
   if (results[0]?.error) {
-    throw new Error(results[0].error);
+    throw new Error(results[0].error)
   }
 
-  tableResult.head = results[0].series[0].columns;
-  tableResult.rows = results[0].series[0].values;
+  tableResult.head = results[0].series[0].columns
+  tableResult.rows = results[0].series[0].values
 
-  return tableResult;
+  return tableResult
 }
