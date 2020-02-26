@@ -8,21 +8,13 @@ import {
 } from "vscode";
 import { InfluxDBConnection } from "./Connection";
 
-export function NewStringNode(
-  v: string,
-  _a: OutputChannel,
-  _b: InfluxDBConnection
-): StringNode {
-  return new StringNode(v);
-}
-
-class StringNode implements INode {
-  constructor(private readonly v: string) {}
+export class StringNode implements INode {
+  constructor(private readonly value: string) {}
 
   public getTreeItem(_: ExtensionContext): TreeItem {
     return {
-      label: this.v,
-      contextValue: this.v,
+      label: this.value,
+      contextValue: this.value,
       collapsibleState: TreeItemCollapsibleState.None
     };
   }

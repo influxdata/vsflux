@@ -151,7 +151,7 @@
     "vscode:prepublish": "npm run webpack-prod && npm run copy-wasm",
     "webpack-dev": "webpack --mode development --watch",
     "webpack-prod": "webpack --mode production",
-    "test-compile": "tsc -p ./"
+    "compile": "tsc"
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
@@ -160,6 +160,7 @@
     "@types/node": "^12.12.28",
     "@types/through2": "^2.0.34",
     "@types/vscode": "^1.42.0",
+    "expect": "^25.1.0",
     "glob": "^7.1.5",
     "mocha": "^6.2.2",
     "ts-loader": "^6.2.1",

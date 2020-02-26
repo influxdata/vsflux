@@ -1,4 +1,4 @@
-import { ExtensionContext, window, ViewColumn, Uri } from "vscode";
+import { ExtensionContext, window, ViewColumn, Uri, WebviewPanel } from "vscode";
 import mustache = require("mustache");
 import * as path from "path";
 import { View } from "../View";
@@ -9,6 +9,8 @@ import {
   emptyInfluxDBConnection
 } from "./Connection";
 
+import {defaultV1URL, defaultV2URL} from "../../util";
+
 export class EditConnectionView extends View {
   public constructor(context: ExtensionContext) {
     super(context, "templates/editConn.html");
@@ -18,23 +20,19 @@ export class EditConnectionView extends View {
     tree: InfluxDBTreeDataProvider,
     conn: InfluxDBConnection
   ) {
-    this.show(conn.hostNport, "", "Edit Connection", tree, conn);
+    this.show("Edit Connection", tree, conn);
   }
 
   public async showNew(
-    defaultHost: string,
-    defaultHostV1: string,
     tree: InfluxDBTreeDataProvider
   ) {
-    this.show(defaultHost, defaultHostV1, "Add Connection", tree);
+    this.show("Add Connection", tree, emptyInfluxDBConnection);
   }
 
   private async show(
-    defaultHost: string,
-    defaultHostV1: string,
     title: string,
     tree: InfluxDBTreeDataProvider,
-    conn: InfluxDBConnection = emptyInfluxDBConnection()
+    conn: InfluxDBConnection
   ) {
     const panel = window.createWebviewPanel(
       "InfluxDB",
@@ -49,7 +47,7 @@ export class EditConnectionView extends View {
       }
     );
 
-    panel.webview.html = mustache.to_html(this.template, {
+    panel.webview.html = await this.templateHTML(conn, {
       cssPath: panel.webview.asWebviewUri(
         Uri.file(path.join(this.context.extensionPath, "templates", "form.css"))
       ),
@@ -58,15 +56,20 @@ export class EditConnectionView extends View {
           path.join(this.context.extensionPath, "templates", "editConn.js")
         )
       ),
-      isV1: conn.version === InfluxConnectionVersion.V1,
-      title: title,
-      connID: conn.id,
-      connName: conn.name,
-      defaultHostV1: defaultHostV1,
-      defaultHost: defaultHost,
-      connToken: conn.token,
-      connOrg: conn.org
+      title,
     });
-    await InfluxDBTreeDataProvider.handleMessage(panel, tree);
+
+    await InfluxDBTreeDataProvider.setMessageHandler(panel, tree);
+  }
+
+  private async templateHTML(conn: InfluxDBConnection, params: {cssPath: Uri, jsPath: Uri, title: string}): Promise<string> {
+    const template = await this.getTemplate();
+    return mustache.to_html(template, {
+      ...conn,
+      ...params,
+      isV1: conn.version === InfluxConnectionVersion.V1,
+      defaultHostV1: defaultV1URL(),
+      defaultHost: conn.hostNport || defaultV2URL(),
+    })
   }
 }

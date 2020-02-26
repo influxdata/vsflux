@@ -1,27 +1,26 @@
 import { INode } from "./INode";
-import { Engine as QueryEngine } from "../Query";
+import { Queries } from "../Query";
 import {
   ExtensionContext,
   TreeItem,
   TreeItemCollapsibleState,
   OutputChannel
 } from "vscode";
-import { InfluxDBConnection, InfluxConnectionVersion } from "./Connection";
-import { NewStringNode } from "./StringNode";
-import { NewMeasurementNode } from "./MeasurementNode";
+import { InfluxDBConnection } from "./Connection";
+import { MeasurementNode } from "./MeasurementNode";
+
+import {now, outputChannel} from "../../util";
 
 export function NewBucketNode(
   bucket: string,
-  outputChannel: OutputChannel,
   conn: InfluxDBConnection
 ): BucketNode {
-  return new BucketNode(bucket, outputChannel, conn);
+  return new BucketNode(bucket, conn);
 }
 
 export class BucketNode implements INode {
   constructor(
     private readonly bucket: string,
-    private readonly outputChannel: OutputChannel,
     private readonly conn: InfluxDBConnection
   ) {}
 
@@ -35,18 +34,18 @@ export class BucketNode implements INode {
 
   // get all the measurements
   public async getChildren(): Promise<INode[]> {
-    let queryEngine: QueryEngine = new QueryEngine(this.outputChannel);
-    let query = `import "influxdata/influxdb/v1"
-    v1.measurements(bucket:"${this.bucket}")`;
-    if (this.conn.version === InfluxConnectionVersion.V1) {
-      query = "show measurements";
+    try {
+      const msg = `Getting measurements for bucket: ${this.bucket}`;
+      outputChannel.show();
+      outputChannel.appendLine(`${now()} - ${msg}`);
+
+      const results = await Queries.measurements(this.conn, this.bucket);
+      return (results?.rows || []).map((row) => {
+        return new MeasurementNode(this.bucket, row[0], this.conn);
+      })
+    } catch (e) {
+      outputChannel.appendLine(`${now()} - Error: ${e}`);
+      return [];
     }
-    return queryEngine.GetTreeChildren(
-      this.conn,
-      query,
-      "Getting measurements for bucket: " + this.bucket,
-      NewMeasurementNode,
-      this.bucket
-    );
   }
 }

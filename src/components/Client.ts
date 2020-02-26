@@ -1,5 +1,5 @@
 import fs, { write } from 'fs';
-import { workspace, ExtensionContext, window } from "vscode";
+import { workspace, ExtensionContext, window, TextDocument } from "vscode";
 import through from 'through2';
 
 import {
@@ -13,6 +13,10 @@ import {
 import CLI from "@influxdata/flux-lsp-cli";
 import { Status } from './connections/Status';
 import { Queries } from '../components/Query';
+
+const isFlux = (document: TextDocument): boolean => {
+  return document.languageId === "flux"
+}
 
 const createTransform = () => {
   let count = 0;
@@ -47,7 +51,7 @@ const createTransform = () => {
 async function getBuckets() {
   if (Status.Current) {
     const buckets = await Queries.buckets(Status.Current);
-    return (buckets?.Rows || []).map((row) => row[0]);
+    return (buckets?.rows || []).map((row) => row[0]);
   }
 
   return []
@@ -77,7 +81,7 @@ export class Client {
   private cli: CLI
 
   // constructor
-  constructor(logFilePath: string, context: ExtensionContext) {
+  constructor(context: ExtensionContext) {
     this.context = context;
 
     // Options to control the language client
@@ -103,20 +107,19 @@ export class Client {
     );
   }
 
-  start(): void {
+  start() {
     this.actOnOpen(this.context);
     this.actOnSave(this.context);
     this.languageClient.start();
   }
 
-  stop(): Thenable<void> | undefined {
-    if (!this.languageClient) {
-      return undefined;
+  async stop() {
+    if (this.languageClient) {
+      this.languageClient.stop();
     }
-    return this.languageClient.stop();
   }
 
-  private actOnOpen(context: ExtensionContext): void {
+  private actOnOpen(context: ExtensionContext) {
     context.subscriptions.push(
       workspace.onDidOpenTextDocument(document => {
         if (
@@ -143,27 +146,15 @@ export class Client {
   private actOnSave(context: ExtensionContext): void {
     context.subscriptions.push(
       workspace.onDidSaveTextDocument(document => {
-        if (!window.activeTextEditor) {
+        if (!isFlux(document)) {
           return;
         }
-        const activeDocument = window.activeTextEditor.document;
-        if (document !== activeDocument) {
-          return;
-        }
-        if (
-          document.languageId !== "flux" ||
-          !document.fileName.endsWith(".flux")
-        ) {
-          return;
-        }
+
+        const {version, uri} = document;
+        const textDocument = { uri: uri.toString(), version }
+
         this.languageClient.sendNotification(
-          DidSaveTextDocumentNotification.type,
-          {
-            textDocument: {
-              uri: document.uri.toString(),
-              version: document.version
-            }
-          }
+          DidSaveTextDocumentNotification.type, { textDocument }
         );
       })
     );

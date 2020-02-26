@@ -8,17 +8,17 @@
     <body>
         <table>
             <tr>
-            {{#Head}}
+            {{#head}}
             <th>{{.}}</th>
-            {{/Head}}
+            {{/head}}
             </tr>
-            {{#Rows}}
+            {{#rows}}
             <tr>
                 {{# . }}
                     <td>{{.}}</td>
                 {{/ .}} 
             </tr>
-            {{/Rows}}
+            {{/rows}}
         </table>
     </body>
 </html>

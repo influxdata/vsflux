@@ -8,37 +8,10 @@ import { Status } from "./connections/Status";
 import { INode } from "./connections/INode";
 import axios from "axios";
 
-function pad(n: number) {
-  return n < 10 ? "0" + n : n;
-}
-
-function timezoneOffset(offset: number): string {
-  var sign;
-  if (offset === 0) {
-    return "Z";
-  }
-
-  sign = offset > 0 ? "-" : "+";
-  offset = Math.abs(offset);
-  var hh = pad(Math.floor(offset / 60));
-  var mm = pad(offset % 60);
-  return `${sign}${hh}:${mm}`;
-}
-
-function now(): string {
-  var d = new Date();
-  let year = d.getFullYear();
-  let month = pad(d.getMonth() + 1);
-  let day = pad(d.getDate());
-  let hour = pad(d.getHours());
-  let minutes = pad(d.getMinutes());
-  let seconds = pad(d.getSeconds());
-  let timezone = timezoneOffset(d.getTimezoneOffset());
-  return `${year}-${month}-${day}T${hour}:${minutes}:${seconds}${timezone}`;
-}
+import {now, outputChannel} from "../util";
 
 export class Engine {
-  public constructor(protected outputChannel: OutputChannel) {}
+  public constructor() {}
 
   public async GetTreeChildren(
     conn: InfluxDBConnection,
@@ -52,8 +25,8 @@ export class Engine {
     ) => INode,
     pp = ""
   ): Promise<INode[]> {
-    this.outputChannel.show();
-    this.outputChannel.appendLine(`${now()} - ${msg}`);
+    outputChannel.show();
+    outputChannel.appendLine(`${now()} - ${msg}`);
 
     let result: TableResult;
     try {
@@ -63,12 +36,12 @@ export class Engine {
         result = await APIRequest.queryV2(conn, query);
       }
     } catch (e) {
-      this.outputChannel.appendLine(`${now()} - Error: ${e}`);
+      outputChannel.appendLine(`${now()} - Error: ${e}`);
       return [];
     }
 
-    return (result?.Rows || {}).map((row) => {
-      return newNodeFn(row[0], this.outputChannel, conn, pp);
+    return (result?.rows || []).map((row) => {
+      return newNodeFn(row[0], outputChannel, conn, pp);
     })
   }
 }
@@ -76,13 +49,15 @@ export class Engine {
 export class ViewEngine extends Engine {
   private tableView: TableView;
 
-  public constructor(context: ExtensionContext, outputChannel: OutputChannel) {
-    super(outputChannel);
+  public constructor(context: ExtensionContext) {
+    super();
     this.tableView = new TableView(context);
   }
 
   public async TableView(connection?: InfluxDBConnection, query?: string) {
-    if (!query && !window.activeTextEditor) {
+    const {activeTextEditor} = window
+
+    if (!query && !activeTextEditor) {
       return window.showWarningMessage("No Flux file selected");
     }
 
@@ -93,37 +68,78 @@ export class ViewEngine extends Engine {
       return;
     }
 
-    if (!query && window.activeTextEditor) {
-      if (window.activeTextEditor.selection.isEmpty) {
-        query = window.activeTextEditor.document.getText();
+    if (!query && activeTextEditor) {
+      if (activeTextEditor.selection.isEmpty) {
+        query = activeTextEditor.document.getText();
       } else {
-        query = window.activeTextEditor.document.getText(
-          window.activeTextEditor.selection
+        query = activeTextEditor.document.getText(
+          activeTextEditor.selection
         );
       }
     }
 
     query = query || "";
 
-    this.outputChannel.appendLine(`${now()} - Running Query: '${query}'`);
-    this.outputChannel.show();
+    outputChannel.appendLine(`${now()} - Running Query: '${query}'`);
+    outputChannel.show();
 
     try {
       let result = await APIRequest.queryV2(connection, query);
       return this.tableView.show(result, connection.name);
     } catch (e) {
-      this.outputChannel.appendLine(`${now()} - ${e}`);
+      outputChannel.appendLine(`${now()} - ${e}`);
     }
   }
 }
 
 export class Queries {
   public static async buckets(connection: InfluxDBConnection): Promise<TableResult> {
-    if (connection.version == InfluxConnectionVersion.V1) {
+    if (connection.version === InfluxConnectionVersion.V1) {
       return await this.bucketsV1(connection);
     } else {
       return await this.bucketsV2(connection);
     }
+  }
+
+  public static async measurements(connection: InfluxDBConnection, bucket: string): Promise<TableResult> {
+    if (connection.version === InfluxConnectionVersion.V1) {
+      return await this.measurementsV1(connection, bucket);
+    } else {
+      return await this.measurementsV2(connection, bucket);
+    }
+  }
+
+  public static async tagKeys(connection: InfluxDBConnection, bucket: string, measurement: string): Promise<TableResult> {
+    if (connection.version === InfluxConnectionVersion.V1) {
+      return this.tagKeysV1(connection, bucket, measurement);
+    } else {
+      return this.tagKeysV2(connection, bucket, measurement);
+    }
+  }
+
+  private static async tagKeysV1(connection: InfluxDBConnection, bucket: string, measurement: string): Promise<TableResult> {
+    const query = `show tag keys from ${measurement}`;
+    return await APIRequest.queryV1(connection, query, bucket);
+  }
+
+  private static async tagKeysV2(connection: InfluxDBConnection, bucket: string, measurement: string): Promise<TableResult> {
+    const query = `
+      import "influxdata/influxdb/v1"
+      v1.measurementTagKeys(bucket:"${bucket}", measurement: "${measurement}")`;
+
+    return await APIRequest.queryV2(connection, query);
+  }
+
+  private static async measurementsV1(connection: InfluxDBConnection, bucket: string): Promise<TableResult> {
+    const query = "show measurements";
+    return await APIRequest.queryV1(connection, query, bucket);
+  }
+
+  private static async measurementsV2(connection: InfluxDBConnection, bucket: string): Promise<TableResult> {
+    const query = 
+      `import "influxdata/influxdb/v1"
+      v1.measurements(bucket:"${bucket}")`;
+    return await APIRequest.queryV2(connection, query)
   }
 
   private static async bucketsV1(connection: InfluxDBConnection): Promise<TableResult> {
@@ -194,27 +210,38 @@ export class APIRequest {
   }
 }
 
-function queryResponseToTableResult(body: string): TableResult {
-  return body.split("\r\n").filter(v => v !== "").reduce((table, row, index) => {
-    let fields = row.split(",").slice(3);
+export function queryResponseToTableResult(body: string): TableResult {
+  let initial: TableResult = {head: [], rows: []};
+  let accum: TableResult[] = [];
+  return body
+    .replace("\r", "")
+    .split("\n\n")
+    .reduce((acc, group) => {
+      const rows = group.split("\n").filter(v => !v.startsWith("#") && v)
+      const result: TableResult = {
+        head: rows[0].split(",").slice(3), 
+        rows: rows.slice(1).map(v => v.split(",").slice(3)),
+      };
 
-    if (index === 0) {
-      table.Head.push(...fields);
-    } else {
-      table.Rows.push(fields);
-    }
+      acc.push(result)
 
-    return table;
-  }, {
-    Head: [],
-    Rows: [],
-  } as TableResult);
+      return acc
+    }, accum)
+    .reduce((table, result, index) => {
+      if (index === 0) {
+        table.head = result.head;
+      }
+
+      table.rows.push(...result.rows);
+
+      return table;
+    }, initial);
 }
 
 function v1QueryResponseToTableResult(body: { results: V1Result[] }): TableResult {
     let tableResult: TableResult = {
-    Head: [],
-    Rows: []
+    head: [],
+    rows: []
   };
 
   let results: Array<V1Result> = body.results;
@@ -227,8 +254,8 @@ function v1QueryResponseToTableResult(body: { results: V1Result[] }): TableResul
     throw new Error(results[0].error)
   }
 
-  tableResult.Head = results[0].series[0].columns;
-  tableResult.Rows = results[0].series[0].values
+  tableResult.head = results[0].series[0].columns;
+  tableResult.rows = results[0].series[0].values
 
   return tableResult;
 }
