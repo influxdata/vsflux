@@ -94,9 +94,9 @@ export class Queries {
     connection: InfluxDBConnection
   ): Promise<TableResult> {
     if (connection.version === InfluxConnectionVersion.V1) {
-      return await this.bucketsV1(connection)
+      return this.bucketsV1(connection)
     } else {
-      return await this.bucketsV2(connection)
+      return this.bucketsV2(connection)
     }
   }
 
@@ -105,9 +105,9 @@ export class Queries {
     bucket: string
   ): Promise<TableResult> {
     if (connection.version === InfluxConnectionVersion.V1) {
-      return await this.measurementsV1(connection, bucket)
+      return this.measurementsV1(connection, bucket)
     } else {
-      return await this.measurementsV2(connection, bucket)
+      return this.measurementsV2(connection, bucket)
     }
   }
 
@@ -129,7 +129,7 @@ export class Queries {
     measurement: string
   ): Promise<TableResult> {
     const query = `show tag keys from ${measurement}`
-    return await APIRequest.queryV1(connection, query, bucket)
+    return APIRequest.queryV1(connection, query, bucket)
   }
 
   private static async tagKeysV2 (
@@ -141,7 +141,7 @@ export class Queries {
       import "influxdata/influxdb/v1"
       v1.measurementTagKeys(bucket:"${bucket}", measurement: "${measurement}")`
 
-    return await APIRequest.queryV2(connection, query)
+    return APIRequest.queryV2(connection, query)
   }
 
   private static async measurementsV1 (
@@ -149,7 +149,7 @@ export class Queries {
     bucket: string
   ): Promise<TableResult> {
     const query = 'show measurements'
-    return await APIRequest.queryV1(connection, query, bucket)
+    return APIRequest.queryV1(connection, query, bucket)
   }
 
   private static async measurementsV2 (
@@ -158,21 +158,21 @@ export class Queries {
   ): Promise<TableResult> {
     const query = `import "influxdata/influxdb/v1"
       v1.measurements(bucket:"${bucket}")`
-    return await APIRequest.queryV2(connection, query)
+    return APIRequest.queryV2(connection, query)
   }
 
   private static async bucketsV1 (
     connection: InfluxDBConnection
   ): Promise<TableResult> {
     const query = 'show databases'
-    return await APIRequest.queryV1(connection, query)
+    return APIRequest.queryV1(connection, query)
   }
 
   private static async bucketsV2 (
     connection: InfluxDBConnection
   ): Promise<TableResult> {
     const query = 'buckets()'
-    return await APIRequest.queryV2(connection, query)
+    return APIRequest.queryV2(connection, query)
   }
 }
 
@@ -238,7 +238,7 @@ export class APIRequest {
 export function queryResponseToTableResult (body: string): TableResult {
   const initial: TableResult = { head: [], rows: [] }
   const accum: TableResult[] = []
-  return body
+  const table = body
     .replace('\r', '')
     .split('\n\n')
     .reduce((acc, group) => {
@@ -261,6 +261,10 @@ export function queryResponseToTableResult (body: string): TableResult {
 
       return table
     }, initial)
+
+  table.rows = table.rows.filter((v) => v.length > 0)
+
+  return table
 }
 
 function v1QueryResponseToTableResult (body: {
