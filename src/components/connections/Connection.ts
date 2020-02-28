@@ -4,7 +4,7 @@ import { INode } from './INode'
 import { Status } from './Status'
 import { ConnectionNode, InfluxDBConectionsKey } from './ConnectionNode'
 import { EditConnectionView } from './EditConnectionView'
-import { outputChannel } from '../../util'
+import { logger } from '../../util'
 
 const uuidv1 = require('uuid/v1')
 
@@ -56,9 +56,9 @@ implements vscode.TreeDataProvider<INode> {
 
   getChildren (element?: INode): Thenable<INode[]> | INode[] {
     if (element) {
-      return element.getChildren(outputChannel)
+      return element.getChildren()
     }
-    return this.getConnectionNodes(outputChannel)
+    return this.getConnectionNodes()
   }
 
   public refresh (element?: INode): void {
@@ -89,7 +89,6 @@ implements vscode.TreeDataProvider<INode> {
   }
 
   private async getConnectionNodes (
-    outputChannel: vscode.OutputChannel
   ): Promise<ConnectionNode[]> {
     const connections = this.context.globalState.get<{
       [key: string]: InfluxDBConnection;

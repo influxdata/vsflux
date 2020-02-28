@@ -1,151 +1,148 @@
 class Actions {
-  constructor (hasErr, vscode) {
-    this.hasErr = hasErr
+  constructor (vscode) {
     this.vscode = vscode
   }
 
-  toggleOptions () {
-    const connVersionEle = document.getElementById('connVersion')
-    if (connVersionEle.value === 1) {
-      document.getElementById('connToken').classList.add('hidden')
-      document.getElementById('connOrg').classList.add('hidden')
+  get versionElement () {
+    return document.querySelector('#connVersion')
+  }
+
+  get hostElement () {
+    return document.querySelector('#connHost')
+  }
+
+  get tokenElement () {
+    return document.querySelector('#connToken')
+  }
+
+  get orgElement () {
+    return document.querySelector('#connOrg')
+  }
+
+  get form () {
+    return document.querySelector('form.ui')
+  }
+
+  setHost (val) {
+    const element = this.hostElement.querySelector('input')
+    this.hostElement.querySelector('input').value = val
+  }
+
+  hide (element) {
+    element.classList.add('hidden')
+  }
+
+  show (element) {
+    element.classList.remove('hidden')
+  }
+
+  get defaultURL () {
+    if (this.isV1()) {
+      return this.hostElement.dataset.v1
     }
-    connVersionEle.addEventListener('change', () => {
-      if (connVersionEle.value === 1) {
-        document.getElementById('connToken').classList.add('hidden')
-        document.getElementById('connOrg').classList.add('hidden')
+
+    return this.hostElement.dataset.v2
+  }
+
+  toggleToV1 () {
+    this.tokenElement.querySelector('input').removeAttribute('required')
+    this.orgElement.querySelector('input').removeAttribute('required')
+    this.hide(this.tokenElement)
+    this.hide(this.orgElement)
+    this.hostElement.querySelector('input').removeAttribute('list')
+  }
+
+  toggleToV2 () {
+    this.show(this.tokenElement)
+    this.show(this.orgElement)
+    this.tokenElement.querySelector('input').setAttribute('required', 'true')
+    this.orgElement.querySelector('input').setAttribute('required', 'true')
+    this.hostElement.querySelector('input').setAttribute('list', 'hosts')
+  }
+
+  isV1 () {
+    return this.versionElement.value === '1'
+  }
+
+  toggleOptions () {
+    if (this.isV1()) {
+      this.toggleToV1()
+    }
+
+    if (this.hostElement.querySelector('input').value === '') {
+      this.setHost(this.defaultURL)
+    }
+
+    this.versionElement.addEventListener('change', () => {
+      if (this.isV1()) {
+        this.toggleToV1()
       } else {
-        document.getElementById('connToken').classList.remove('hidden')
-        document.getElementById('connOrg').classList.remove('hidden')
+        this.toggleToV2()
       }
-      const temp = document
-        .getElementById('connHost')
-        .getElementsByTagName('input')[0].value
-      document
-        .getElementById('connHost')
-        .getElementsByTagName('input')[0].value = document.getElementById(
-          'alternativeHost'
-        ).innerText
-      document.getElementById('alternativeHost').innerText = temp
+
+      this.setHost(this.defaultURL)
     })
   }
 
   save () {
-    document.getElementById('save').addEventListener('click', () => {
-      const data = this.getData()
-      if (this.hasErr) {
+    document.querySelector('#save').addEventListener('click', () => {
+      if (!this.validate()) {
         return {}
       }
+
       this.vscode.postMessage({
         command: 'save',
-        connVersion: data.connVersion,
-        connID: data.connID,
-        connName: data.connName,
-        connHost: data.connHost,
-        connToken: data.connToken,
-        connOrg: data.connOrg
+        ...this.getData()
       })
     })
   }
 
   testConn () {
-    document.getElementById('testConn').addEventListener('click', () => {
-      const data = this.getData()
-      if (this.hasErr) {
+    document.querySelector('#testConn').addEventListener('click', () => {
+      if (!this.validate()) {
         return {}
       }
+
       this.vscode.postMessage({
         command: 'testConn',
-        connVersion: data.connVersion,
-        connName: data.connName,
-        connHost: data.connHost,
-        connToken: data.connToken,
-        connOrg: data.connOrg
+        ...this.getData()
       })
     })
   }
 
   getData () {
-    this.hasErr = false
-    const connID = document.getElementById('connID').value
-    const connName = this.validTextInput(
-      'connName',
-      'Name is empty for the connection'
-    )
-    const connHost = this.validTextInput(
-      'connHost',
-      'Host URI is empty for the connection'
-    )
-    let connToken, connOrg
-    const connVersion = document.getElementById('connVersion').value
-    if (connVersion === 1) {
-      connToken = ''
-      connOrg = ''
-    } else {
-      connToken = this.validTextInput(
-        'connToken',
-        'Token is empty for the connection',
-        '^[-A-Za-z0-9+=]{1,50}|=[^=]|={3,}$',
-        'Token should be a valid base64 encoded string'
-      )
-      connOrg = this.validTextInput(
-        'connOrg',
-        'Org is empty for the connection'
-      )
+    const result = {
+      connID: document.querySelector('#connID').value,
+      connName: document.querySelector('#connName input').value,
+      connHost: document.querySelector('#connHost input').value,
+      connVersion: document.querySelector('#connVersion').value,
+      connToken: '',
+      connOrg: ''
     }
 
-    if (this.hasErr) {
-      return {}
+    if (result.connVersion !== 1) {
+      const connToken = this.tokenElement.querySelector('input').value
+      const connOrg = this.orgElement.querySelector('input').value
+
+      return { ...result, connToken, connOrg }
     }
-    return {
-      connVersion: connVersion,
-      connID: connID,
-      connName: connName,
-      connHost: connHost,
-      connToken: connToken,
-      connOrg: connOrg
-    }
+
+    return result
   }
 
-  validTextInput (id, errMsg, regex, regexErr) {
-    const wrapper = document.getElementById(id)
-    const input = wrapper.getElementsByTagName('input')[0]
-    this.clearErr(wrapper)
-    const v = input.value.trim()
-    if (v === '') {
-      this.setErr(wrapper, errMsg)
-      return ''
+  validate () {
+    if (!this.form.checkValidity()) {
+      this.form.reportValidity()
+      return false
     }
-    if (regex && regexErr) {
-      if (!v.match(regex)) {
-        this.setErr(wrapper, regexErr)
-        return ''
-      }
-    }
-    return v
-  }
 
-  clearErr (wrapper) {
-    wrapper.classList.remove('error')
-    const ele = wrapper.getElementsByClassName('errMsg')[0]
-    ele.innerHTML = ''
-    ele.classList.add('hidden')
-    return ele
-  }
-
-  setErr (wrapper, errMsg) {
-    const ele = this.clearErr(wrapper)
-    ele.classList.remove('hidden')
-    wrapper.classList.add('error')
-    var pNode = document.createElement('p')
-    pNode.appendChild(document.createTextNode(errMsg))
-    ele.appendChild(pNode)
-    this.hasErr = true
+    return true
   }
 }
 
 const vscode = acquireVsCodeApi()
-const act = new Actions(false, vscode)
+const act = new Actions(vscode)
+
 act.toggleOptions()
 act.save()
 act.testConn()

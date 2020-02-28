@@ -3,12 +3,11 @@ import { Queries } from '../Query'
 import {
   ExtensionContext,
   TreeItem,
-  TreeItemCollapsibleState,
-  OutputChannel
+  TreeItemCollapsibleState
 } from 'vscode'
 import { InfluxDBConnection } from './Connection'
 import { StringNode } from './StringNode'
-import { now, outputChannel } from '../../util'
+import { logger } from '../../util'
 
 export class MeasurementNode implements INode {
   constructor (
@@ -31,8 +30,8 @@ export class MeasurementNode implements INode {
       const msg =
         `Getting tag keys for bucket: ${this.bucket}, measurement: ${this.measurement}: `
 
-      outputChannel.show()
-      outputChannel.appendLine(`${now()} - ${msg}`)
+      logger.show()
+      logger.log(msg)
 
       const results = await Queries.tagKeys(this.conn, this.bucket, this.measurement)
 
@@ -40,7 +39,7 @@ export class MeasurementNode implements INode {
         return new StringNode(row[0])
       })
     } catch (e) {
-      outputChannel.appendLine(`${now()} - Error: ${e}`)
+      logger.log(`Error: ${e}`)
       return []
     }
   }

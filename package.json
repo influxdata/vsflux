@@ -136,14 +136,14 @@
         "properties": {
           "vsflux.defaultInfluxDBURLs": {
             "default": [
+              "http://localhost:9999",
               "https://us-central1-1.gcp.cloud2.influxdata.com",
               "https://us-west-2-1.aws.cloud2.influxdata.com",
-              "https://eu-central-1-1.aws.cloud2.influxdata.com",
-              "http://localhost:9999"
+              "https://eu-central-1-1.aws.cloud2.influxdata.com"
             ],
             "description": "The URL lists of influxdb 2"
           },
-          "vsflux.defaultInfluxDBURL": {
+          "vsflux.defaultInfluxDBV2URL": {
             "default": "http://localhost:9999",
             "description": "The default URL when adding a new influxdb connection"
           },

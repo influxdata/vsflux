@@ -3,13 +3,12 @@ import { Queries } from '../Query'
 import {
   ExtensionContext,
   TreeItem,
-  TreeItemCollapsibleState,
-  OutputChannel
+  TreeItemCollapsibleState
 } from 'vscode'
 import { InfluxDBConnection } from './Connection'
 import { MeasurementNode } from './MeasurementNode'
 
-import { now, outputChannel } from '../../util'
+import { logger } from '../../util'
 
 export function NewBucketNode (
   bucket: string,
@@ -36,15 +35,15 @@ export class BucketNode implements INode {
   public async getChildren (): Promise<INode[]> {
     try {
       const msg = `Getting measurements for bucket: ${this.bucket}`
-      outputChannel.show()
-      outputChannel.appendLine(`${now()} - ${msg}`)
+      logger.show()
+      logger.log(`${msg}`)
 
       const results = await Queries.measurements(this.conn, this.bucket)
       return (results?.rows || []).map((row) => {
         return new MeasurementNode(this.bucket, row[0], this.conn)
       })
     } catch (e) {
-      outputChannel.appendLine(`${now()} - Error: ${e}`)
+      logger.log(`Error: ${e}`)
       return []
     }
   }
