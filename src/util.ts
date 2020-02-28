@@ -1,6 +1,22 @@
 import * as vscode from 'vscode'
 
-export const outputChannel = vscode.window.createOutputChannel('influxdb')
+class Logger {
+  private out: vscode.OutputChannel
+
+  constructor (out: vscode.OutputChannel) {
+    this.out = out
+  }
+
+  show () {
+    this.out.show()
+  }
+
+  log (msg: string) {
+    this.out.appendLine(`${now()} - ${msg}`)
+  }
+}
+
+export const logger = new Logger(vscode.window.createOutputChannel('influxdb'))
 
 export function getConfig () {
   return vscode.workspace.getConfiguration('vsflux')
@@ -8,6 +24,10 @@ export function getConfig () {
 
 export function defaultV1URL (): string {
   return getConfig()?.get<string>('defaultInfluxDBV1URL', '')
+}
+
+export function defaultV2URL (): string {
+  return getConfig()?.get<string>('defaultInfluxDBV2URL', '')
 }
 
 export function defaultV2URLList (): string[] {
@@ -26,7 +46,7 @@ export function timezoneOffset (offset: number): string {
   offset = Math.abs(offset)
   const hours = pad(Math.floor(offset / 60))
   const minutes = pad(offset % 60)
-  return `${sign}${hours}:${minutes}}`
+  return `${sign}${hours}:${minutes}`
 }
 export function now (): string {
   const d = new Date()
@@ -38,5 +58,5 @@ export function now (): string {
   const seconds = pad(d.getSeconds())
   const timezone = timezoneOffset(d.getTimezoneOffset())
 
-  return `${year}-${month}-${day}T${hour}:${minutes}:${seconds}${timezone}}`
+  return `${year}-${month}-${day}T${hour}:${minutes}:${seconds}${timezone}`
 }

@@ -3,10 +3,8 @@ import { INode } from './INode'
 import {
   ExtensionContext,
   TreeItem,
-  TreeItemCollapsibleState,
-  OutputChannel
+  TreeItemCollapsibleState
 } from 'vscode'
-import { InfluxDBConnection } from './Connection'
 
 export class StringNode implements INode {
   constructor (private readonly value: string) {}
@@ -19,7 +17,7 @@ export class StringNode implements INode {
     }
   }
 
-  public getChildren (_outputChannel: OutputChannel): INode[] {
+  public getChildren (): INode[] {
     return []
   }
 }

@@ -7,13 +7,12 @@ import {
 import {
   ExtensionContext,
   TreeItem,
-  TreeItemCollapsibleState,
-  OutputChannel
+  TreeItemCollapsibleState
 } from 'vscode'
 import { NewBucketNode } from './BucketNode'
 import { Status } from './Status'
 import { EditConnectionView } from './EditConnectionView'
-import { now, outputChannel } from '../../util'
+import { logger } from '../../util'
 
 export const InfluxDBConectionsKey = 'influxdb.connections'
 
@@ -41,8 +40,8 @@ export class ConnectionNode implements INode {
   public async getChildren (): Promise<INode[]> {
     try {
       const msg = 'Fetching buckets'
-      outputChannel.show()
-      outputChannel.appendLine(`${now()} - ${msg}`)
+      logger.show()
+      logger.log(msg)
 
       const results = await Queries.buckets(this.connection)
 
@@ -50,7 +49,7 @@ export class ConnectionNode implements INode {
         return NewBucketNode(row[0], this.connection)
       })
     } catch (e) {
-      outputChannel.appendLine(`${now()} - Error: ${e}`)
+      logger.log(`Error: ${e}`)
       return []
     }
   }

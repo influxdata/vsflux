@@ -8,7 +8,7 @@ import {
   emptyInfluxDBConnection
 } from './Connection'
 
-import { defaultV1URL, defaultV2URLList } from '../../util'
+import { defaultV1URL, defaultV2URLList, defaultV2URL } from '../../util'
 import mustache = require('mustache');
 
 export class EditConnectionView extends View {
@@ -70,7 +70,7 @@ export class EditConnectionView extends View {
       ...params,
       isV1: conn.version === InfluxConnectionVersion.V1,
       defaultHostV1: defaultV1URL(),
-      defaultHost: conn.hostNport,
+      defaultHost: defaultV2URL(),
       defaultHostLists: defaultV2URLList()
     })
   }

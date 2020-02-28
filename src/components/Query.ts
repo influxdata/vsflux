@@ -1,4 +1,4 @@
-import { OutputChannel, ExtensionContext, window } from 'vscode'
+import { ExtensionContext, window } from 'vscode'
 import {
   InfluxDBConnection,
   InfluxConnectionVersion
@@ -8,7 +8,7 @@ import { Status } from './connections/Status'
 import { INode } from './connections/INode'
 import axios from 'axios'
 
-import { now, outputChannel } from '../util'
+import { logger } from '../util'
 
 export class Engine {
   public constructor () {}
@@ -19,14 +19,13 @@ export class Engine {
     msg: string,
     newNodeFn: (
       name: string,
-      outputChannel: OutputChannel,
       iConn: InfluxDBConnection,
       parent?: string
     ) => INode,
     pp = ''
   ): Promise<INode[]> {
-    outputChannel.show()
-    outputChannel.appendLine(`${now()} - ${msg}`)
+    logger.show()
+    logger.log(msg)
 
     let result: TableResult
     try {
@@ -36,12 +35,12 @@ export class Engine {
         result = await APIRequest.queryV2(conn, query)
       }
     } catch (e) {
-      outputChannel.appendLine(`${now()} - Error: ${e}`)
+      logger.log(`Error: ${e}`)
       return []
     }
 
     return (result?.rows || []).map(row => {
-      return newNodeFn(row[0], outputChannel, conn, pp)
+      return newNodeFn(row[0], conn, pp)
     })
   }
 }
@@ -78,14 +77,14 @@ export class ViewEngine extends Engine {
 
     query = query || ''
 
-    outputChannel.appendLine(`${now()} - Running Query: '${query}'`)
-    outputChannel.show()
+    logger.log(`Running Query: '${query}'`)
+    logger.show()
 
     try {
       const result = await APIRequest.queryV2(connection, query)
       return this.tableView.show(result, connection.name)
     } catch (e) {
-      outputChannel.appendLine(`${now()} - ${e}`)
+      logger.log(e.toString())
     }
   }
 }
