@@ -1,65 +1,59 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-		<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-		<link rel="stylesheet" type="text/css" href="{{cssPath}}">
-	</head>
-	<body>
-		<form class="ui form">
-			<h4 class="ui dividing header">{{title}}</h4>
-			<div class="field">
-				<label>Version</label>
-				<select id="connVersion">
-					<option value="0" {{^isV1}}selected="selected"{{/isV1}}>InfluxDB V2</option>
-					<option value="1" {{#isV1}}selected="selected"{{/isV1}}>InfluxDB V1</option>
-				</select>
-			</div>		
-			<div class="field" id="connName">
-    			<label>Name</label>
-    			<input required="true" type="text" name="name" placeholder="Give a name of the influxdb connection" value="{{name}}">				
-  				<div class="ui negative hidden errMsg message">
-				</div>
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+	<link rel="stylesheet" type="text/css" href="{{cssPath}}">
+</head>
+
+<body>
+	<form class="ui form">
+		<h4 class="ui dividing header">{{title}}</h4>
+		<div class="field">
+			<label>Version</label>
+			<select id="connVersion">
+				<option value="0" {{^isV1}}selected="selected" {{/isV1}}>InfluxDB V2</option>
+				<option value="1" {{#isV1}}selected="selected" {{/isV1}}>InfluxDB V1</option>
+			</select>
+		</div>
+		<div class="field" id="connName">
+			<label>Name</label>
+			<input required="true" type="text" name="name" placeholder="Give a name of the influxdb connection"
+				value="{{name}}">
+			<div class="ui negative hidden errMsg message">
 			</div>
-  			<div class="field" id="connHost" data-v1="{{defaultHostV1}}" data-v2="{{defaultHost}}">
-    			<label>Hostname and Port</label>
-    			<input required="true" list="hosts" type="url" name="host" placeholder="The hostname and port of the influxdb" value="{{hostNport}}">
-            <datalist id="hosts">
-              {{#defaultHostLists}}
-              <option value="{{.}}"></option>
-              {{/defaultHostLists}}
-            </datalist>
-          </input>
-				<div class="ui negative hidden message errMsg">
-  				</div>
-  			</div>
-			<div class="field" id="connToken">
-    			<label>Token</label>
-          <input 
-            required="true"
-            pattern="^[-A-Za-z0-9+=]{1,50}|=[^=]|={3,}$" 
-            type="password" 
-            name="token" 
-            placeholder="Token of the influxdb" 
-            value="{{token}}">
-				<div class="ui negative hidden message errMsg">
-  				</div>
-  			</div>
-			<div class="field" id="connOrg">
-    			<label>Org</label>
-          <input 
-            required="true"
-            type="text" 
-            name="org" 
-            placeholder="Name of the influxdb org" 
-            value="{{org}}">
-				<div class="ui negative hidden message errMsg">
-  				</div>
-  			</div>
-			<input type="hidden" id="connID" value="{{id}}">
-			<div class="ui button" id="testConn" tabindex="0">Test Connection</div>
-			<div class="ui blue button" id="save" tabindex="0">Save</div>
-		</form>
-		<script src="{{jsPath}}"></script>
-	</body>
+		</div>
+		<div class="field" id="connHost" data-v1="{{defaultHostV1}}" data-v2="{{defaultHost}}">
+			<label>Hostname and Port</label>
+			<input required="true" list="hosts" type="url" name="host"
+				placeholder="The hostname and port of the influxdb" value="{{hostNport}}">
+			<datalist id="hosts">
+				{{#defaultHostLists}}
+				<option value="{{.}}"></option>
+				{{/defaultHostLists}}
+			</datalist>
+			</input>
+			<div class="ui negative hidden message errMsg">
+			</div>
+		</div>
+		<div class="field" id="connToken">
+			<label>Token</label>
+			<input required="true" type="password" name="token" placeholder="Token of the influxdb" value="{{token}}">
+			<div class="ui negative hidden message errMsg">
+			</div>
+		</div>
+		<div class="field" id="connOrg">
+			<label>Org</label>
+			<input required="true" type="text" name="org" placeholder="Name of the influxdb org" value="{{org}}">
+			<div class="ui negative hidden message errMsg">
+			</div>
+		</div>
+		<input type="hidden" id="connID" value="{{id}}">
+		<div class="ui button" id="testConn" tabindex="0">Test Connection</div>
+		<div class="ui blue button" id="save" tabindex="0">Save</div>
+	</form>
+	<script src="{{jsPath}}"></script>
+</body>
+
 </html>
