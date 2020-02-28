@@ -1,3 +1,10 @@
+## 0.4.0 - Unreleased
+
+### Features
+
+1. [#97](https://github.com/influxdata/vsflux/pull/97): Add support for InfluxDB 1.x connections.
+1. [#99](https://github.com/influxdata/vsflux/pull/99): Autocompletion for bucket names.
+
 ## 0.3.1 - 24 January, 2020
 
 ### Bug Fixes
