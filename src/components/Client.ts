@@ -50,13 +50,16 @@ const createTransform = () => {
 async function getBuckets () {
   if (Status.Current) {
     const buckets = await Queries.buckets(Status.Current)
-    return (buckets?.rows || []).map((row) => row[0])
+    return (buckets?.rows || []).map(row => row[0])
   }
 
   return []
 }
 
-const createStreamInfo: (context: ExtensionContext, cli: CLI) => () => Thenable<StreamInfo> = (context, cli) => {
+const createStreamInfo: (
+  context: ExtensionContext,
+  cli: CLI
+) => () => Thenable<StreamInfo> = (context, cli) => {
   return function () {
     const stream = cli.createStream()
 
@@ -75,8 +78,8 @@ const createStreamInfo: (context: ExtensionContext, cli: CLI) => () => Thenable<
 }
 
 export class Client {
-  private languageClient: LanguageClient;
-  private context: ExtensionContext;
+  private languageClient: LanguageClient
+  private context: ExtensionContext
   private cli: CLI
 
   // constructor
@@ -152,7 +155,8 @@ export class Client {
         const textDocument = { uri: uri.toString(), version }
 
         this.languageClient.sendNotification(
-          DidSaveTextDocumentNotification.type, { textDocument }
+          DidSaveTextDocumentNotification.type,
+          { textDocument }
         )
       })
     )
