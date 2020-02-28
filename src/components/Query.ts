@@ -3,46 +3,14 @@ import {
   InfluxDBConnection,
   InfluxConnectionVersion
 } from './connections/Connection'
-import { TableResult, TableView } from './TableView'
+import { TableResult, TableView, EmptyTableResult } from './TableView'
 import { Status } from './connections/Status'
-import { INode } from './connections/INode'
 import axios from 'axios'
 
 import { logger } from '../util'
 
 export class Engine {
   public constructor () {}
-
-  public async GetTreeChildren (
-    conn: InfluxDBConnection,
-    query: string,
-    msg: string,
-    newNodeFn: (
-      name: string,
-      iConn: InfluxDBConnection,
-      parent?: string
-    ) => INode,
-    pp = ''
-  ): Promise<INode[]> {
-    logger.show()
-    logger.log(msg)
-
-    let result: TableResult
-    try {
-      if (conn.version === InfluxConnectionVersion.V1) {
-        result = await APIRequest.queryV1(conn, query, pp)
-      } else {
-        result = await APIRequest.queryV2(conn, query)
-      }
-    } catch (e) {
-      logger.log(`Error: ${e}`)
-      return []
-    }
-
-    return (result?.rows || []).map(row => {
-      return newNodeFn(row[0], conn, pp)
-    })
-  }
 }
 
 export class ViewEngine extends Engine {
@@ -81,8 +49,8 @@ export class ViewEngine extends Engine {
     logger.show()
 
     try {
-      const result = await APIRequest.queryV2(connection, query)
-      return this.tableView.show(result, connection.name)
+      const results = await APIRequest.queryV2(connection, query)
+      return this.tableView.show(results, connection.name)
     } catch (e) {
       logger.log(e.toString())
     }
@@ -129,7 +97,8 @@ export class Queries {
     measurement: string
   ): Promise<TableResult> {
     const query = `show tag keys from ${measurement}`
-    return APIRequest.queryV1(connection, query, bucket)
+    const results = await APIRequest.queryV1(connection, query, bucket)
+    return results ? results[0] : EmptyTableResult
   }
 
   private static async tagKeysV2 (
@@ -141,7 +110,8 @@ export class Queries {
       import "influxdata/influxdb/v1"
       v1.measurementTagKeys(bucket:"${bucket}", measurement: "${measurement}")`
 
-    return APIRequest.queryV2(connection, query)
+    const results = await APIRequest.queryV2(connection, query)
+    return results ? results[0] : EmptyTableResult
   }
 
   private static async measurementsV1 (
@@ -149,7 +119,8 @@ export class Queries {
     bucket: string
   ): Promise<TableResult> {
     const query = 'show measurements'
-    return APIRequest.queryV1(connection, query, bucket)
+    const results = await APIRequest.queryV1(connection, query, bucket)
+    return results ? results[0] : EmptyTableResult
   }
 
   private static async measurementsV2 (
@@ -158,21 +129,24 @@ export class Queries {
   ): Promise<TableResult> {
     const query = `import "influxdata/influxdb/v1"
       v1.measurements(bucket:"${bucket}")`
-    return APIRequest.queryV2(connection, query)
+    const results = await APIRequest.queryV2(connection, query)
+    return results ? results[0] : EmptyTableResult
   }
 
   private static async bucketsV1 (
     connection: InfluxDBConnection
   ): Promise<TableResult> {
     const query = 'show databases'
-    return APIRequest.queryV1(connection, query)
+    const results = await APIRequest.queryV1(connection, query)
+    return results ? results[0] : EmptyTableResult
   }
 
   private static async bucketsV2 (
     connection: InfluxDBConnection
   ): Promise<TableResult> {
     const query = 'buckets()'
-    return APIRequest.queryV2(connection, query)
+    const results = await APIRequest.queryV2(connection, query)
+    return results ? results[0] : EmptyTableResult
   }
 }
 
@@ -191,7 +165,7 @@ export class APIRequest {
     conn: InfluxDBConnection,
     query: string,
     bucket: string = ''
-  ): Promise<TableResult> {
+  ): Promise<TableResult[]> {
     try {
       const encodedQuery = encodeURI(query)
       const url = `${conn.hostNport}/query?db=${encodeURI(
@@ -213,15 +187,20 @@ export class APIRequest {
   public static async queryV2 (
     conn: InfluxDBConnection,
     query: string
-  ): Promise<TableResult> {
+  ): Promise<TableResult[]> {
     try {
       const { data } = await axios({
         method: 'POST',
         url: `${conn.hostNport}/api/v2/query?org=${encodeURI(conn.org)}`,
-        data: query,
+        data: {
+          type: 'flux',
+          query: query,
+          dialect: {
+            annotations: ['group', 'datatype', 'default']
+          }
+        },
         maxContentLength: Infinity,
         headers: {
-          'Content-Type': 'application/vnd.flux',
           Authorization: `Token ${conn.token}`
         }
       })
@@ -235,58 +214,41 @@ export class APIRequest {
   }
 }
 
-export function queryResponseToTableResult (body: string): TableResult {
-  const initial: TableResult = { head: [], rows: [] }
+export function queryResponseToTableResult (body: string): TableResult[] {
   const accum: TableResult[] = []
-  const table = body
-    .replace('\r', '')
-    .split('\n\n')
+  return body.split(/\r?\n\r?\n/)
+    .filter(v => v) // kill the blank lines
     .reduce((acc, group) => {
       const rows = group.split('\n').filter(v => !v.startsWith('#') && v)
       const result: TableResult = {
         head: rows[0].split(',').slice(3),
         rows: rows.slice(1).map(v => v.split(',').slice(3))
       }
-
       acc.push(result)
-
       return acc
     }, accum)
-    .reduce((table, result, index) => {
-      if (index === 0) {
-        table.head = result.head
-      }
-
-      table.rows.push(...result.rows)
-
-      return table
-    }, initial)
-
-  table.rows = table.rows.filter((v) => v.length > 0)
-
-  return table
 }
 
 function v1QueryResponseToTableResult (body: {
   results: V1Result[];
-}): TableResult {
-  const tableResult: TableResult = {
-    head: [],
-    rows: []
-  }
-
+}): TableResult[] {
   const results: Array<V1Result> = body.results
 
   if (results.length === 0) {
-    return tableResult
+    return [EmptyTableResult]
   }
 
   if (results[0]?.error) {
     throw new Error(results[0].error)
   }
+  const tableResults: TableResult[] = []
 
-  tableResult.head = results[0].series[0].columns
-  tableResult.rows = results[0].series[0].values
+  results[0].series.forEach(result => {
+    tableResults.push({
+      head: result.columns,
+      rows: result.values
+    })
+  })
 
-  return tableResult
+  return tableResults
 }
