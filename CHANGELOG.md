@@ -1,9 +1,11 @@
-## 0.4.0 - Unreleased
+## 0.4.0 - 28 February, 2020
 
 ### Features
 
 1. [#97](https://github.com/influxdata/vsflux/pull/97): Add support for InfluxDB 1.x connections.
 1. [#99](https://github.com/influxdata/vsflux/pull/99): Autocompletion for bucket names.
+1. [#81](https://github.com/influxdata/vsflux/pull/81): Make connection icon prettier.
+1. [#78](https://github.com/influxdata/vsflux/pull/78): Add connection configuration view.
 
 ## 0.3.1 - 24 January, 2020
 
