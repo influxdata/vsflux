@@ -10,7 +10,7 @@ A list of recent changes can be found in the [Changelog](https://github.com/infl
 
 ## Installation
 
-VSFlux can be installed through the [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=influxdata.flux).
+The extension can be installed through the [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=influxdata.flux).
 
 ## Contributing
 
