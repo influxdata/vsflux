@@ -38,3 +38,24 @@ The extension can be sideloaded to test it end to end, instead of running in deb
 1. `npm install -g vsce` to globally install the [extension manager CLI tool](https://github.com/microsoft/vscode-vsce)
 1. `vsce package` to build the package. This will generate a file ending with `.vsix`
 1. In the [command palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette), run `Extensions: Install from VSIX...` and choose the vsix file that you generated.
+
+### Running a Local Language Server Build
+
+If you'd like to build the language server locally and run it against the VSCode extension:
+
+Requirements:
+
+* Docker
+* Node (> 12)
+* Rust (> 1.40)
+
+1. Clone the following repos
+  - github.com/influxdata/vsflux
+  - github.com/influxdata/flux-lsp-cli
+  - github.com/influxdata/flux-lsp
+1. CD into the flux-lsp repo and run `make wasm` (requires docker)
+1. CD into the flux-lsp-cli repo and update `package.json` and change the dependency of `@influxdata/flux-lsp-node` to `file: <full path to flux-lsp>/pkg-node`
+1. run `npm install`
+1. CD into the vsflux repo and update `package.json` and change the dependency of `@influxdata/flux-lsp-cli` to `file: <full path to flux-lsp-cli>`
+1. run `npm install`
+1. Open vsflux in vscode and run (`F5`)
