@@ -10,6 +10,7 @@ import {
 } from 'vscode-languageclient'
 
 import CLI from '@influxdata/flux-lsp-cli'
+import { Server } from '@influxdata/flux-lsp-node'
 import { Status } from './connections/Status'
 import { Queries } from '../components/Query'
 
@@ -56,14 +57,38 @@ async function getBuckets () {
   return []
 }
 
-const createStreamInfo: (
-  context: ExtensionContext,
-  cli: CLI
-) => () => Thenable<StreamInfo> = (context, cli) => {
-  return function () {
-    const stream = cli.createStream()
+const createStream = () => {
+  const server = new Server(true)
+  server.register_buckets_callback(getBuckets)
 
-    cli.registerBucketsCallback(getBuckets)
+  return through(async function (data, _enc, cb) {
+    const input = data.toString()
+
+    const response = await server.process(input)
+
+    try {
+      const msg = response.get_message()
+      if (msg) {
+        this.push(msg)
+      }
+
+      const err = response.get_error()
+      if (err) {
+        console.error(`LSP Error: ${err}`)
+      }
+
+      cb()
+    } catch (e) {
+      cb(e)
+    }
+  })
+}
+
+const createStreamInfo: (
+  context: ExtensionContext
+) => () => Thenable<StreamInfo> = (context) => {
+  return function () {
+    const stream = createStream()
 
     const writer = createTransform()
     writer.pipe(stream)
@@ -80,7 +105,6 @@ const createStreamInfo: (
 export class Client {
   private languageClient: LanguageClient
   private context: ExtensionContext
-  private cli: CLI
 
   // constructor
   constructor (context: ExtensionContext) {
@@ -96,14 +120,11 @@ export class Client {
       }
     }
 
-    this.cli = new CLI({ 'disable-folding': true })
-    this.cli.on('log', console.debug)
-
     // Create the language client and start the client.
     this.languageClient = new LanguageClient(
       'flux lsp server',
       'flux language',
-      createStreamInfo(context, this.cli),
+      createStreamInfo(context),
       clientOptions
     )
   }
