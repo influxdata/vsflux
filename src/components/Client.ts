@@ -64,11 +64,14 @@ const createStream = () => {
   return through(async function (data, _enc, cb) {
     const input = data.toString()
 
+    console.debug(`Request:\n ${input}\n`)
+
     const response = await server.process(input)
 
     try {
       const msg = response.get_message()
       if (msg) {
+        console.debug(`Response:\n ${msg}\n`)
         this.push(msg)
       }
 
