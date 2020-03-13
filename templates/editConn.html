@@ -11,15 +11,15 @@
 	<form class="ui form">
 		<h4 class="ui dividing header">{{title}}</h4>
 		<div class="field">
-			<label>Version</label>
+			<label>Type</label>
 			<select id="connVersion">
-				<option value="0" {{^isV1}}selected="selected" {{/isV1}}>InfluxDB V2</option>
-				<option value="1" {{#isV1}}selected="selected" {{/isV1}}>InfluxDB V1</option>
+				<option value="0" {{^isV1}}selected="selected" {{/isV1}}>InfluxDB 2.0</option>
+				<option value="1" {{#isV1}}selected="selected" {{/isV1}}>InfluxDB 1.7</option>
 			</select>
 		</div>
 		<div class="field" id="connName">
 			<label>Name</label>
-			<input required="true" type="text" name="name" placeholder="Give a name of the influxdb connection"
+			<input required="true" type="text" name="name" placeholder="local"
 				value="{{name}}">
 			<div class="ui negative hidden errMsg message">
 			</div>
@@ -27,7 +27,7 @@
 		<div class="field" id="connHost" data-v1="{{defaultHostV1}}" data-v2="{{defaultHost}}">
 			<label>Hostname and Port</label>
 			<input required="true" list="hosts" type="url" name="host"
-				placeholder="The hostname and port of the influxdb" value="{{hostNport}}">
+				placeholder="http://localhost:9999" value="{{hostNport}}">
 			<datalist id="hosts">
 				{{#defaultHostLists}}
 				<option value="{{.}}"></option>
@@ -39,13 +39,13 @@
 		</div>
 		<div class="field" id="connToken">
 			<label>Token</label>
-			<input required="true" name="token" placeholder="Token of the influxdb" value="{{token}}">
+			<input required="true" name="token" placeholder="yOuRtOkEn==" value="{{token}}">
 			<div class="ui negative hidden message errMsg">
 			</div>
 		</div>
 		<div class="field" id="connOrg">
-			<label>Org</label>
-			<input required="true" type="text" name="org" placeholder="Name of the influxdb org" value="{{org}}">
+			<label>Organization Name</label>
+			<input required="true" type="text" name="org" placeholder="YourOrg" value="{{org}}">
 			<div class="ui negative hidden message errMsg">
 			</div>
 		</div>
