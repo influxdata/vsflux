@@ -193,8 +193,8 @@ export class Connection {
 
     this.context.subscriptions.push(
       vscode.commands.registerCommand(
-        'influxdb.deleteConnection',
-        this.deleteConnection
+        'influxdb.removeConnection',
+        this.removeConnection
       )
     )
 
@@ -232,17 +232,18 @@ export class Connection {
     await node.editConnection(this.context, this.treeData)
   }
 
-  private deleteConnection = async (node: ConnectionNode) => {
+  private removeConnection = async (node: ConnectionNode) => {
     const confirmation = await vscode.window.showInformationMessage(
-      'You are about to delete the connection.',
-      { title: 'Confirm' }
+      `Are you sure you want to remove ${node.connection.name}?`,
+      'Yes',
+      'No'
     )
 
-    if (!confirmation) {
+    if (confirmation != 'Yes') {
       return
     }
 
-    node.deleteConnection(this.context, this.treeData)
+    node.removeConnection(this.context, this.treeData)
   }
 
   private runQuery = () => {
