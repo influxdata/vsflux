@@ -3,6 +3,7 @@
 out
 src
 node_modules
+test-resources/**
 .gitignore
 **/tsconfig.json
 **/tslint.json
