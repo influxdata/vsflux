@@ -67,7 +67,7 @@ export class ConnectionNode implements INode {
     }
   }
 
-  public async deleteConnection (
+  public async removeConnection (
     context: ExtensionContext,
     influxDBTreeDataProvider: InfluxDBTreeDataProvider
   ) {

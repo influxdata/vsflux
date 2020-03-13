@@ -79,8 +79,8 @@
         "category": "InfluxDB"
       },
       {
-        "command": "influxdb.deleteConnection",
-        "title": "Delete Connection",
+        "command": "influxdb.removeConnection",
+        "title": "Remove Connection",
         "category": "InfluxDB"
       },
       {
@@ -111,7 +111,7 @@
           "group": "influxdb@1"
         },
         {
-          "command": "influxdb.deleteConnection",
+          "command": "influxdb.removeConnection",
           "when": "view == influxdb && viewItem == connection",
           "group": "influxdb@1"
         }
