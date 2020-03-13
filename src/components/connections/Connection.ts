@@ -233,13 +233,16 @@ export class Connection {
   }
 
   private removeConnection = async (node: ConnectionNode) => {
+    const removeText = 'Yes, remove it'
+    const cancelText = 'Cancel'
+
     const confirmation = await vscode.window.showInformationMessage(
-      `Are you sure you want to remove ${node.connection.name}?`,
-      'Yes',
-      'No'
+      `Remove connection "${node.connection.name}"?`,
+      cancelText,
+      removeText
     )
 
-    if (confirmation != 'Yes') {
+    if (confirmation != removeText) {
       return
     }
 
