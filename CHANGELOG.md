@@ -1,5 +1,7 @@
 ## 0.4.1 - 17 March, 2020
 
+### Features
+
 1. [#126](https://github.com/influxdata/flux-lsp/pull/126): Context-sensitive completion suggestions.
 
 ### Bug Fixes
