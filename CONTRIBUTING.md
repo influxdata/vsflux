@@ -51,11 +51,8 @@ Requirements:
 
 1. Clone the following repos
   - github.com/influxdata/vsflux
-  - github.com/influxdata/flux-lsp-cli
   - github.com/influxdata/flux-lsp
 1. CD into the flux-lsp repo and run `make wasm` (requires docker)
-1. CD into the flux-lsp-cli repo and update `package.json` and change the dependency of `@influxdata/flux-lsp-node` to `file: <full path to flux-lsp>/pkg-node`
-1. run `npm install`
-1. CD into the vsflux repo and update `package.json` and change the dependency of `@influxdata/flux-lsp-cli` to `file: <full path to flux-lsp-cli>`
+1. CD into the vsflux repo and update `package.json` and change the dependency of `@influxdata/flux-lsp-node` to `file: <full path to flux-lsp>/pkg-node`
 1. run `npm install`
 1. Open vsflux in vscode and run (`F5`)
