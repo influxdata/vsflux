@@ -1,3 +1,14 @@
+## 0.4.1 - 17 March, 2020
+
+1. [#126](https://github.com/influxdata/flux-lsp/pull/126): Context-sensitive completion suggestions.
+
+### Bug Fixes
+
+1. [#122](https://github.com/influxdata/flux-lsp/pull/122): Add quotes around buckets in completion list.
+1. [#136](https://github.com/influxdata/vsflux/pull/136): Show token string in connection view.
+1. [#137](https://github.com/influxdata/vsflux/pull/137): Use more descriptive placeholders in connection view.
+1. [#138](https://github.com/influxdata/vsflux/pull/138): Clean up connection deletion modal.
+
 ## 0.4.0 - 28 February, 2020
 
 ### Features
