@@ -19,15 +19,14 @@
 		</div>
 		<div class="field" id="connName">
 			<label>Name</label>
-			<input required="true" type="text" name="name" placeholder="local"
-				value="{{name}}">
+			<input required="true" type="text" name="name" placeholder="local" value="{{name}}">
 			<div class="ui negative hidden errMsg message">
 			</div>
 		</div>
 		<div class="field" id="connHost" data-v1="{{defaultHostV1}}" data-v2="{{defaultHost}}">
 			<label>Hostname and Port</label>
-			<input required="true" list="hosts" type="url" name="host"
-				placeholder="http://localhost:9999" value="{{hostNport}}">
+			<input required="true" list="hosts" type="url" name="host" placeholder="http://localhost:9999"
+				value="{{hostNport}}">
 			<datalist id="hosts">
 				{{#defaultHostLists}}
 				<option value="{{.}}"></option>
@@ -50,7 +49,7 @@
 			</div>
 		</div>
 		<input type="hidden" id="connID" value="{{id}}">
-		<div class="ui button" id="testConn" tabindex="0">Test Connection</div>
+		<div class="ui teal button" id="testConn" tabindex="0">Test Connection</div>
 		<div class="ui blue button" id="save" tabindex="0">Save</div>
 	</form>
 	<script src="{{jsPath}}"></script>
