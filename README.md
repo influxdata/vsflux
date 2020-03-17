@@ -18,8 +18,6 @@ Features:
 * Function signatures
 * Code folding
 
-with features like syntax highlighting, error messages and autocompletion.
-
 ## Installation
 
 The extension can be installed through the [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=influxdata.flux).
