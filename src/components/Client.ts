@@ -9,7 +9,6 @@ import {
   StreamInfo
 } from 'vscode-languageclient'
 
-import CLI from '@influxdata/flux-lsp-cli'
 import { Server } from '@influxdata/flux-lsp-node'
 import { Status } from './connections/Status'
 import { Queries } from '../components/Query'
