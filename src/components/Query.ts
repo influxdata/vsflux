@@ -166,30 +166,46 @@ export class APIRequest {
     query: string,
     bucket: string = ''
   ): Promise<TableResult[]> {
+    let data = {
+      results: []
+    }
     try {
+      const source = axios.CancelToken.source()
+      Status.SetRunningQuery(source)
       const encodedQuery = encodeURI(query)
       const url = `${conn.hostNport}/query?db=${encodeURI(
         bucket
       )}&q=${encodedQuery}`
-      const resp = await axios({ method: 'GET', url })
-
-      return v1QueryResponseToTableResult(resp.data)
+      data = (await axios({ method: 'GET', url, cancelToken: source.token })).data
     } catch (err) {
       const message = err.response?.data?.message || err.toString()
       throw new Error(message)
+    } finally {
+      Status.SetNotRunnningQuery()
     }
+    return v1QueryResponseToTableResult(data)
   }
 
   public static defaultParams = {
     method: 'POST'
   };
 
+  public static cancelQuery () {
+    const source = Status.CancelTokenSource
+    if (source) {
+      source.cancel()
+    }
+  }
+
   public static async queryV2 (
     conn: InfluxDBConnection,
     query: string
   ): Promise<TableResult[]> {
+    let data:string = ''
     try {
-      const { data } = await axios({
+      const source = axios.CancelToken.source()
+      Status.SetRunningQuery(source)
+      data = (await axios({
         method: 'POST',
         url: `${conn.hostNport}/api/v2/query?org=${encodeURI(conn.org)}`,
         data: {
@@ -202,15 +218,16 @@ export class APIRequest {
         maxContentLength: Infinity,
         headers: {
           Authorization: `Token ${conn.token}`
-        }
-      })
-
-      return queryResponseToTableResult(data)
+        },
+        cancelToken: source.token
+      })).data
     } catch (err) {
       const message = err?.response?.data?.message || err.toString()
-
       throw new Error(message)
+    } finally {
+      Status.SetNotRunnningQuery()
     }
+    return queryResponseToTableResult(data)
   }
 }
 

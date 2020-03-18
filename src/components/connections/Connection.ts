@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import { ViewEngine as QueryViewEngine, Queries } from '../Query'
+import { ViewEngine as QueryViewEngine, Queries, APIRequest } from '../Query'
 import { INode } from './INode'
 import { Status } from './Status'
 import { ConnectionNode, InfluxDBConectionsKey } from './ConnectionNode'
@@ -218,6 +218,13 @@ export class Connection {
         this.switchConnection
       )
     )
+
+    this.context.subscriptions.push(
+      vscode.commands.registerCommand(
+        'influxdb.cancelQuery',
+        APIRequest.cancelQuery
+      )
+    )
   }
 
   private refresh = () => {
@@ -242,7 +249,7 @@ export class Connection {
       removeText
     )
 
-    if (confirmation != removeText) {
+    if (confirmation !== removeText) {
       return
     }
 
