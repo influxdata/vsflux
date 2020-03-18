@@ -17,6 +17,8 @@ Features:
 * Go to definition
 * Function signatures
 * Code folding
+* Symbol renaming
+* Document symbols
 
 ## Installation
 
