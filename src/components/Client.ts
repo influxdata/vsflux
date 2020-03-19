@@ -57,7 +57,7 @@ async function getBuckets () {
 }
 
 const createStream = () => {
-  const server = new Server(true)
+  const server = new Server(true, false)
   server.register_buckets_callback(getBuckets)
 
   return through(async function (data, _enc, cb) {
