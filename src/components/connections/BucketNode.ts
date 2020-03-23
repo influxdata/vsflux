@@ -43,7 +43,7 @@ export class BucketNode implements INode {
         return new MeasurementNode(this.bucket, row[0], this.conn)
       })
     } catch (e) {
-      logger.log(`Error: ${e}`)
+      logger.log(e)
       return []
     }
   }
