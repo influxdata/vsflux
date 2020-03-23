@@ -39,7 +39,7 @@ export class MeasurementNode implements INode {
         return new StringNode(row[0])
       })
     } catch (e) {
-      logger.log(`Error: ${e}`)
+      logger.log(e)
       return []
     }
   }

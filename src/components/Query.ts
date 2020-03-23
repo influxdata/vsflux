@@ -178,8 +178,16 @@ export class APIRequest {
       )}&q=${encodedQuery}`
       data = (await axios({ method: 'GET', url, cancelToken: source.token })).data
     } catch (err) {
-      const message = err.response?.data?.message || err.toString()
-      throw new Error(message)
+      const message = err?.response?.data?.error
+      if (message) {
+        throw new Error(message)
+      } else if (err instanceof Error) {
+        // connection error
+        throw err
+      } else {
+        // unknown error
+        throw new Error(err.toString())
+      }
     } finally {
       Status.SetNotRunnningQuery()
     }
@@ -222,8 +230,16 @@ export class APIRequest {
         cancelToken: source.token
       })).data
     } catch (err) {
-      const message = err?.response?.data?.message || err.toString()
-      throw new Error(message)
+      const message = err?.response?.data?.message || err?.response?.data?.error
+      if (message) {
+        throw new Error(message)
+      } else if (err instanceof Error) {
+        // connection error
+        throw err
+      } else {
+        // unknown error
+        throw new Error(err.toString())
+      }
     } finally {
       Status.SetNotRunnningQuery()
     }

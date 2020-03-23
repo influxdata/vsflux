@@ -49,7 +49,7 @@ export class ConnectionNode implements INode {
         return NewBucketNode(row[0], this.connection)
       })
     } catch (e) {
-      logger.log(`Error: ${e}`)
+      logger.log(e)
       return []
     }
   }
