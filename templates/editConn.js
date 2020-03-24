@@ -41,7 +41,7 @@ class Actions {
       return this.hostElement.dataset.v1
     }
 
-    return this.hostElement.dataset.v2
+    return ''
   }
 
   toggleToV1 () {

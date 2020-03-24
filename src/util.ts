@@ -26,10 +26,6 @@ export function defaultV1URL (): string {
   return getConfig()?.get<string>('defaultInfluxDBV1URL', '')
 }
 
-export function defaultV2URL (): string {
-  return getConfig()?.get<string>('defaultInfluxDBV2URL', '')
-}
-
 export function defaultV2URLList (): string[] {
   return getConfig()?.get<string[]>('defaultInfluxDBURLs', [''])
 }
