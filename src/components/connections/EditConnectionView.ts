@@ -9,7 +9,7 @@ import {
 } from './Connection'
 
 import { defaultV1URL, defaultV2URLList } from '../../util'
-import mustache = require('mustache');
+import * as Mustache from 'mustache'
 
 export class EditConnectionView extends View {
   public constructor (context: ExtensionContext) {
@@ -65,7 +65,7 @@ export class EditConnectionView extends View {
     params: { cssPath: Uri; jsPath: Uri; title: string }
   ): Promise<string> {
     const template = await this.getTemplate()
-    return mustache.to_html(template, {
+    return Mustache.render(template, {
       ...conn,
       ...params,
       isV1: conn.version === InfluxConnectionVersion.V1,
