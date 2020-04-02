@@ -2,7 +2,7 @@ import { View } from './View'
 import * as path from 'path'
 import { ExtensionContext, window, ViewColumn, Uri } from 'vscode'
 
-import mustache = require('mustache');
+import * as Mustache from 'mustache'
 
 type Rows = string[][];
 
@@ -24,7 +24,7 @@ export class TableView extends View {
     })
 
     const template = await this.getTemplate()
-    panel.webview.html = mustache.to_html(template, {
+    panel.webview.html = Mustache.render(template, {
       cssPath: panel.webview.asWebviewUri(
         Uri.file(
           path.join(this.context.extensionPath, 'templates', 'table.css')

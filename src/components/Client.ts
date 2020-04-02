@@ -1,4 +1,4 @@
-import { workspace, ExtensionContext, window, TextDocument } from 'vscode'
+import { workspace, ExtensionContext, TextDocument } from 'vscode'
 import through from 'through2'
 
 import {
@@ -88,7 +88,7 @@ const createStream = () => {
 
 const createStreamInfo: (
   context: ExtensionContext
-) => () => Thenable<StreamInfo> = (context) => {
+) => () => Promise<StreamInfo> = (context) => {
   return function () {
     const stream = createStream()
 
