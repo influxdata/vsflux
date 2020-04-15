@@ -98,6 +98,32 @@
       "name": "string.regexp",
       "begin": "/(?=\\S.*/)",
       "end": "[^\\\\/+]\\/"
+    },
+    "statements": {
+      "patterns": [
+        {
+          "name": "meta.function.flux",
+          "match": "([_$[:alpha:]][_$[:alnum:]]*)\\s*(?==>)"
+        },
+        {
+          "begin": "([A-Za-z_$][\\w$]*)\\s*(\\()",
+          "end": "\\)",
+          "name": "meta.function-call.flux",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.function.flux"
+            },
+            "2": {
+              "name": "punctuation.definition.parameters.begin.bracket.round.flux"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.parameters.end.bracket.round.flux"
+            }
+          }
+        }
+      ]
     }
   },
   "scopeName": "flux"
