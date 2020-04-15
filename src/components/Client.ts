@@ -56,9 +56,19 @@ async function getBuckets () {
   return []
 }
 
+async function getMeasurements (bucket: string) {
+  if (Status.Current) {
+    const measurements = await Queries.measurements(Status.Current, bucket)
+    return (measurements?.rows || []).map(row => row[0])
+  }
+
+  return []
+}
+
 const createStream = () => {
   const server = new Server(true, false)
   server.register_buckets_callback(getBuckets)
+  server.register_measurements_callback(getMeasurements)
 
   return through(async function (data, _enc, cb) {
     const input = data.toString()
@@ -152,6 +162,7 @@ export class Client {
         ) {
           return
         }
+
         this.languageClient.sendNotification(
           DidOpenTextDocumentNotification.type,
           {
