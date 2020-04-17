@@ -55,7 +55,8 @@
         ],
         "extensions": [
           ".flux"
-        ]
+        ],
+        "configuration": "./language-configuration.json"
       }
     ],
     "commands": [
@@ -160,34 +161,34 @@
     "ui-test": "npm run compile && extest setup-and-run out/ui-test/*.js"
   },
   "devDependencies": {
-    "@types/chai": "^4.2.10",
+    "@types/chai": "^4.2.11",
     "@types/glob": "^7.1.1",
-    "@types/mocha": "^5.2.7",
+    "@types/mocha": "^7.0.2",
     "@types/mustache": "^4.0.1",
-    "@types/node": "^12.12.28",
+    "@types/node": "^13.11.1",
     "@types/through2": "^2.0.34",
-    "@types/vscode": "^1.42.0",
-    "@typescript-eslint/eslint-plugin": "^2.21.0",
-    "@typescript-eslint/parser": "^2.21.0",
+    "@types/vscode": "^1.44.0",
+    "@typescript-eslint/eslint-plugin": "^2.28.0",
+    "@typescript-eslint/parser": "^2.28.0",
     "chai": "^4.2.0",
     "eslint": "^6.8.0",
-    "eslint-config-standard": "^14.1.0",
-    "eslint-plugin-import": "^2.20.1",
-    "eslint-plugin-node": "^11.0.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
-    "expect": "^25.1.0",
-    "glob": "^7.1.5",
-    "mocha": "^6.2.2",
-    "ts-loader": "^6.2.1",
-    "typescript": "^3.8.2",
-    "vscode-extension-tester": "^2.4.0",
-    "vscode-test": "^1.2.2",
-    "webpack": "^4.41.6",
+    "expect": "^25.3.0",
+    "glob": "^7.1.6",
+    "mocha": "^7.1.1",
+    "ts-loader": "^7.0.0",
+    "typescript": "^3.8.3",
+    "vscode-extension-tester": "^2.6.0",
+    "vscode-test": "^1.3.0",
+    "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@influxdata/flux-lsp-node": "^0.5.0",
+    "@influxdata/flux-lsp-node": "^0.5.1",
     "axios": "^0.19.2",
     "mustache": "^4.0.1",
     "through2": "^3.0.1",
