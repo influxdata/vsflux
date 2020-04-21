@@ -91,6 +91,29 @@ export class Queries {
     }
   }
 
+  public static async bucketTagKeys (connection: InfluxDBConnection, bucket: string) {
+    if (connection.version === InfluxConnectionVersion.V1) {
+      return this.bucketTagKeysV1(connection, bucket)
+    } else {
+      return this.bucketTagKeysV2(connection, bucket)
+    }
+  }
+
+  public static async bucketTagKeysV1 (connection: InfluxDBConnection, bucket: string) {
+    const query = 'show tag keys'
+    const results = await APIRequest.queryV1(connection, query)
+    return results ? results[0] : EmptyTableResult
+  }
+
+  public static async bucketTagKeysV2 (connection: InfluxDBConnection, bucket: string) {
+    const query = `
+      import "influxdata/influxdb/v1"
+      v1.tagKeys(bucket:"${bucket}")`
+
+    const results = await APIRequest.queryV2(connection, query)
+    return results ? results[0] : EmptyTableResult
+  }
+
   private static async tagKeysV1 (
     connection: InfluxDBConnection,
     bucket: string,

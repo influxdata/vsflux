@@ -11,7 +11,7 @@ import {
 
 import { Server } from '@influxdata/flux-lsp-node'
 import { Status } from './connections/Status'
-import { Queries } from '../components/Query'
+import { Queries, queryResponseToTableResult } from '../components/Query'
 
 const isFlux = (document: TextDocument): boolean => {
   return document.languageId === 'flux'
@@ -65,10 +65,19 @@ async function getMeasurements (bucket: string) {
   return []
 }
 
+async function getTagKeys (bucket: string) {
+  if (Status.Current) {
+    const tagKeys = await Queries.bucketTagKeys(Status.Current, bucket)
+    return (tagKeys?.rows || []).map(row => row[0]?.trim())
+  }
+  return []
+}
+
 const createStream = () => {
   const server = new Server(true, false)
   server.register_buckets_callback(getBuckets)
   server.register_measurements_callback(getMeasurements)
+  server.register_tag_keys_callback(getTagKeys)
 
   return through(async function (data, _enc, cb) {
     const input = data.toString()
