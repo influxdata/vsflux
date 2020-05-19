@@ -6,7 +6,10 @@ import {
   LanguageClientOptions,
   DidOpenTextDocumentNotification,
   DidSaveTextDocumentNotification,
-  StreamInfo
+  StreamInfo,
+  ErrorAction,
+  CloseAction,
+  RevealOutputChannelOn
 } from 'vscode-languageclient'
 
 import { Server } from '@influxdata/flux-lsp-node'
@@ -65,20 +68,42 @@ async function getMeasurements (bucket: string) {
   return []
 }
 
+async function getTagKeys (bucket: string) {
+  if (Status.Current) {
+    const tagKeys = await Queries.bucketTagKeys(Status.Current, bucket)
+    return (tagKeys?.rows || []).map(row => row[0]?.trim())
+  }
+  return []
+}
+
+async function getTagValues (bucket: string, field: string) {
+  console.log(`Tag Values: ${bucket} ${field}`)
+  if (Status.Current) {
+    const tagValues = await Queries.tagValues(Status.Current, bucket, field)
+    console.log(tagValues)
+    return (tagValues?.rows || []).map(row => row[0]?.trim())
+  }
+
+  return []
+}
+
 const createStream = () => {
   const server = new Server(true, false)
+
   server.register_buckets_callback(getBuckets)
   server.register_measurements_callback(getMeasurements)
+  server.register_tag_keys_callback(getTagKeys)
+  server.register_tag_values_callback(getTagValues)
 
   return through(async function (data, _enc, cb) {
     const input = data.toString()
 
     console.debug(`Request:\n ${input}\n`)
 
-    const response = await server.process(input)
-
     try {
+      const response = await server.process(input)
       const msg = response.get_message()
+
       if (msg) {
         console.debug(`Response:\n ${msg}\n`)
         this.push(msg)
@@ -129,7 +154,12 @@ export class Client {
       synchronize: {
         // Notify the server about file changes to '.clientrc files contained in the workspace
         fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
-      }
+      },
+      errorHandler: {
+        error: () => ErrorAction.Continue,
+        closed: () => CloseAction.Restart
+      },
+      revealOutputChannelOn: RevealOutputChannelOn.Never
     }
 
     // Create the language client and start the client.

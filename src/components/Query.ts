@@ -68,6 +68,19 @@ export class Queries {
     }
   }
 
+  public static async tagValues (
+    connection: InfluxDBConnection,
+    bucket: string,
+    tag: string
+  ): Promise<TableResult> {
+    const query = `
+      import "influxdata/influxdb/v1"
+      v1.tagValues(bucket:"${bucket}", tag: "${tag}")`
+
+    const results = await APIRequest.queryV2(connection, query)
+    return results ? results[0] : EmptyTableResult
+  }
+
   public static async measurements (
     connection: InfluxDBConnection,
     bucket: string
@@ -89,6 +102,38 @@ export class Queries {
     } else {
       return this.tagKeysV2(connection, bucket, measurement)
     }
+  }
+
+  public static async bucketTagKeys (
+    connection: InfluxDBConnection,
+    bucket: string
+  ) {
+    if (connection.version === InfluxConnectionVersion.V1) {
+      return this.bucketTagKeysV1(connection, bucket)
+    } else {
+      return this.bucketTagKeysV2(connection, bucket)
+    }
+  }
+
+  public static async bucketTagKeysV1 (
+    connection: InfluxDBConnection,
+    bucket: string
+  ) {
+    const query = 'show tag keys'
+    const results = await APIRequest.queryV1(connection, query)
+    return results ? results[0] : EmptyTableResult
+  }
+
+  public static async bucketTagKeysV2 (
+    connection: InfluxDBConnection,
+    bucket: string
+  ) {
+    const query = `
+      import "influxdata/influxdb/v1"
+      v1.tagKeys(bucket:"${bucket}")`
+
+    const results = await APIRequest.queryV2(connection, query)
+    return results ? results[0] : EmptyTableResult
   }
 
   private static async tagKeysV1 (
@@ -176,7 +221,8 @@ export class APIRequest {
       const url = `${conn.hostNport}/query?db=${encodeURI(
         bucket
       )}&q=${encodedQuery}`
-      data = (await axios({ method: 'GET', url, cancelToken: source.token })).data
+      data = (await axios({ method: 'GET', url, cancelToken: source.token }))
+        .data
     } catch (err) {
       const message = err?.response?.data?.error
       if (message) {
@@ -209,28 +255,31 @@ export class APIRequest {
     conn: InfluxDBConnection,
     query: string
   ): Promise<TableResult[]> {
-    let data:string = ''
+    let data: string = ''
     try {
       const source = axios.CancelToken.source()
       Status.SetRunningQuery(source)
-      data = (await axios({
-        method: 'POST',
-        url: `${conn.hostNport}/api/v2/query?org=${encodeURI(conn.org)}`,
-        data: {
-          type: 'flux',
-          query: query,
-          dialect: {
-            annotations: ['group', 'datatype', 'default']
-          }
-        },
-        maxContentLength: Infinity,
-        headers: {
-          Authorization: `Token ${conn.token}`
-        },
-        cancelToken: source.token
-      })).data
+      data = (
+        await axios({
+          method: 'POST',
+          url: `${conn.hostNport}/api/v2/query?org=${encodeURI(conn.org)}`,
+          data: {
+            type: 'flux',
+            query: query,
+            dialect: {
+              annotations: ['group', 'datatype', 'default']
+            }
+          },
+          maxContentLength: Infinity,
+          headers: {
+            Authorization: `Token ${conn.token}`
+          },
+          cancelToken: source.token
+        })
+      ).data
     } catch (err) {
-      const message = err?.response?.data?.message || err?.response?.data?.error
+      const message =
+        err?.response?.data?.message || err?.response?.data?.error
       if (message) {
         throw new Error(message)
       } else if (err instanceof Error) {
@@ -249,13 +298,14 @@ export class APIRequest {
 
 export function queryResponseToTableResult (body: string): TableResult[] {
   const accum: TableResult[] = []
-  return body.split(/\r?\n\r?\n/)
-    .filter(v => v) // kill the blank lines
+  return body
+    .split(/\r?\n\r?\n/)
+    .filter((v) => v) // kill the blank lines
     .reduce((acc, group) => {
-      const rows = group.split('\n').filter(v => !v.startsWith('#') && v)
+      const rows = group.split('\n').filter((v) => !v.startsWith('#') && v)
       const result: TableResult = {
         head: rows[0].split(',').slice(3),
-        rows: rows.slice(1).map(v => v.split(',').slice(3))
+        rows: rows.slice(1).map((v) => v.split(',').slice(3))
       }
       acc.push(result)
       return acc
@@ -276,7 +326,7 @@ function v1QueryResponseToTableResult (body: {
   }
   const tableResults: TableResult[] = []
 
-  results[0].series.forEach(result => {
+  results[0].series.forEach((result) => {
     tableResults.push({
       head: result.columns,
       rows: result.values
