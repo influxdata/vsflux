@@ -188,7 +188,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@influxdata/flux-lsp-node": "0.5.8",
+    "@influxdata/flux-lsp-node": "0.5.11",
     "axios": "^0.19.2",
     "mustache": "^4.0.1",
     "through2": "^3.0.1",
