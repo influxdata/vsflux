@@ -77,10 +77,8 @@ async function getTagKeys (bucket: string) {
 }
 
 async function getTagValues (bucket: string, field: string) {
-  console.log(`Tag Values: ${bucket} ${field}`)
   if (Status.Current) {
     const tagValues = await Queries.tagValues(Status.Current, bucket, field)
-    console.log(tagValues)
     return (tagValues?.rows || []).map(row => row[0]?.trim())
   }
 

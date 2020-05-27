@@ -73,12 +73,16 @@ export class Queries {
     bucket: string,
     tag: string
   ): Promise<TableResult> {
-    const query = `
+    if (connection.version === InfluxConnectionVersion.V2) {
+      const query = `
       import "influxdata/influxdb/v1"
       v1.tagValues(bucket:"${bucket}", tag: "${tag}")`
 
-    const results = await APIRequest.queryV2(connection, query)
-    return results ? results[0] : EmptyTableResult
+      const results = await APIRequest.queryV2(connection, query)
+      return results ? results[0] : EmptyTableResult
+    }
+
+    return EmptyTableResult
   }
 
   public static async measurements (
