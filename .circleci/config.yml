@@ -11,3 +11,26 @@ jobs:
       - run:
           name: run selenium test
           command: npm run ui-test
+
+  publish:
+    docker:
+      - image: circleci/node:12.4
+    steps:
+      - checkout
+      - run: npm i
+      - run: vsce publish -p $AZURE_TOKEN
+
+workflows:
+  version: 2.1
+  test:
+    jobs:
+      - test
+
+  publish:
+    jobs:
+      - publish:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
