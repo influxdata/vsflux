@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  build:
+  run-tests:
     docker:
       - image: circleci/node:12.4-browsers
     steps:
@@ -22,9 +22,9 @@ jobs:
 
 workflows:
   version: 2.1
-  test:
+  verify:
     jobs:
-      - test
+      - run-tests
 
   publish:
     jobs:
