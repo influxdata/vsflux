@@ -3,7 +3,7 @@ import {
   InfluxDBConnection,
   InfluxConnectionVersion
 } from './connections/Connection'
-import { TableResult, TableView, EmptyTableResult } from './TableView'
+import { TableResult, QueryResult, TableView, EmptyTableResult } from './TableView'
 import { Status } from './connections/Status'
 import axios from 'axios'
 
@@ -49,8 +49,8 @@ export class ViewEngine extends Engine {
     logger.show()
 
     try {
-      const results = await APIRequest.queryV2(connection, query)
-      return this.tableView.show(results, connection.name)
+      const results = await APIRequest.query(connection, query)
+      return this.tableView.show(results.tables, connection.name)
     } catch (e) {
       logger.log(e.toString())
     }
@@ -79,7 +79,7 @@ export class Queries {
       v1.tagValues(bucket:"${bucket}", tag: "${tag}")`
 
       const results = await APIRequest.queryV2(connection, query)
-      return results ? results[0] : EmptyTableResult
+      return results ? results.tables[0] : EmptyTableResult
     }
 
     return EmptyTableResult
@@ -125,7 +125,7 @@ export class Queries {
   ) {
     const query = 'show tag keys'
     const results = await APIRequest.queryV1(connection, query)
-    return results ? results[0] : EmptyTableResult
+    return results ? results.tables[0] : EmptyTableResult
   }
 
   public static async bucketTagKeysV2 (
@@ -137,7 +137,7 @@ export class Queries {
       v1.tagKeys(bucket:"${bucket}")`
 
     const results = await APIRequest.queryV2(connection, query)
-    return results ? results[0] : EmptyTableResult
+    return results ? results.tables[0] : EmptyTableResult
   }
 
   private static async tagKeysV1 (
@@ -147,7 +147,7 @@ export class Queries {
   ): Promise<TableResult> {
     const query = `show tag keys from ${measurement}`
     const results = await APIRequest.queryV1(connection, query, bucket)
-    return results ? results[0] : EmptyTableResult
+    return results ? results.tables[0] : EmptyTableResult
   }
 
   private static async tagKeysV2 (
@@ -160,7 +160,7 @@ export class Queries {
       v1.measurementTagKeys(bucket:"${bucket}", measurement: "${measurement}")`
 
     const results = await APIRequest.queryV2(connection, query)
-    return results ? results[0] : EmptyTableResult
+    return results ? results.tables[0] : EmptyTableResult
   }
 
   private static async measurementsV1 (
@@ -169,7 +169,7 @@ export class Queries {
   ): Promise<TableResult> {
     const query = 'show measurements'
     const results = await APIRequest.queryV1(connection, query, bucket)
-    return results ? results[0] : EmptyTableResult
+    return results ? results.tables[0] : EmptyTableResult
   }
 
   private static async measurementsV2 (
@@ -179,7 +179,7 @@ export class Queries {
     const query = `import "influxdata/influxdb/v1"
       v1.measurements(bucket:"${bucket}")`
     const results = await APIRequest.queryV2(connection, query)
-    return results ? results[0] : EmptyTableResult
+    return results ? results.tables[0] : EmptyTableResult
   }
 
   private static async bucketsV1 (
@@ -187,7 +187,7 @@ export class Queries {
   ): Promise<TableResult> {
     const query = 'show databases'
     const results = await APIRequest.queryV1(connection, query)
-    return results ? results[0] : EmptyTableResult
+    return results ? results.tables[0] : EmptyTableResult
   }
 
   private static async bucketsV2 (
@@ -195,7 +195,7 @@ export class Queries {
   ): Promise<TableResult> {
     const query = 'buckets()'
     const results = await APIRequest.queryV2(connection, query)
-    return results ? results[0] : EmptyTableResult
+    return results ? results.tables[0] : EmptyTableResult
   }
 }
 
@@ -214,7 +214,7 @@ export class APIRequest {
     conn: InfluxDBConnection,
     query: string,
     bucket: string = ''
-  ): Promise<TableResult[]> {
+  ): Promise<QueryResult> {
     let data = {
       results: []
     }
@@ -241,7 +241,12 @@ export class APIRequest {
     } finally {
       Status.SetNotRunnningQuery()
     }
-    return v1QueryResponseToTableResult(data)
+    const tables = v1QueryResponseToTableResult(data)
+
+    return {
+      tables,
+      raw: JSON.stringify(data.results)
+    }
   }
 
   public static defaultParams = {
@@ -255,10 +260,18 @@ export class APIRequest {
     }
   }
 
+  public static async query (conn: InfluxDBConnection, query: string, bucket: string = ''): Promise<QueryResult> {
+    if (conn.version === InfluxConnectionVersion.V1) {
+      return this.queryV1(conn, query, bucket)
+    } else {
+      return this.queryV2(conn, query)
+    }
+  }
+
   public static async queryV2 (
     conn: InfluxDBConnection,
     query: string
-  ): Promise<TableResult[]> {
+  ): Promise<QueryResult> {
     let data: string = ''
     try {
       const source = axios.CancelToken.source()
@@ -296,7 +309,12 @@ export class APIRequest {
     } finally {
       Status.SetNotRunnningQuery()
     }
-    return queryResponseToTableResult(data)
+    const tables = queryResponseToTableResult(data)
+
+    return {
+      tables,
+      raw: data
+    }
   }
 }
 

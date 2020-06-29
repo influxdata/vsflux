@@ -79,9 +79,14 @@
       ]
     },
     "comments": {
-      "name": "comment.line.double-slash",
-      "begin": "//",
-      "end": "\n|\r"
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.flux",
+          "match": "(//).*$\n?",
+          "begin": "//",
+          "end": "\n|\r"
+        }
+      ]
     },
     "strings": {
       "name": "string.quoted.double.flux",
@@ -95,7 +100,7 @@
       ]
     },
     "regexps": {
-      "name": "string.regexp",
+      "name": "string.regexp.flux",
       "begin": "/(?=\\S.*/)",
       "end": "[^\\\\/+]\\/"
     },

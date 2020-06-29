@@ -4,7 +4,6 @@ import { INode } from './INode'
 import { Status } from './Status'
 import { ConnectionNode, InfluxDBConectionsKey } from './ConnectionNode'
 import { EditConnectionView } from './EditConnectionView'
-import { logger } from '../../util'
 
 const uuidv1 = require('uuid/v1')
 

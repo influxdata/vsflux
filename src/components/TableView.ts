@@ -6,6 +6,11 @@ import * as Mustache from 'mustache'
 
 type Rows = string[][];
 
+export interface QueryResult {
+  tables: TableResult[],
+  raw: string,
+}
+
 export interface TableResult {
   head: string[];
   rows: Rows;
