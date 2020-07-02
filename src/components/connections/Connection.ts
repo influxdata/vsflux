@@ -1,11 +1,11 @@
 import * as vscode from 'vscode'
+import { v1 as uuid } from 'uuid'
+
 import { ViewEngine as QueryViewEngine, Queries, APIRequest } from '../Query'
 import { INode } from './INode'
 import { Status } from './Status'
 import { ConnectionNode, InfluxDBConectionsKey } from './ConnectionNode'
-import { EditConnectionView } from './EditConnectionView'
-
-const uuidv1 = require('uuid/v1')
+import { ConnectionView } from './ConnectionView'
 
 enum MessageType {
   Test = 'testConn',
@@ -38,6 +38,12 @@ export const emptyInfluxDBConnection: InfluxDBConnection = {
 
 export class InfluxDBTreeDataProvider
 implements vscode.TreeDataProvider<INode> {
+  public static instance: InfluxDBTreeDataProvider;
+
+  public static init (context: vscode.ExtensionContext) {
+    this.instance = new InfluxDBTreeDataProvider(context)
+  }
+
   public _onDidChangeTreeData: vscode.EventEmitter<
     INode
   > = new vscode.EventEmitter<INode>();
@@ -50,7 +56,7 @@ implements vscode.TreeDataProvider<INode> {
   ) {}
 
   getTreeItem (element: INode): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    return element.getTreeItem(this.context)
+    return element.getTreeItem()
   }
 
   getChildren (element?: INode): Thenable<INode[]> | INode[] {
@@ -65,20 +71,19 @@ implements vscode.TreeDataProvider<INode> {
   }
 
   public async addConnection () {
-    const addConnView = new EditConnectionView(this.context)
-    await addConnView.showNew(this)
+    const addConnView = new ConnectionView(this.context)
+    await addConnView.create()
   }
 
-  public static setMessageHandler (
-    panel: vscode.WebviewPanel,
-    tree: InfluxDBTreeDataProvider
+  public setMessageHandler (
+    panel: vscode.WebviewPanel
   ) {
     // Handle messages from the webview
     panel.webview.onDidReceiveMessage(async (message: Message) => {
-      const conn = convertMessageToConnection(message, uuidv1())
+      const conn = convertMessageToConnection(message, uuid())
       switch (message.command) {
         case MessageType.Save:
-          tree.saveConnection(panel, message)
+          this.saveConnection(panel, message)
           break
         case MessageType.Test:
           this.testConnection(conn)
@@ -91,57 +96,54 @@ implements vscode.TreeDataProvider<INode> {
   ): Promise<ConnectionNode[]> {
     const connections = this.context.globalState.get<{
       [key: string]: InfluxDBConnection;
-    }>(InfluxDBConectionsKey)
+    }>(InfluxDBConectionsKey) || {}
     const ConnectionNodes = []
-    if (connections) {
-      const activeID = Status.Current?.id
-      for (const id of Object.keys(connections)) {
-        connections[id].isActive = activeID === id || connections[id].isActive
-        if (connections[id].isActive) {
-          Status.Current = connections[id]
-        }
+    const activeID = Status.Current?.id
 
-        ConnectionNodes.push(
-          new ConnectionNode(connections[id])
-        )
+    for (const [id, connection] of Object.entries(connections)) {
+      connection.isActive = activeID === id || connection.isActive
+
+      if (connection.isActive) {
+        Status.Current = connection
       }
 
-      // if there is only one connection, set it to active.
-      if (ConnectionNodes.length === 1) {
-        ConnectionNodes[0].connection.isActive = true
-        Status.Current = ConnectionNodes[0].connection
-      }
+      ConnectionNodes.push(
+        new ConnectionNode(connection, this.context)
+      )
+    }
+
+    // if there is only one connection, set it to active.
+    if (ConnectionNodes.length === 1) {
+      ConnectionNodes[0].connection.isActive = true
+      Status.Current = ConnectionNodes[0].connection
     }
     return ConnectionNodes
   }
 
-  private static async testConnection (conn: InfluxDBConnection) {
+  private async testConnection (conn: InfluxDBConnection) {
     try {
       await Queries.buckets(conn)
       vscode.window.showInformationMessage('Success')
-      return
     } catch (e) {
-      vscode.window.showErrorMessage(e)
+      vscode.window.showErrorMessage('Failed to connect to database')
     }
   }
 
-  public async switchConnection (
+  public async setCurrent (
     target: InfluxDBConnection
   ) {
     const connections = this.context.globalState.get<{
       [key: string]: InfluxDBConnection;
     }>(InfluxDBConectionsKey) || {}
 
-    target.isActive = true
-    connections[target.id] = target
-
-    for (const connID of Object.keys(connections)) {
-      if (target.id !== connID) {
-        connections[connID].isActive = false
-      }
+    for (const connection of Object.values(connections)) {
+      connection.isActive = false
     }
 
-    Status.Current = connections[target.id]
+    target.isActive = true
+    connections[target.id] = target
+    Status.Current = target
+
     await this.context.globalState.update(InfluxDBConectionsKey, connections)
     this.refresh()
   }
@@ -150,9 +152,9 @@ implements vscode.TreeDataProvider<INode> {
     panel: vscode.WebviewPanel,
     message: Message
   ) {
-    const id = message.connID || uuidv1()
+    const id = message.connID || uuid()
     const target = convertMessageToConnection(message, id, true)
-    await this.switchConnection(target)
+    await this.setCurrent(target)
 
     panel.dispose()
   }
@@ -161,19 +163,22 @@ implements vscode.TreeDataProvider<INode> {
 export class Connection {
   private queryViewEngine: QueryViewEngine;
   private context: vscode.ExtensionContext;
-  private treeData: InfluxDBTreeDataProvider;
 
   public constructor (context: vscode.ExtensionContext) {
     this.context = context
     this.queryViewEngine = new QueryViewEngine(context)
-    this.treeData = new InfluxDBTreeDataProvider(
-      this.context
-    )
+  }
+
+  public static load (context: vscode.ExtensionContext) {
+    const connection = new Connection(context)
+    connection.load()
+
+    return connection
   }
 
   public load () {
     this.context.subscriptions.push(
-      vscode.window.registerTreeDataProvider('influxdb', this.treeData)
+      vscode.window.registerTreeDataProvider('influxdb', this.tree)
     )
 
     this.context.subscriptions.push(
@@ -227,40 +232,44 @@ export class Connection {
   }
 
   private refresh = () => {
-    this.treeData.refresh()
+    this.tree.refresh()
   }
 
   private addConnection = () => {
-    this.treeData.addConnection()
+    this.tree.addConnection()
   }
 
   private editConnection = async (node: ConnectionNode) => {
-    await node.editConnection(this.context, this.treeData)
+    await node.edit()
   }
 
   private removeConnection = async (node: ConnectionNode) => {
     const removeText = 'Yes, remove it'
 
     const confirmation = await vscode.window.showInformationMessage(
-       `Remove connection "${node.connection.name}"?`, {
-         modal: true
-       },
-       removeText
+      `Remove connection "${node.connection.name}"?`, {
+        modal: true
+      },
+      removeText
     )
 
     if (confirmation !== removeText) {
       return
     }
 
-    node.removeConnection(this.context, this.treeData)
+    node.remove()
   }
 
   private runQuery = () => {
-    this.queryViewEngine.TableView()
+    this.queryViewEngine.showTable()
   }
 
   private switchConnection = async (node: ConnectionNode) => {
-    await this.treeData.switchConnection(node.connection)
+    await this.tree.setCurrent(node.connection)
+  }
+
+  private get tree (): InfluxDBTreeDataProvider {
+    return InfluxDBTreeDataProvider.instance
   }
 }
 

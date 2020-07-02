@@ -1,6 +1,53 @@
 class Actions {
-  constructor (vscode) {
+  constructor (vscode = acquireVsCodeApi()) {
     this.vscode = vscode
+
+    if (this.isV1) {
+      this.toggleToV1()
+    }
+
+    if (this.isHostEmpty) {
+      this.resetHost()
+    }
+  }
+
+  save () {
+    if (!this.validate()) {
+      return
+    }
+    this.vscode.postMessage({
+      command: 'save',
+      ...this.getData()
+    })
+  }
+
+  test () {
+    if (!this.validate()) {
+      return
+    }
+    this.vscode.postMessage({
+      command: 'testConn',
+      ...this.getData()
+    })
+  }
+
+  bind () {
+    document.querySelector('#testConn').addEventListener('click', () => {
+      this.test()
+    })
+
+    document.querySelector('#save').addEventListener('click', () => {
+      this.save()
+    })
+
+    this.versionElement.addEventListener('change', () => {
+      this.toggleOptions()
+    })
+  }
+
+  /* getters */
+  get isHostEmpty () {
+    return this.hostElement.querySelector('input').value === ''
   }
 
   get versionElement () {
@@ -20,94 +67,26 @@ class Actions {
   }
 
   get form () {
-    return document.querySelector('form.ui')
+    return document.querySelector('form')
   }
 
-  setHost (val) {
-    const element = this.hostElement.querySelector('input')
-    this.hostElement.querySelector('input').value = val
-  }
-
-  hide (element) {
-    element.classList.add('hidden')
-  }
-
-  show (element) {
-    element.classList.remove('hidden')
-  }
-
-  get defaultURL () {
-    if (this.isV1()) {
-      return this.hostElement.dataset.v1
-    }
-
-    return ''
-  }
-
-  toggleToV1 () {
-    this.tokenElement.querySelector('input').removeAttribute('required')
-    this.orgElement.querySelector('input').removeAttribute('required')
-    this.hide(this.tokenElement)
-    this.hide(this.orgElement)
-    this.hostElement.querySelector('input').removeAttribute('list')
-  }
-
-  toggleToV2 () {
-    this.show(this.tokenElement)
-    this.show(this.orgElement)
-    this.tokenElement.querySelector('input').setAttribute('required', 'true')
-    this.orgElement.querySelector('input').setAttribute('required', 'true')
-    this.hostElement.querySelector('input').setAttribute('list', 'hosts')
-  }
-
-  isV1 () {
+  get isV1 () {
     return this.versionElement.value === '1'
   }
 
-  toggleOptions () {
-    if (this.isV1()) {
-      this.toggleToV1()
-    }
-
-    if (this.hostElement.querySelector('input').value === '') {
-      this.setHost(this.defaultURL)
-    }
-
-    this.versionElement.addEventListener('change', () => {
-      if (this.isV1()) {
-        this.toggleToV1()
-      } else {
-        this.toggleToV2()
-      }
-
-      this.setHost(this.defaultURL)
-    })
+  get defaultURL () {
+    return this.isV1 ? this.hostElement.dataset.v1 : ''
   }
 
-  save () {
-    document.querySelector('#save').addEventListener('click', () => {
-      if (!this.validate()) {
-        return {}
-      }
+  /* private api */
 
-      this.vscode.postMessage({
-        command: 'save',
-        ...this.getData()
-      })
-    })
-  }
+  validate () {
+    if (!this.form.checkValidity()) {
+      this.form.reportValidity()
+      return false
+    }
 
-  testConn () {
-    document.querySelector('#testConn').addEventListener('click', () => {
-      if (!this.validate()) {
-        return {}
-      }
-
-      this.vscode.postMessage({
-        command: 'testConn',
-        ...this.getData()
-      })
-    })
+    return true
   }
 
   getData () {
@@ -130,19 +109,43 @@ class Actions {
     return result
   }
 
-  validate () {
-    if (!this.form.checkValidity()) {
-      this.form.reportValidity()
-      return false
-    }
+  setHost (val) {
+    this.hostElement.querySelector('input').value = val
+  }
 
-    return true
+  hide (element) {
+    element.classList.add('hidden')
+  }
+
+  show (element) {
+    element.classList.remove('hidden')
+  }
+
+  toggleToV1 () {
+    this.tokenElement.querySelector('input').removeAttribute('required')
+    this.orgElement.querySelector('input').removeAttribute('required')
+    this.hide(this.tokenElement)
+    this.hide(this.orgElement)
+    this.hostElement.querySelector('input').removeAttribute('list')
+  }
+
+  toggleToV2 () {
+    this.show(this.tokenElement)
+    this.show(this.orgElement)
+    this.tokenElement.querySelector('input').setAttribute('required', 'true')
+    this.orgElement.querySelector('input').setAttribute('required', 'true')
+    this.hostElement.querySelector('input').setAttribute('list', 'hosts')
+  }
+
+  resetHost () {
+    this.setHost(this.defaultURL)
+  }
+
+  toggleOptions () {
+    this.isV1 ? this.toggleToV1() : this.toggleToV2()
+    this.resetHost()
   }
 }
 
-const vscode = acquireVsCodeApi()
-const act = new Actions(vscode)
-
-act.toggleOptions()
-act.save()
-act.testConn()
+const actions = new Actions()
+actions.bind()

@@ -1,7 +1,6 @@
 import { INode } from './INode'
 
 import {
-  ExtensionContext,
   TreeItem,
   TreeItemCollapsibleState
 } from 'vscode'
@@ -9,7 +8,7 @@ import {
 export class StringNode implements INode {
   constructor (private readonly value: string) {}
 
-  public getTreeItem (_: ExtensionContext): TreeItem {
+  public getTreeItem (): TreeItem {
     return {
       label: this.value,
       contextValue: this.value,

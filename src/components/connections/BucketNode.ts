@@ -1,7 +1,6 @@
 import { INode } from './INode'
 import { Queries } from '../Query'
 import {
-  ExtensionContext,
   TreeItem,
   TreeItemCollapsibleState
 } from 'vscode'
@@ -23,7 +22,7 @@ export class BucketNode implements INode {
     private readonly conn: InfluxDBConnection
   ) {}
 
-  public getTreeItem (_: ExtensionContext): TreeItem {
+  public getTreeItem (): TreeItem {
     return {
       label: this.bucket,
       contextValue: this.bucket,
@@ -31,11 +30,9 @@ export class BucketNode implements INode {
     }
   }
 
-  // get all the measurements
   public async getChildren (): Promise<INode[]> {
     try {
       const msg = `Getting measurements for bucket: ${this.bucket}`
-      logger.show()
       logger.log(`${msg}`)
 
       const results = await Queries.measurements(this.conn, this.bucket)

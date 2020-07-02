@@ -11,18 +11,26 @@ import {
 } from 'vscode'
 import { NewBucketNode } from './BucketNode'
 import { Status } from './Status'
-import { EditConnectionView } from './EditConnectionView'
+import { ConnectionView } from './ConnectionView'
 import { logger } from '../../util'
 
 export const InfluxDBConectionsKey = 'influxdb.connections'
 
 export class ConnectionNode implements INode {
   constructor (
-    public connection: InfluxDBConnection
+    public connection: InfluxDBConnection,
+    private context: ExtensionContext
   ) {}
 
-  public getTreeItem (context: ExtensionContext): TreeItem {
-    const status = this.connection.isActive ? '' : '-gray'
+  public get status () {
+    return this.connection.isActive ? '' : '-gray'
+  }
+
+  public get iconPath () {
+    return this.context.asAbsolutePath(`resources/influx-logo${this.status}.svg`)
+  }
+
+  public getTreeItem (): TreeItem {
     return {
       label: this.connection.name,
       collapsibleState: TreeItemCollapsibleState.Collapsed,
@@ -32,16 +40,14 @@ export class ConnectionNode implements INode {
         arguments: [this]
       },
       contextValue: 'connection',
-      iconPath: context.asAbsolutePath(`resources/influx-logo${status}.svg`)
+      iconPath: this.iconPath
     }
   }
 
   // get all buckets
   public async getChildren (): Promise<INode[]> {
     try {
-      const msg = 'Fetching buckets'
-      logger.show()
-      logger.log(msg)
+      logger.log('Fetching buckets')
 
       const results = await Queries.buckets(this.connection)
 
@@ -54,36 +60,30 @@ export class ConnectionNode implements INode {
     }
   }
 
-  public async editConnection (
-    context: ExtensionContext,
-    influxDBTreeDataProvider: InfluxDBTreeDataProvider
-  ) {
-    const connections = context.globalState.get<{
-      [key: string]: InfluxDBConnection;
-    }>(InfluxDBConectionsKey)
-    if (connections !== undefined) {
-      const editConnView = new EditConnectionView(context)
-      await editConnView.showEdit(influxDBTreeDataProvider, this.connection)
-    }
+  public get tree (): InfluxDBTreeDataProvider {
+    return InfluxDBTreeDataProvider.instance
   }
 
-  public async removeConnection (
-    context: ExtensionContext,
-    influxDBTreeDataProvider: InfluxDBTreeDataProvider
+  public async edit (
   ) {
-    const connections = context.globalState.get<{
-      [key: string]: InfluxDBConnection;
-    }>(InfluxDBConectionsKey)
+    const view = new ConnectionView(this.context)
+    await view.edit(this.connection)
+  }
 
-    if (connections) {
-      if (Status.Current !== undefined && Status.Current.id === this.connection.id) {
-        Status.Current = undefined
-      }
-      delete connections[this.connection.id]
+  public async remove (
+  ) {
+    const connections = this.context.globalState.get<{
+      [key: string]: InfluxDBConnection;
+    }>(InfluxDBConectionsKey) || {}
+
+    delete connections[this.connection.id]
+
+    if (Status.Current?.id === this.connection.id) {
+      Status.Current = Object.values(connections)[0]
     }
 
-    await context.globalState.update(InfluxDBConectionsKey, connections)
+    await this.context.globalState.update(InfluxDBConectionsKey, connections)
 
-    influxDBTreeDataProvider.refresh()
+    this.tree.refresh()
   }
 }

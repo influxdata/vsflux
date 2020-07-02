@@ -9,7 +9,8 @@ import {
   StreamInfo,
   ErrorAction,
   CloseAction,
-  RevealOutputChannelOn
+  RevealOutputChannelOn,
+  VersionedTextDocumentIdentifier
 } from 'vscode-languageclient'
 
 import { Server } from '@influxdata/flux-lsp-node'
@@ -149,10 +150,6 @@ export class Client {
     const clientOptions: LanguageClientOptions = {
       // Register the server for flux documents
       documentSelector: [{ scheme: 'file', language: 'flux' }],
-      synchronize: {
-        // Notify the server about file changes to '.clientrc files contained in the workspace
-        fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
-      },
       errorHandler: {
         error: () => ErrorAction.Continue,
         closed: () => CloseAction.Restart
@@ -167,60 +164,55 @@ export class Client {
       createStreamInfo(context),
       clientOptions
     )
+
+    this.context.subscriptions.push(
+      workspace.onDidSaveTextDocument(this.onSave)
+    )
+
+    context.subscriptions.push(
+      workspace.onDidOpenTextDocument(this.onOpen)
+    )
   }
 
   start () {
-    this.actOnOpen(this.context)
-    this.actOnSave(this.context)
     this.languageClient.start()
   }
 
   async stop () {
-    if (this.languageClient) {
-      this.languageClient.stop()
-    }
+    this.languageClient.stop()
   }
 
-  private actOnOpen (context: ExtensionContext) {
-    context.subscriptions.push(
-      workspace.onDidOpenTextDocument(document => {
-        if (
-          document.languageId !== 'flux' ||
-          !document.fileName.endsWith('.flux')
-        ) {
-          return
-        }
+  private onOpen = (document: TextDocument) => {
+    if (!isFlux(document)) {
+      return
+    }
 
-        this.languageClient.sendNotification(
-          DidOpenTextDocumentNotification.type,
-          {
-            textDocument: {
-              uri: document.uri.toString(),
-              languageId: document.languageId,
-              text: document.getText(),
-              version: document.version
-            }
-          }
-        )
-      })
+    const { languageId, version } = document
+
+    this.languageClient.sendNotification(
+      DidOpenTextDocumentNotification.type,
+      {
+        textDocument: {
+          languageId,
+          version,
+          uri: document.uri.toString(),
+          text: document.getText()
+        }
+      }
     )
   }
 
-  private actOnSave (context: ExtensionContext): void {
-    context.subscriptions.push(
-      workspace.onDidSaveTextDocument(document => {
-        if (!isFlux(document)) {
-          return
-        }
+  private onSave = (document: TextDocument): void => {
+    if (!isFlux(document)) {
+      return
+    }
 
-        const { version, uri } = document
-        const textDocument = { uri: uri.toString(), version }
+    const { version, uri } = document
+    const textDocument = { uri: uri.toString(), version }
 
-        this.languageClient.sendNotification(
-          DidSaveTextDocumentNotification.type,
-          { textDocument }
-        )
-      })
+    this.languageClient.sendNotification(
+      DidSaveTextDocumentNotification.type,
+      { textDocument }
     )
   }
 }

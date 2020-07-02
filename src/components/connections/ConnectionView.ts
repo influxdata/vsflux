@@ -11,26 +11,24 @@ import {
 import { defaultV1URL, defaultV2URLList } from '../../util'
 import * as Mustache from 'mustache'
 
-export class EditConnectionView extends View {
+export class ConnectionView extends View {
   public constructor (context: ExtensionContext) {
     super(context, 'templates/editConn.html')
   }
 
-  public async showEdit (
-    tree: InfluxDBTreeDataProvider,
+  public async edit (
     conn: InfluxDBConnection
   ) {
-    this.show('Edit Connection', tree, conn)
+    return this.show('Edit Connection', conn)
   }
 
-  public async showNew (tree: InfluxDBTreeDataProvider) {
-    this.show('Add Connection', tree, emptyInfluxDBConnection)
+  public async create () {
+    return this.show('New Connection')
   }
 
   private async show (
     title: string,
-    tree: InfluxDBTreeDataProvider,
-    conn: InfluxDBConnection
+    conn: InfluxDBConnection = emptyInfluxDBConnection
   ) {
     const panel = window.createWebviewPanel(
       'InfluxDB',
@@ -45,27 +43,36 @@ export class EditConnectionView extends View {
       }
     )
 
-    panel.webview.html = await this.templateHTML(conn, {
-      cssPath: panel.webview.asWebviewUri(
-        Uri.file(path.join(this.context.extensionPath, 'templates', 'form.css'))
-      ),
-      jsPath: panel.webview.asWebviewUri(
-        Uri.file(
-          path.join(this.context.extensionPath, 'templates', 'editConn.js')
-        )
-      ),
+    panel.webview.html = await this.html(conn, {
+      cssPath: this.cssPath,
+      jsPath: this.jsPath,
       title
     })
 
-    await InfluxDBTreeDataProvider.setMessageHandler(panel, tree)
+    await this.tree.setMessageHandler(panel)
   }
 
-  private async templateHTML (
+  private get cssPath () {
+    return Uri.file(
+      path.join(this.context.extensionPath, 'templates', 'form.css')
+    ).with({ scheme: 'vscode-resource' })
+  }
+
+  private get jsPath () {
+    return Uri.file(
+      path.join(this.context.extensionPath, 'templates', 'editConn.js')
+    ).with({ scheme: 'vscode-resource' })
+  }
+
+  private get tree () {
+    return InfluxDBTreeDataProvider.instance
+  }
+
+  private async html (
     conn: InfluxDBConnection,
     params: { cssPath: Uri; jsPath: Uri; title: string }
   ): Promise<string> {
-    const template = await this.getTemplate()
-    return Mustache.render(template, {
+    return Mustache.render(this.template, {
       ...conn,
       ...params,
       isV1: conn.version === InfluxConnectionVersion.V1,
