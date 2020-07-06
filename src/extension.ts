@@ -3,14 +3,15 @@
 import { ExtensionContext } from 'vscode'
 
 import { Client } from './components/Client'
-import { Connection } from './components/connections/Connection'
+import { Connection, InfluxDBTreeDataProvider } from './components/connections/Connection'
 
 let client: Client
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate (context: ExtensionContext) {
-  new Connection(context).load()
+  InfluxDBTreeDataProvider.init(context)
+  Connection.load(context)
 
   client = new Client(context)
   await client.start()

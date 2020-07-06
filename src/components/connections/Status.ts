@@ -2,54 +2,47 @@ import { InfluxDBConnection } from './Connection'
 import { StatusBarItem, window, StatusBarAlignment } from 'vscode'
 import { CancelTokenSource } from 'axios'
 
+class ConnectionStatusBar {
+  public item: StatusBarItem;
+
+  constructor () {
+    this.item = window.createStatusBarItem(StatusBarAlignment.Left)
+  }
+
+  setIdle (connection?: InfluxDBConnection) {
+    this.item.text = ''
+    if (connection) {
+      this.item.text = `$(server) ${connection.name}`
+    }
+    this.item.command = undefined
+    this.item.show()
+  }
+
+  setQueryRunning () {
+    this.item.text = '$(chrome-close) cancel query'
+    this.item.command = 'influxdb.cancelQuery'
+    this.item.show()
+  }
+}
+
 export class Status {
   private static current?: InfluxDBConnection;
-  private static statusBarItem: StatusBarItem;
-  private static cancelTokenSource?: CancelTokenSource;
-
-  static get CancelTokenSource () {
-    return Status.cancelTokenSource
-  }
+  private static connectionStatusBar: ConnectionStatusBar = new ConnectionStatusBar()
 
   static get Current () {
     return Status.current
   }
 
-  private static get currentStatusBarText (): string {
-    if (!this.Current) {
-      return ''
-    }
-
-    return `$(server) ${this.Current.name}`
-  }
-
-  private static set statusBarText (val: string) {
-    if (!this.statusBarItem) {
-      this.statusBarItem = window.createStatusBarItem(
-        StatusBarAlignment.Left
-      )
-    }
-
-    this.statusBarItem.text = val
-  }
-
   static set Current (conn: InfluxDBConnection | undefined) {
     this.current = conn
-    this.statusBarText = Status.currentStatusBarText
-    this.statusBarItem.show()
+    this.connectionStatusBar.setIdle(conn)
   }
 
   static SetRunningQuery (source: CancelTokenSource) {
-    this.cancelTokenSource = source
-    this.statusBarItem.text = '$(chrome-close) cancel query'
-    this.statusBarItem.command = 'influxdb.cancelQuery'
-    this.statusBarItem.show()
+    this.connectionStatusBar.setQueryRunning()
   }
 
   static SetNotRunnningQuery () {
-    this.cancelTokenSource = undefined
-    this.statusBarItem.text = Status.currentStatusBarText
-    this.statusBarItem.command = ''
-    this.statusBarItem.show()
+    this.connectionStatusBar.setIdle(Status.Current)
   }
 }

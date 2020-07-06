@@ -1,7 +1,6 @@
 import { INode } from './INode'
 import { Queries } from '../Query'
 import {
-  ExtensionContext,
   TreeItem,
   TreeItemCollapsibleState
 } from 'vscode'
@@ -16,7 +15,7 @@ export class MeasurementNode implements INode {
     private readonly conn: InfluxDBConnection
   ) {}
 
-  public getTreeItem (_: ExtensionContext): TreeItem {
+  public getTreeItem (): TreeItem {
     return {
       label: this.measurement,
       contextValue: this.measurement,
@@ -30,7 +29,6 @@ export class MeasurementNode implements INode {
       const msg =
         `Getting tag keys for bucket: ${this.bucket}, measurement: ${this.measurement}: `
 
-      logger.show()
       logger.log(msg)
 
       const results = await Queries.tagKeys(this.conn, this.bucket, this.measurement)

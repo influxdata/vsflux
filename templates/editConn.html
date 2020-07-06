@@ -8,21 +8,23 @@
 </head>
 
 <body>
-	<form class="ui form">
-		<h4 class="ui dividing header">{{title}}</h4>
+	<form class="form">
+    <h1>{{title}}</h1>
+
 		<div class="field">
 			<label>Type</label>
 			<select id="connVersion">
-				<option value="0" {{^isV1}}selected="selected" {{/isV1}}>InfluxDB 2.0</option>
-				<option value="1" {{#isV1}}selected="selected" {{/isV1}}>InfluxDB 1.7</option>
+				<option value="0" {{^isV1}}selected="selected" {{/isV1}}>InfluxDB v2</option>
+				<option value="1" {{#isV1}}selected="selected" {{/isV1}}>InfluxDB v1</option>
 			</select>
-		</div>
+    </div>
+
 		<div class="field" id="connName">
 			<label>Name</label>
 			<input required="true" type="text" name="name" placeholder="local" value="{{name}}">
-			<div class="ui negative hidden errMsg message">
 			</div>
-		</div>
+    </div>
+
 		<div class="field" id="connHost" data-v1="{{defaultHostV1}}">
 			<label>Hostname and Port</label>
 			<input required="true" list="hosts" type="url" name="host" placeholder="http://localhost:9999"
@@ -33,24 +35,27 @@
 				{{/defaultHostLists}}
 			</datalist>
 			</input>
-			<div class="ui negative hidden message errMsg">
 			</div>
-		</div>
+    </div>
+
 		<div class="field" id="connToken">
 			<label>Token</label>
 			<input required="true" name="token" placeholder="yOuRtOkEn==" value="{{token}}">
-			<div class="ui negative hidden message errMsg">
 			</div>
-		</div>
+    </div>
+
 		<div class="field" id="connOrg">
 			<label>Organization Name</label>
 			<input required="true" type="text" name="org" placeholder="YourOrg" value="{{org}}">
-			<div class="ui negative hidden message errMsg">
 			</div>
-		</div>
-		<input type="hidden" id="connID" value="{{id}}">
-		<div class="ui teal button" id="testConn" tabindex="0">Test Connection</div>
-		<div class="ui blue button" id="save" tabindex="0">Save</div>
+    </div>
+
+    <input type="hidden" id="connID" value="{{id}}">
+
+    <div class="actions">
+      <span class="teal button" id="testConn" tabindex="0">Test</span>
+      <span class="blue button" id="save" tabindex="0">Save</span>
+    </div>
 	</form>
 	<script src="{{jsPath}}"></script>
 </body>

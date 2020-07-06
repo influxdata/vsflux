@@ -1,176 +1,110 @@
 body {
-  line-height: 1.4285em;
-  padding: 1rem;
-  background-color: rgba(44, 44, 44, 0.774);
+  background-color: #333333
 }
+
 .hidden {
   display: none;
 }
-.ui.dividing.header {
-  padding-bottom: 0.21428571rem;
+
+form h1 {
+  font-size: 18px;
   border-bottom: 1px solid #eee;
+  margin-bottom: 25px;
+  padding-bottom: 5px;
 }
-.ui.header:first-child {
-  margin-top: -0.14285714em;
+
+form .field {
+  margin-bottom: 15px;
 }
-.ui.form {
-  position: relative;
-  max-width: 100%;
-  font-size: 0.8rem;
-}
-.ui.form .field {
-  clear: both;
-  margin: 0 0 1em;
-}
-.ui.form .field > label {
+
+form .field > label {
   display: block;
-  margin: 0 0 0.3em 1.4em;
-  font-size: 0.7em;
-  font-weight: 700;
+  margin: 0;
+  font-size: 12px;
   text-transform: none;
-}
-.ui.form input:not([type]),
-.ui.form input[type="date"],
-.ui.form input[type="datetime-local"],
-.ui.form input[type="email"],
-.ui.form input[type="file"],
-.ui.form input[type="number"],
-.ui.form input[type="password"],
-.ui.form input[type="search"],
-.ui.form input[type="tel"],
-.ui.form input[type="text"],
-.ui.form input[type="time"],
-.ui.form input[type="url"],
-.ui.form select {
-  margin: 0 1em;
-  outline: 0;
-  width: 90%;
-  vertical-align: top;
-  -webkit-appearance: none;
-  line-height: 1em;
-  padding: 0.25em 0.5em;
-  font-size: 1em;
-  background: #fff;
-  border: 1px solid rgba(34, 36, 38, 0.15);
-  color: rgba(1, 1, 1, 0.87);
-  border-radius: 0.28571429rem;
-  box-shadow: 0 0 0 0 transparent inset;
-  transition: color 0.1s ease, border-color 0.1s ease;
+  margin-bottom: 5px;
 }
 
-*,
-:after,
-:before {
-  box-sizing: inherit;
-}
-
-.ui.blue.button {
-  box-shadow: 0 0 0 0 rgba(34, 36, 38, 0.15) inset;
-}
-
-.ui.teal.button, .ui.teal.buttons .button {
-  background-color: #00b5ad;
-  color: #fff;
-  text-shadow: none;
-  background-image: none;
-}
-
-.ui.blue.button,
-.ui.blue.buttons .button {
-  background-color: #2185d0;
-  color: #fff;
-  text-shadow: none;
-  background-image: none;
-}
-.ui.button,
-.ui.buttons .button,
-.ui.buttons .or {
-  font-size: 0.8rem;
-}
-.ui.button {
-  cursor: pointer;
-  display: inline-block;
-  min-height: 1em;
+form input,
+form select {
+  padding: 2px;
+  font-size: 12px;
+  background: #ffffff;
   outline: 0;
   border: none;
-  vertical-align: baseline;
-  background: #e0e1e2 none;
-  color: rgba(0, 0, 0, 0.6);
-  margin: 0 0.25em 0 1em;
-  padding: 0.3em 1.5em 0.3em;
-  text-transform: none;
-  text-shadow: none;
-  font-style: normal;
-  text-align: center;
-  text-decoration: none;
-  border-radius: 0.28571429rem;
-  box-shadow: 0 0 0 1px transparent inset, 0 0 0 0 rgba(34, 36, 38, 0.15) inset;
-  user-select: none;
-  transition: opacity 0.1s ease, background-color 0.1s ease, color 0.1s ease,
-    box-shadow 0.1s ease, background 0.1s ease, -webkit-box-shadow 0.1s ease;
-  will-change: "";
+  color: #000000;
+  box-shadow: 0 0 0 0 transparent inset;
+  transition: color 0.1s ease, border-color 0.1s ease;
+  border-radius: 0;
 }
-.ui.form .field.error .input,
-.ui.form .field.error label,
-.ui.form .fields.error .field .input,
-.ui.form .fields.error .field label {
+
+form select {
+  line-height: 16px;
+  width: 100px;
+
+  border-radius: 0;
+  -webkit-border-radius: 0px;
+  -webkit-appearance: none;
+
+  background-image: url("data:image/svg+xml;utf8,<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='24' height='24' viewBox='0 0 24 24'><path fill='%23444' d='M7.406 7.828l4.594 4.594 4.594-4.594 1.406 1.406-6 6-6-6z'></path></svg>");
+  background-position: 100% 50%;
+  background-repeat: no-repeat;
+}
+
+form select option {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+form input {
+  width: 250px;
+}
+
+.blue {
+  background-color: #2185d0;
+}
+
+.teal {
+  background-color: #00b5ad;
+}
+
+.button {
+  cursor: pointer;
+
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+
+  color: #ffffff;
+
+  text-align: center;
+}
+
+.actions {
+  margin-top: 25px;
+}
+
+/* Error */
+form .field.error .input,
+form .field.error label,
+form .fields.error .field .input,
+form .fields.error .field label {
   color: #9f3a38;
 }
-.ui.form .field.error input:not([type]),
-.ui.form .field.error input[type="date"],
-.ui.form .field.error input[type="datetime-local"],
-.ui.form .field.error input[type="email"],
-.ui.form .field.error input[type="file"],
-.ui.form .field.error input[type="number"],
-.ui.form .field.error input[type="password"],
-.ui.form .field.error input[type="search"],
-.ui.form .field.error input[type="tel"],
-.ui.form .field.error input[type="text"],
-.ui.form .field.error input[type="time"],
-.ui.form .field.error input[type="url"],
-.ui.form .field.error select,
-.ui.form .field.error textarea,
-.ui.form .fields.error .field input:not([type]),
-.ui.form .fields.error .field input[type="date"],
-.ui.form .fields.error .field input[type="datetime-local"],
-.ui.form .fields.error .field input[type="email"],
-.ui.form .fields.error .field input[type="file"],
-.ui.form .fields.error .field input[type="number"],
-.ui.form .fields.error .field input[type="password"],
-.ui.form .fields.error .field input[type="search"],
-.ui.form .fields.error .field input[type="tel"],
-.ui.form .fields.error .field input[type="text"],
-.ui.form .fields.error .field input[type="time"],
-.ui.form .fields.error .field input[type="url"],
-.ui.form .fields.error .field select,
-.ui.form .fields.error .field textarea {
+
+form .field.error input,
+form .field.error select,
+form .field.error textarea,
+form .fields.error .field input,
+form .fields.error .field select,
+form .fields.error .field textarea {
   background: #fff6f6;
   border-color: #e0b4b4;
   color: #9f3a38;
   box-shadow: none;
 }
-.ui.checkbox {
-  position: relative;
-  display: block;
-  backface-visibility: hidden;
-  outline: 0;
-  font-style: normal;
-  min-height: 17px;
-  font-size: 1rem;
-  line-height: 17px;
-  min-width: 17px;
-  margin: 0.5em 2em 0.5em 0.6em;
-}
 
-/* Error */
-.ui.form .error ::-webkit-input-placeholder {
-  color: #e7bdbc;
-}
-.ui.negative.message {
-  color: #9f3a38;
-  font-size: x-small;
-  position: relative;
-  top: -1em;
-  padding: 0 1.3em;
-  line-height: 1.4285em;
+::-webkit-input-placeholder {
+  color: #AAA;
 }

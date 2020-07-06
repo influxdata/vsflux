@@ -1,26 +1,19 @@
-import { View } from './View'
 import * as path from 'path'
+import * as Mustache from 'mustache'
 import { ExtensionContext, window, ViewColumn, Uri } from 'vscode'
 
-import * as Mustache from 'mustache'
-
-type Rows = string[][];
-
-export interface QueryResult {
-  tables: TableResult[],
-  raw: string,
-}
-
-export interface TableResult {
-  head: string[];
-  rows: Rows;
-}
-
-export var EmptyTableResult = { head: [], rows: [] }
+import { View } from './View'
+import { TableResult } from './util/query'
 
 export class TableView extends View {
   public constructor (context: ExtensionContext) {
     super(context, 'templates/table.html')
+  }
+
+  private get cssPath () {
+    return Uri.file(
+      path.join(this.context.extensionPath, 'templates', 'table.css')
+    )
   }
 
   public async show (results: TableResult[], title: string) {
@@ -28,13 +21,8 @@ export class TableView extends View {
       retainContextWhenHidden: true
     })
 
-    const template = await this.getTemplate()
-    panel.webview.html = Mustache.render(template, {
-      cssPath: panel.webview.asWebviewUri(
-        Uri.file(
-          path.join(this.context.extensionPath, 'templates', 'table.css')
-        )
-      ),
+    panel.webview.html = Mustache.render(this.template, {
+      cssPath: panel.webview.asWebviewUri(this.cssPath),
       results: results
     })
   }

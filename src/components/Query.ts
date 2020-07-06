@@ -3,9 +3,11 @@ import {
   InfluxDBConnection,
   InfluxConnectionVersion
 } from './connections/Connection'
-import { TableResult, QueryResult, TableView, EmptyTableResult } from './TableView'
+import { TableView } from './TableView'
 import { Status } from './connections/Status'
-import axios from 'axios'
+import axios, { CancelTokenSource } from 'axios'
+
+import { TableResult, QueryResult, EmptyTableResult, v1QueryResponseToTableResult, queryResponseToTableResult } from './util/query'
 
 import { logger } from '../util'
 
@@ -21,36 +23,43 @@ export class ViewEngine extends Engine {
     this.tableView = new TableView(context)
   }
 
-  public async TableView (connection?: InfluxDBConnection, query?: string) {
+  private showNoConnectionWarning () {
+    window.showWarningMessage('No influxDB Server selected')
+  }
+
+  private showNoFluxWarning () {
+    return window.showWarningMessage('No Flux file selected')
+  }
+
+  private get query () {
     const { activeTextEditor } = window
 
-    if (!query && !activeTextEditor) {
-      return window.showWarningMessage('No Flux file selected')
+    if (!activeTextEditor) {
+      return
     }
 
-    connection = connection || Status.Current
+    if (activeTextEditor.selection.isEmpty) {
+      return activeTextEditor.document.getText()
+    }
 
-    if (!connection) {
+    return activeTextEditor.document.getText(activeTextEditor.selection)
+  }
+
+  public async showTable () {
+    if (!this.query) {
+      return this.showNoFluxWarning()
+    }
+
+    if (!Status.Current) {
       window.showWarningMessage('No influxDB Server selected')
       return
     }
 
-    if (!query && activeTextEditor) {
-      if (activeTextEditor.selection.isEmpty) {
-        query = activeTextEditor.document.getText()
-      } else {
-        query = activeTextEditor.document.getText(activeTextEditor.selection)
-      }
-    }
-
-    query = query || ''
-
-    logger.log(`Running Query: '${query}'`)
-    logger.show()
+    logger.log(`Running Query: '${this.query}'`)
 
     try {
-      const results = await APIRequest.query(connection, query)
-      return this.tableView.show(results.tables, connection.name)
+      const results = await APIRequest.query(Status.Current, this.query)
+      return this.tableView.show(results.tables, Status.Current?.name)
     } catch (e) {
       logger.log(e.toString())
     }
@@ -199,17 +208,9 @@ export class Queries {
   }
 }
 
-interface V1Result {
-  series: Array<V1Row>;
-  error: string;
-}
-
-interface V1Row {
-  columns: Array<string>;
-  values: Array<Array<string>>;
-}
-
 export class APIRequest {
+  private static source?: CancelTokenSource;
+
   public static async queryV1 (
     conn: InfluxDBConnection,
     query: string,
@@ -219,23 +220,20 @@ export class APIRequest {
       results: []
     }
     try {
-      const source = axios.CancelToken.source()
-      Status.SetRunningQuery(source)
+      this.source = axios.CancelToken.source()
       const encodedQuery = encodeURI(query)
       const url = `${conn.hostNport}/query?db=${encodeURI(
         bucket
       )}&q=${encodedQuery}`
-      data = (await axios({ method: 'GET', url, cancelToken: source.token }))
+      data = (await axios({ method: 'GET', url, cancelToken: this.source.token }))
         .data
     } catch (err) {
       const message = err?.response?.data?.error
       if (message) {
         throw new Error(message)
       } else if (err instanceof Error) {
-        // connection error
         throw err
       } else {
-        // unknown error
         throw new Error(err.toString())
       }
     } finally {
@@ -254,9 +252,9 @@ export class APIRequest {
   };
 
   public static cancelQuery () {
-    const source = Status.CancelTokenSource
-    if (source) {
-      source.cancel()
+    if (this.source) {
+      this.source.cancel()
+      this.source = undefined
     }
   }
 
@@ -274,8 +272,7 @@ export class APIRequest {
   ): Promise<QueryResult> {
     let data: string = ''
     try {
-      const source = axios.CancelToken.source()
-      Status.SetRunningQuery(source)
+      this.source = axios.CancelToken.source()
       data = (
         await axios({
           method: 'POST',
@@ -291,7 +288,7 @@ export class APIRequest {
           headers: {
             Authorization: `Token ${conn.token}`
           },
-          cancelToken: source.token
+          cancelToken: this.source.token
         })
       ).data
     } catch (err) {
@@ -316,44 +313,4 @@ export class APIRequest {
       raw: data
     }
   }
-}
-
-export function queryResponseToTableResult (body: string): TableResult[] {
-  const accum: TableResult[] = []
-  return body
-    .split(/\r?\n\r?\n/)
-    .filter((v) => v) // kill the blank lines
-    .reduce((acc, group) => {
-      const rows = group.split('\n').filter((v) => !v.startsWith('#') && v)
-      const result: TableResult = {
-        head: rows[0].split(',').slice(3),
-        rows: rows.slice(1).map((v) => v.split(',').slice(3))
-      }
-      acc.push(result)
-      return acc
-    }, accum)
-}
-
-function v1QueryResponseToTableResult (body: {
-  results: V1Result[];
-}): TableResult[] {
-  const results: Array<V1Result> = body.results
-
-  if (results.length === 0) {
-    return [EmptyTableResult]
-  }
-
-  if (results[0]?.error) {
-    throw new Error(results[0].error)
-  }
-  const tableResults: TableResult[] = []
-
-  results[0].series.forEach((result) => {
-    tableResults.push({
-      head: result.columns,
-      rows: result.values
-    })
-  })
-
-  return tableResults
 }

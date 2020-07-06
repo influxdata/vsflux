@@ -18,7 +18,8 @@
 	},
 	"exclude": [
 		"dist",
-		"out",
+    "out",
+    "test",
 		"node_modules",
 		"test-resources",
 		".vscode-test",
