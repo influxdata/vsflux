@@ -9,8 +9,7 @@ import {
   StreamInfo,
   ErrorAction,
   CloseAction,
-  RevealOutputChannelOn,
-  VersionedTextDocumentIdentifier
+  RevealOutputChannelOn
 } from 'vscode-languageclient'
 
 import { Server } from '@influxdata/flux-lsp-node'
