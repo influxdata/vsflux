@@ -9,8 +9,8 @@ jobs:
           name: download deps
           command: npm i
       - run:
-          name: run selenium test
-          command: npm run ui-test
+          name: run tests
+          command: npm test
 
   publish:
     docker:
