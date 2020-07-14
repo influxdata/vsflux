@@ -125,6 +125,7 @@ implements vscode.TreeDataProvider<INode> {
       await Queries.buckets(conn)
       vscode.window.showInformationMessage('Success')
     } catch (e) {
+      console.error(e)
       vscode.window.showErrorMessage('Failed to connect to database')
     }
   }

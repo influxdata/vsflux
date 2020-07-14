@@ -1,15 +1,5 @@
 export const EmptyTableResult = { head: [], rows: [] }
 
-export interface V1Result {
-  series: Array<V1Row>;
-  error: string;
-}
-
-export interface V1Row {
-  columns: Array<string>;
-  values: Array<Array<string>>;
-}
-
 export interface QueryResult {
   tables: TableResult[],
   raw: string,
@@ -36,28 +26,4 @@ export function queryResponseToTableResult (body: string): TableResult[] {
       acc.push(result)
       return acc
     }, accum)
-}
-
-export function v1QueryResponseToTableResult (body: {
-  results: V1Result[];
-}): TableResult[] {
-  const results: Array<V1Result> = body.results
-
-  if (results.length === 0) {
-    return [EmptyTableResult]
-  }
-
-  if (results[0]?.error) {
-    throw new Error(results[0].error)
-  }
-  const tableResults: TableResult[] = []
-
-  results[0].series.forEach((result) => {
-    tableResults.push({
-      head: result.columns,
-      rows: result.values
-    })
-  })
-
-  return tableResults
 }
