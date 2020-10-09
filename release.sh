@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 current_branch=$(git branch --show-current)
 git_changes=$(git status -s | wc -l)
 if [[ $git_changes != 0 ]]; then
@@ -15,6 +13,7 @@ if [[ $git_changes != 0 ]]; then
 fi
 
 git fetch
+git checkout master
 ahead=$(git status -sb | grep ahead -c)
 if [[ $ahead != 0 ]]; then
 	echo "Your local master branch is ahead of the remote master branch. Exiting."
@@ -33,7 +32,6 @@ if [[ $continue != "yes" && $continue != "y" && $continue != "Yes" && $continue 
 	exit
 fi
 
-git checkout master
 git pull origin master
 
 version=v$(cat package.json| grep -Po -m 1 '\d+\.\d+\.\d+')
@@ -49,4 +47,4 @@ git tag -a $new_version HEAD -m "Release $new_verion"
 git push origin master --follow-tags
 
 # Requires the hub CLI tool to be installed
-hub release create $new_version -m "Release $new_version" 
+hub release create $new_version -m "Release $new_version" -e
