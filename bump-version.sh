@@ -38,16 +38,18 @@ npm version $release_type --no-git-tag-version
 npm install
 new_version=v$(cat package.json | grep -Po -m 1 '\d+\.\d+\.\d+')
 
-git checkout -B bump-$new_version
-echo "Checking out branch \`bump-$new_version\`"
+branch_name=bump-$new_version
+
+git checkout -B $branch_name
+echo "Checking out branch \`$branch_name\`"
 
 echo "Incrementing version"
 echo "$version -> $new_version"
 
 git add .
 git commit -m "build: Release $new_version"
-git push origin master
+git push -u origin $branch_name
 
 hub pull-request -o \
-	-m "build: Increment version" \
+	-m "build: Release $new_version" \
 	-m "Change version from $version to $new_version" &> /dev/null &
