@@ -85,6 +85,11 @@
         "category": "InfluxDB"
       },
       {
+        "command": "influxdb.switchConnection",
+        "title": "Switch Connection",
+        "category": "InfluxDB"
+      },
+      {
         "command": "influxdb.editConnection",
         "title": "Edit Connection",
         "category": "InfluxDB"
@@ -137,7 +142,7 @@
         "properties": {
           "vsflux.defaultInfluxDBURLs": {
             "default": [
-              "http://localhost:9999",
+              "http://localhost:8086",
               "https://us-central1-1.gcp.cloud2.influxdata.com",
               "https://us-west-2-1.aws.cloud2.influxdata.com",
               "https://eu-central-1-1.aws.cloud2.influxdata.com"

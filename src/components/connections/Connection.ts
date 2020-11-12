@@ -4,7 +4,7 @@ import { v1 as uuid } from 'uuid'
 import { ViewEngine as QueryViewEngine, Queries, APIRequest } from '../Query'
 import { INode } from './INode'
 import { Status } from './Status'
-import { ConnectionNode, InfluxDBConectionsKey } from './ConnectionNode'
+import { ConnectionNode, InfluxDBConnectionsKey } from './ConnectionNode'
 import { ConnectionView } from './ConnectionView'
 
 enum MessageType {
@@ -92,11 +92,11 @@ implements vscode.TreeDataProvider<INode> {
     }, null)
   }
 
-  private async getConnectionNodes (
+  public async getConnectionNodes (
   ): Promise<ConnectionNode[]> {
     const connections = this.context.globalState.get<{
       [key: string]: InfluxDBConnection;
-    }>(InfluxDBConectionsKey) || {}
+    }>(InfluxDBConnectionsKey) || {}
     const ConnectionNodes = []
     const activeID = Status.Current?.id
 
@@ -107,8 +107,9 @@ implements vscode.TreeDataProvider<INode> {
         Status.Current = connection
       }
 
+			const label = `${connection.name} - ${connection.hostNport} - ${id}`
       ConnectionNodes.push(
-        new ConnectionNode(connection, this.context)
+        new ConnectionNode(connection, this.context, label)
       )
     }
 
@@ -135,7 +136,7 @@ implements vscode.TreeDataProvider<INode> {
   ) {
     const connections = this.context.globalState.get<{
       [key: string]: InfluxDBConnection;
-    }>(InfluxDBConectionsKey) || {}
+    }>(InfluxDBConnectionsKey) || {}
 
     for (const connection of Object.values(connections)) {
       connection.isActive = false
@@ -145,7 +146,7 @@ implements vscode.TreeDataProvider<INode> {
     connections[target.id] = target
     Status.Current = target
 
-    await this.context.globalState.update(InfluxDBConectionsKey, connections)
+    await this.context.globalState.update(InfluxDBConnectionsKey, connections)
     this.refresh()
   }
 
@@ -177,7 +178,16 @@ export class Connection {
     return connection
   }
 
-  public load () {
+  public async load () {
+		var nodes = await this.tree.getConnectionNodes()
+		for (var i=0; i < nodes.length; i++) {
+			if (nodes[i].connection.isActive) {
+				console.log("Loaded + " + nodes[i].label)
+				this.tree.setCurrent(nodes[i].connection)
+				Status.Current = nodes[i].connection
+			}
+		}
+
     this.context.subscriptions.push(
       vscode.window.registerTreeDataProvider('influxdb', this.tree)
     )
@@ -199,14 +209,30 @@ export class Connection {
     this.context.subscriptions.push(
       vscode.commands.registerCommand(
         'influxdb.removeConnection',
-        this.removeConnection
+				async () => {
+					var nodes = await this.tree.getConnectionNodes()
+					var node = await vscode.window.showQuickPick(
+						nodes, 
+						{canPickMany: false}
+					) || new ConnectionNode(emptyInfluxDBConnection, this.context, '')
+					this.removeConnection(node)
+				},
+				this
       )
     )
 
     this.context.subscriptions.push(
       vscode.commands.registerCommand(
         'influxdb.editConnection',
-        this.editConnection
+				async () => {
+					var nodes = await this.tree.getConnectionNodes()
+					var node = await vscode.window.showQuickPick(
+						nodes, 
+						{canPickMany: false}
+					) || new ConnectionNode(emptyInfluxDBConnection, this.context, '')
+					this.editConnection(node)
+				},
+				this
       )
     )
 
@@ -219,8 +245,16 @@ export class Connection {
 
     this.context.subscriptions.push(
       vscode.commands.registerCommand(
-        'influxdb.switchConn',
-        this.switchConnection
+        'influxdb.switchConnection',
+				async () => {
+					var nodes = await this.tree.getConnectionNodes()
+					var node = await vscode.window.showQuickPick(
+						nodes, 
+						{canPickMany: false}
+					) || new ConnectionNode(emptyInfluxDBConnection, this.context, '')
+					this.switchConnection(node)
+				},
+				this
       )
     )
 

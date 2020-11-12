@@ -14,12 +14,13 @@ import { Status } from './Status'
 import { ConnectionView } from './ConnectionView'
 import { logger } from '../../util'
 
-export const InfluxDBConectionsKey = 'influxdb.connections'
+export const InfluxDBConnectionsKey = 'influxdb.connections'
 
 export class ConnectionNode implements INode {
   constructor (
     public connection: InfluxDBConnection,
-    private context: ExtensionContext
+    private context: ExtensionContext,
+		public label: string
   ) {}
 
   public get status () {
@@ -74,7 +75,7 @@ export class ConnectionNode implements INode {
   ) {
     const connections = this.context.globalState.get<{
       [key: string]: InfluxDBConnection;
-    }>(InfluxDBConectionsKey) || {}
+    }>(InfluxDBConnectionsKey) || {}
 
     delete connections[this.connection.id]
 
@@ -82,7 +83,7 @@ export class ConnectionNode implements INode {
       Status.Current = Object.values(connections)[0]
     }
 
-    await this.context.globalState.update(InfluxDBConectionsKey, connections)
+    await this.context.globalState.update(InfluxDBConnectionsKey, connections)
 
     this.tree.refresh()
   }
