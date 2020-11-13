@@ -179,8 +179,8 @@ export class Connection {
   }
 
   public async load () {
-		var nodes = await this.tree.getConnectionNodes()
-		for (var i=0; i < nodes.length; i++) {
+		const nodes = await this.tree.getConnectionNodes()
+		for (let i=0; i < nodes.length; i++) {
 			if (nodes[i].connection.isActive) {
 				this.tree.setCurrent(nodes[i].connection)
 				Status.Current = nodes[i].connection
@@ -210,8 +210,8 @@ export class Connection {
       vscode.commands.registerCommand(
         'influxdb.removeConnection',
 				async () => {
-					var nodes = await this.tree.getConnectionNodes()
-					var node = await vscode.window.showQuickPick(
+					const nodes = await this.tree.getConnectionNodes()
+					const node = await vscode.window.showQuickPick(
 						nodes, 
 						{canPickMany: false}
 					) || new ConnectionNode(emptyInfluxDBConnection, this.context, '')
@@ -225,8 +225,8 @@ export class Connection {
       vscode.commands.registerCommand(
         'influxdb.editConnection',
 				async () => {
-					var nodes = await this.tree.getConnectionNodes()
-					var node = await vscode.window.showQuickPick(
+					const nodes = await this.tree.getConnectionNodes()
+					const node = await vscode.window.showQuickPick(
 						nodes, 
 						{canPickMany: false}
 					) || new ConnectionNode(emptyInfluxDBConnection, this.context, '')
@@ -247,8 +247,8 @@ export class Connection {
       vscode.commands.registerCommand(
         'influxdb.switchConnection',
 				async () => {
-					var nodes = await this.tree.getConnectionNodes()
-					var node = await vscode.window.showQuickPick(
+					const nodes = await this.tree.getConnectionNodes()
+					const node = await vscode.window.showQuickPick(
 						nodes, 
 						{canPickMany: false}
 					) || new ConnectionNode(emptyInfluxDBConnection, this.context, '')
