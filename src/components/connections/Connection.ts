@@ -183,7 +183,6 @@ export class Connection {
 		for (let i=0; i < nodes.length; i++) {
 			if (nodes[i].connection.isActive) {
 				this.tree.setCurrent(nodes[i].connection)
-				Status.Current = nodes[i].connection
 				break
 			}
 		}
