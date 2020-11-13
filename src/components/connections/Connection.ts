@@ -182,9 +182,9 @@ export class Connection {
 		var nodes = await this.tree.getConnectionNodes()
 		for (var i=0; i < nodes.length; i++) {
 			if (nodes[i].connection.isActive) {
-				console.log("Loaded + " + nodes[i].label)
 				this.tree.setCurrent(nodes[i].connection)
 				Status.Current = nodes[i].connection
+				break
 			}
 		}
 
