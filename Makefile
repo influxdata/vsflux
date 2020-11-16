@@ -6,3 +6,6 @@ minor-version:
 
 tag-release:
 	./tag-release.sh
+
+fmt:
+	tsfmt -r
