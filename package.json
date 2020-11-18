@@ -145,7 +145,10 @@
               "http://localhost:8086",
               "https://us-central1-1.gcp.cloud2.influxdata.com",
               "https://us-west-2-1.aws.cloud2.influxdata.com",
-              "https://eu-central-1-1.aws.cloud2.influxdata.com"
+              "https://us-east-1-1.aws.cloud2.influxdata.com",
+              "https://eu-central-1-1.aws.cloud2.influxdata.com",
+              "https://westeurope-1.azure.cloud2.influxdata.com",
+              "https://eastus-1.azure.cloud2.influxdata.com"
             ],
             "description": "The URL lists of influxdb 2"
           },
