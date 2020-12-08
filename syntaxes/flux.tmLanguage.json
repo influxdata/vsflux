@@ -30,7 +30,7 @@
       "patterns": [
         {
           "name": "keyword.control.flux",
-          "match": "\\b(in|import|package|return|option|builtin|test|if|then|else|exists)\\b"
+          "match": "\\b(in|import|package|return|option|builtin|test|testcase|if|then|else|exists)\\b"
         },
         {
           "name": "keyword.operator",
