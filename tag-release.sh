@@ -35,4 +35,5 @@ git push origin master $new_version
 lsp_version=v$(cat package.json | grep -P -m 1 '"@influxdata/flux-lsp-node":' | grep -Po '\d+\.\d+\.\d+')
 
 hub release create $new_version -m "Release $new_version
+
 - Upgrade to [Flux LSP $lsp_version](https://github.com/influxdata/flux/releases/tag/$lsp_version)" -e
