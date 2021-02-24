@@ -46,10 +46,13 @@ echo "Checking out branch \`$branch_name\`"
 echo "Incrementing version"
 echo "$version -> $new_version"
 
-git add .
-git commit -m "build: Release $new_version"
+git commit -am "build: Release $new_version"
+npm add @influxdata/flux-lsp-node
+git commit -am "build: Import latest version of flux-lsp-node"
 git push -u origin $branch_name
 
 hub pull-request -o \
 	-m "build: Release $new_version" \
-	-m "Change version from $version to $new_version" &> /dev/null &
+	-m "- Change version from $version to $new_version
+- Import latest version of flux-lsp-node
+" &> /dev/null &
