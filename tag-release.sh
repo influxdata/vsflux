@@ -36,4 +36,4 @@ lsp_version=v$(cat package.json | grep -P -m 1 '"@influxdata/flux-lsp-node":' | 
 
 hub release create $new_version -m "Release $new_version
 
-- Upgrade to [Flux LSP $lsp_version](https://github.com/influxdata/flux/releases/tag/$lsp_version)" -e
+- Upgrade to [Flux LSP $lsp_version](https://github.com/influxdata/flux-lsp/releases/tag/$lsp_version)" -e
