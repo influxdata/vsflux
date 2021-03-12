@@ -23,7 +23,7 @@
     "theme": "light"
   },
   "engines": {
-    "vscode": "^1.44.0"
+    "vscode": "1.44.0"
   },
   "activationEvents": [
     "onLanguage:flux",
@@ -176,7 +176,7 @@
     "@types/node": "^13.11.1",
     "@types/through2": "^2.0.34",
     "@types/uuid": "^8.0.0",
-    "@types/vscode": "^1.44.0",
+    "@types/vscode": "1.44.0",
     "@typescript-eslint/eslint-plugin": "^2.28.0",
     "@typescript-eslint/parser": "^2.28.0",
     "chai": "^4.2.0",
