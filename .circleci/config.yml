@@ -28,7 +28,7 @@ workflows:
   version: 2.1
   verify:
     jobs:
-      - run-tests
+      - build-and-test
 
   publish:
     jobs:
