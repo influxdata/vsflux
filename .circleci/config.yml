@@ -9,6 +9,9 @@ jobs:
           name: download deps
           command: npm i
       - run:
+          name: install tsc   
+          command: sudo npm i -g tsc
+      - run:
           name: build
           command: tsc
       - run:
