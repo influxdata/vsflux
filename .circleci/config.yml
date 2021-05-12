@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   build-and-test:
     docker:
-      - image: circleci/node:12.4-browsers
+      - image: circleci/node:14.16-browsers
     steps:
       - checkout
       - run:
@@ -10,7 +10,7 @@ jobs:
           command: npm i
       - run:
           name: install tsc   
-          command: sudo npm i -g tsc
+          command: sudo npm i -g typescript
       - run:
           name: build
           command: tsc
@@ -20,7 +20,7 @@ jobs:
 
   publish:
     docker:
-      - image: circleci/node:12.4
+      - image: circleci/node:14.16
     steps:
       - checkout
       - run: npm i
