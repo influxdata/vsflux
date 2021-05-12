@@ -10,7 +10,7 @@ jobs:
           command: npm i
       - run:
           name: install tsc   
-          command: sudo npm i -g tsc
+          command: sudo npm i -g typescript
       - run:
           name: build
           command: tsc
