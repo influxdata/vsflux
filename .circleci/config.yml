@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  run-tests:
+  build-and-test:
     docker:
       - image: circleci/node:12.4-browsers
     steps:
@@ -8,6 +8,12 @@ jobs:
       - run:
           name: download deps
           command: npm i
+      - run:
+          name: install tsc   
+          command: sudo npm i -g tsc
+      - run:
+          name: build
+          command: tsc
       - run:
           name: run tests
           command: npm test
@@ -25,7 +31,7 @@ workflows:
   version: 2.1
   verify:
     jobs:
-      - run-tests
+      - build-and-test
 
   publish:
     jobs:

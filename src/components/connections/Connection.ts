@@ -45,10 +45,10 @@ export class InfluxDBTreeDataProvider
 	}
 
 	public _onDidChangeTreeData : vscode.EventEmitter<
-		INode
-	> = new vscode.EventEmitter<INode>();
+		void
+	> = new vscode.EventEmitter<void>();
 
-	public readonly onDidChangeTreeData : vscode.Event<INode> = this
+	public readonly onDidChangeTreeData : vscode.Event<void> = this
 		._onDidChangeTreeData.event;
 
 	constructor(
@@ -66,8 +66,8 @@ export class InfluxDBTreeDataProvider
 		return this.getConnectionNodes()
 	}
 
-	public refresh(element ?: INode) : void {
-		this._onDidChangeTreeData.fire(element)
+	public refresh() : void {
+		this._onDidChangeTreeData.fire()
 	}
 
 	public async addConnection() {
