@@ -1,6 +1,6 @@
 {
   "name": "flux",
-  "version": "0.5.28",
+  "version": "0.5.29",
   "publisher": "influxdata",
   "displayName": "Flux",
   "description": "Flux language extension for VSCode",
@@ -23,7 +23,7 @@
     "theme": "light"
   },
   "engines": {
-    "vscode": "1.56.0"
+    "vscode": "1.56.1"
   },
   "activationEvents": [
     "onLanguage:flux",
