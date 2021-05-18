@@ -8,15 +8,15 @@ class Logger {
 	}
 
 	show() {
-		this.out.show()
+		this.out.show(true)
 	}
 
 	log(msg : string) {
-		this.out.appendLine(`${now()} - ${msg}`)
+		this.out.appendLine(`[${now()}] - ${msg}`)
 	}
 }
 
-export const logger = new Logger(vscode.window.createOutputChannel('influxdb'))
+export const logger = new Logger(vscode.window.createOutputChannel('Flux'))
 
 export function getConfig() {
 	return vscode.workspace.getConfiguration('vsflux')
