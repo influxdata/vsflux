@@ -51,7 +51,7 @@ npm add @influxdata/flux-lsp-node
 git commit -am "build: Import latest version of flux-lsp-node"
 git push -u origin $branch_name
 
-hub pull-request -o \
+hub pull-request -o -r influxdata/team-flux \
 	-m "build: Release $new_version" \
 	-m "- Change version from $version to $new_version
 - Import latest version of flux-lsp-node
