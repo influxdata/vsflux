@@ -60,8 +60,7 @@ export class ViewEngine extends Engine {
 			const results = await APIRequest.query(Status.Current, this.query)
 			return this.tableView.show(results.tables, Status.Current?.name)
 		} catch (e) {
-			logger.log(`${e.toString()}\n`)
-			logger.show()
+			logger.logAndShow(`${e.toString()}\n`)
 		}
 	}
 }
