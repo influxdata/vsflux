@@ -7,6 +7,8 @@ import { Status } from './Status'
 import { ConnectionNode, InfluxDBConnectionsKey } from './ConnectionNode'
 import { ConnectionView } from './ConnectionView'
 
+import { logger } from '../../util'
+
 enum MessageType {
 	Test = 'testConn',
 	Save = 'save'
@@ -128,6 +130,7 @@ export class InfluxDBTreeDataProvider
 		} catch (e) {
 			console.error(e)
 			vscode.window.showErrorMessage('Failed to connect to database')
+			logger.logAndShow(`Failed to connect to database: ${e}`)
 		}
 	}
 

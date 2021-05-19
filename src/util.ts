@@ -14,6 +14,11 @@ class Logger {
 	log(msg : string) {
 		this.out.appendLine(`[${now()}] - ${msg}`)
 	}
+
+	logAndShow(msg: string) {
+		this.out.appendLine(`[${now()}] - ${msg}`)
+		this.out.show(true)
+	}
 }
 
 export const logger = new Logger(vscode.window.createOutputChannel('Flux'))
