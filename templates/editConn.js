@@ -99,11 +99,11 @@ class Actions {
       connOrg: ''
     }
 
-		// trim trailing slash on connHost input
-		let host = result.connHost
-		if (host[host.length-1] === '/') {
-			result.connHost = host.slice(0, -1)
-		}
+    // trim trailing slash on connHost input
+    let host = result.connHost
+    if (host[host.length-1] === '/') {
+      result.connHost = host.slice(0, -1)
+    }
 
     if (result.connVersion !== 1) {
       const connToken = this.tokenElement.querySelector('input').value
