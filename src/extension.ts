@@ -10,14 +10,14 @@ let client : Client
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context : ExtensionContext) {
-	InfluxDBTreeDataProvider.init(context)
-	Connection.load(context)
+    InfluxDBTreeDataProvider.init(context)
+    Connection.load(context)
 
-	client = new Client(context)
-	client.start()
+    client = new Client(context)
+    client.start()
 }
 
 // this method is called when your extension is deactivated
 export async function deactivate() {
-	await client.stop()
+    await client.stop()
 }
