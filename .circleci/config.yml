@@ -9,8 +9,11 @@ jobs:
           name: download deps
           command: npm i
       - run:
-          name: install tsc   
-          command: sudo npm i -g typescript
+          name: install tsc
+          command: sudo npm i -g typescript typescript-formatter
+      - run:
+          name: checkfmt
+          command: make checkfmt
       - run:
           name: build
           command: tsc

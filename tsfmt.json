@@ -4,7 +4,7 @@
   "tabSize": 4,
   "indentStyle": 2,
   "newLineCharacter": "\r\n",
-  "convertTabsToSpaces": false,
+  "convertTabsToSpaces": true,
   "insertSpaceAfterCommaDelimiter": true,
   "insertSpaceAfterSemicolonInForStatements": true,
   "insertSpaceBeforeAndAfterBinaryOperators": true,

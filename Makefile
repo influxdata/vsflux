@@ -9,3 +9,6 @@ tag-release:
 
 fmt:
 	tsfmt -r
+
+checkfmt:
+	tsfmt --verify
