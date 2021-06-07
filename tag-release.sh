@@ -27,12 +27,12 @@ if [[ $ahead != 0 ]]; then
 	exit 1
 fi
 
-new_version=v$(cat package.json | grep -Po -m 1 '\d+\.\d+\.\d+')
+new_version=v$(grep -Eom 1 "([0-9]{1,}\.)+[0-9]{1,}" package.json)
 
 git tag -a -s $new_version -m "Release $new_verion"
 git push origin master $new_version
 
-lsp_version=v$(cat package.json | grep -P -m 1 '"@influxdata/flux-lsp-node":' | grep -Po '\d+\.\d+\.\d+')
+lsp_version=v$(grep -E -m 1 '"@influxdata/flux-lsp-node":' package.json | grep -Eo "([0-9]{1,}\.)+[0-9]{1,}")
 
 hub release create $new_version -m "Release $new_version
 
