@@ -10,3 +10,13 @@ test-resources/**
 **/*.map
 **/*.ts
 webpack.config.js
+tag-release.sh
+tsfmt.json
+Makefile
+CHANGELOG.md
+bump-version.sh
+.github/
+.circleci
+*.vsix
+test/
+package.json
