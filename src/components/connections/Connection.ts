@@ -25,6 +25,8 @@ export interface InfluxDBConnection {
     readonly hostNport : string;
     readonly token : string;
     readonly org : string;
+    readonly user : string;
+    readonly pass : string;
     isActive : boolean;
 }
 
@@ -35,6 +37,8 @@ export const emptyInfluxDBConnection : InfluxDBConnection = {
     hostNport: '',
     token: '',
     org: '',
+    user: '',
+    pass: '',
     isActive: false
 }
 
@@ -318,6 +322,8 @@ interface Message {
     readonly connHost : string;
     readonly connToken : string;
     readonly connOrg : string;
+    readonly connUser : string;
+    readonly connPass : string;
 }
 
 function convertMessageToConnection(
@@ -335,6 +341,8 @@ function convertMessageToConnection(
         hostNport: message.connHost,
         token: message.connToken,
         org: message.connOrg,
+        user: message.connUser,
+        pass: message.connPass,
         isActive: isActive
     }
 }
