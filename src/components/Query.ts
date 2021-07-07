@@ -1,6 +1,6 @@
 import { ExtensionContext, window } from 'vscode'
 import {
-    InfluxDBConnection
+    InfluxDBConnection, InfluxConnectionVersion
 } from './connections/Connection'
 import { TableView } from './TableView'
 import { Status } from './connections/Status'
@@ -174,12 +174,19 @@ export class APIRequest {
         query : string
     ) : Promise<QueryResult> {
         let data : string = ''
+        let url : string = `${conn.hostNport}/api/v2/query`
         try {
             this.source = axios.CancelToken.source()
+            if (conn.version == InfluxConnectionVersion.V2) {
+                url = `${url}?org=${encodeURI(conn.org)}`
+            } else if (conn.version == InfluxConnectionVersion.V1) {
+                url = `${url}?u=${encodeURI(conn.user)}&p=${encodeURI(conn.pass)}`
+            }
+            logger.logAndShow(`URL: ${url}`)
             data = (
                 await axios({
                     method: 'POST',
-                    url: `${conn.hostNport}/api/v2/query?org=${encodeURI(conn.org)}`,
+                    url: url,
                     data: {
                         type: 'flux',
                         query: query,

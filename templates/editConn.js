@@ -66,6 +66,14 @@ class Actions {
     return document.querySelector('#connOrg')
   }
 
+	get usernameElement () {
+		return document.querySelector('#connUser')
+	}
+
+	get passwordElement () {
+		return document.querySelector('#connPass')
+	}
+
   get form () {
     return document.querySelector('form')
   }
@@ -96,7 +104,9 @@ class Actions {
       connHost: document.querySelector('#connHost input').value,
       connVersion: document.querySelector('#connVersion').value,
       connToken: '',
-      connOrg: ''
+      connOrg: '',
+      connUser: '',
+      connPass: '',
     }
 
     // trim trailing slash on connHost input
@@ -105,11 +115,12 @@ class Actions {
       result.connHost = host.slice(0, -1)
     }
 
-    if (result.connVersion !== 1) {
-      const connToken = this.tokenElement.querySelector('input').value
-      const connOrg = this.orgElement.querySelector('input').value
-
-      return { ...result, connToken, connOrg }
+    if (result.connVersion === 0) {
+      result.connToken = this.tokenElement.querySelector('input').value
+      result.connOrg = this.orgElement.querySelector('input').value
+    } else {
+      result.connUser = this.usernameElement.querySelector('input').value
+      result.connPass = this.passwordElement.querySelector('input').value
     }
 
     return result
@@ -132,10 +143,14 @@ class Actions {
     this.orgElement.querySelector('input').removeAttribute('required')
     this.hide(this.tokenElement)
     this.hide(this.orgElement)
+    this.show(this.usernameElement)
+    this.show(this.passwordElement)
     this.hostElement.querySelector('input').removeAttribute('list')
   }
 
   toggleToV2 () {
+    this.hide(this.usernameElement)
+    this.hide(this.passwordElement)
     this.show(this.tokenElement)
     this.show(this.orgElement)
     this.tokenElement.querySelector('input').setAttribute('required', 'true')
