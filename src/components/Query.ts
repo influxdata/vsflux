@@ -174,14 +174,21 @@ export class APIRequest {
         query : string
     ) : Promise<QueryResult> {
         let data : string = ''
-        let url : string = `${conn.hostNport}/api/v2/query`
         try {
             this.source = axios.CancelToken.source()
-            if (conn.version == InfluxConnectionVersion.V2) {
-                url = `${url}?org=${encodeURI(conn.org)}`
-            } else if (conn.version == InfluxConnectionVersion.V1) {
-                url = `${url}?u=${encodeURI(conn.user)}&p=${encodeURI(conn.pass)}`
+
+            let url : string = `${conn.hostNport}/api/v2/query`
+            if (conn.version === InfluxConnectionVersion.V2) {
+                url = `${url}/?org=${encodeURI(conn.org)}`
             }
+
+            let authHeader : string = 'Token'
+            if (conn.version === InfluxConnectionVersion.V2) {
+                authHeader = `${authHeader} ${conn.token}`
+            } else {
+                authHeader = `${authHeader} ${conn.user}:${conn.pass}`
+            }
+
             data = (
                 await axios({
                     method: 'POST',
@@ -195,7 +202,7 @@ export class APIRequest {
                     },
                     maxContentLength: Infinity,
                     headers: {
-                        Authorization: `Token ${conn.token}`
+                        Authorization: authHeader
                     },
                     cancelToken: this.source.token
                 })
