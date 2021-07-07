@@ -182,7 +182,6 @@ export class APIRequest {
             } else if (conn.version == InfluxConnectionVersion.V1) {
                 url = `${url}?u=${encodeURI(conn.user)}&p=${encodeURI(conn.pass)}`
             }
-            logger.logAndShow(`URL: ${url}`)
             data = (
                 await axios({
                     method: 'POST',
