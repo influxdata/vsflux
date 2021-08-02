@@ -179,7 +179,7 @@ export class APIRequest {
 
             let url : string = `${conn.hostNport}/api/v2/query`
             if (conn.version === InfluxConnectionVersion.V2) {
-                url = `${url}/?org=${encodeURI(conn.org)}`
+                url = `${url}/?org=${encodeURIComponent(conn.org)}`
             }
 
             let authHeader : string = 'Token'
