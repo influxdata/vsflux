@@ -4,12 +4,12 @@
 <head>
 	<meta charset="UTF-8">
 	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-    <link rel="stylesheet" type="text/css" href="{{{cssPath}}}">
+	<link rel="stylesheet" type="text/css" href="{{{cssPath}}}">
 </head>
 
 <body>
 	<form class="form">
-    <h1>{{title}}</h1>
+		<h1>{{title}}</h1>
 
 		<div class="field">
 			<label>Type</label>
@@ -17,13 +17,12 @@
 				<option value="0" {{^isV1}}selected="selected" {{/isV1}}>InfluxDB v2</option>
 				<option value="1" {{#isV1}}selected="selected" {{/isV1}}>InfluxDB v1</option>
 			</select>
-    </div>
+		</div>
 
 		<div class="field" id="connName">
 			<label>Name</label>
 			<input required="true" type="text" name="name" placeholder="local" value="{{name}}">
-			</div>
-    </div>
+		</div>
 
 		<div class="field" id="connHost" data-v1="{{defaultHostV1}}">
 			<label>Hostname and Port</label>
@@ -35,41 +34,36 @@
 				{{/defaultHostLists}}
 			</datalist>
 			</input>
-			</div>
-    </div>
+		</div>
 
 		<div class="field" id="connToken">
 			<label>Token</label>
 			<input required="true" name="token" placeholder="yOuRtOkEn==" value="{{token}}">
-			</div>
-    </div>
+		</div>
 
 		<div class="field" id="connOrg">
 			<label>Organization Name</label>
 			<input required="true" type="text" name="org" placeholder="YourOrg" value="{{org}}">
-			</div>
-    </div>
+		</div>
 
 		<div class="field hidden" id="connUser">
 			<label>Username</label>
-			<input required="false" type="text" name="user" placeholder="username" value="{{user}}">
-			</div>
-    </div>
+			<input required="false" type="text" name="user" placeholder="username" value="{{user}}" disabled>
+		</div>
 
 		<div class="field hidden" id="connPass">
 			<label>Password</label>
-			<input required="false" type="password" name="pass" placeholder="password" value="{{pass}}">
-			</div>
-    </div>
+			<input required="false" type="password" name="pass" placeholder="password" value="{{pass}}" disabled>
+		</div>
 
-    <input type="hidden" id="connID" value="{{id}}">
+		<input type="hidden" id="connID" value="{{id}}">
 
-    <div class="actions">
-      <span class="teal button" id="testConn" tabindex="0">Test</span>
-      <span class="blue button" id="save" tabindex="0">Save</span>
-    </div>
+		<div class="actions">
+			<span class="teal button" id="testConn" tabindex="0">Test</span>
+			<span class="blue button" id="save" tabindex="0">Save</span>
+		</div>
 	</form>
-    <script src="{{{jsPath}}}"></script>
+	<script src="{{{jsPath}}}"></script>
 </body>
 
 </html>
