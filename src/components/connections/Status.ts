@@ -9,7 +9,7 @@ class ConnectionStatusBar {
         this.item = window.createStatusBarItem(StatusBarAlignment.Left)
     }
 
-    setIdle(connection ?: InfluxDBConnection) {
+    setIdle(connection?: InfluxDBConnection) {
         this.item.text = ''
         if (connection) {
             this.item.text = `$(server) ${connection.name}`
@@ -26,7 +26,7 @@ class ConnectionStatusBar {
 }
 
 export class Status {
-    private static current ?: InfluxDBConnection;
+    private static current?: InfluxDBConnection;
     private static connectionStatusBar : ConnectionStatusBar = new ConnectionStatusBar()
 
     static get Current() {

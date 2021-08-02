@@ -152,7 +152,7 @@ export class Queries {
 }
 
 export class APIRequest {
-    private static source ?: CancelTokenSource;
+    private static source?: CancelTokenSource;
 
     public static defaultParams = {
         method: 'POST'
