@@ -1,5 +1,5 @@
 class Actions {
-  constructor (vscode = acquireVsCodeApi()) {
+  constructor(vscode = acquireVsCodeApi()) {
     this.vscode = vscode
 
     if (this.isV1) {
@@ -11,7 +11,7 @@ class Actions {
     }
   }
 
-  save () {
+  save() {
     if (!this.validate()) {
       return
     }
@@ -21,7 +21,7 @@ class Actions {
     })
   }
 
-  test () {
+  test() {
     if (!this.validate()) {
       return
     }
@@ -31,7 +31,7 @@ class Actions {
     })
   }
 
-  bind () {
+  bind() {
     document.querySelector('#testConn').addEventListener('click', () => {
       this.test()
     })
@@ -46,49 +46,49 @@ class Actions {
   }
 
   /* getters */
-  get isHostEmpty () {
+  get isHostEmpty() {
     return this.hostElement.querySelector('input').value === ''
   }
 
-  get versionElement () {
+  get versionElement() {
     return document.querySelector('#connVersion')
   }
 
-  get hostElement () {
+  get hostElement() {
     return document.querySelector('#connHost')
   }
 
-  get tokenElement () {
+  get tokenElement() {
     return document.querySelector('#connToken')
   }
 
-  get orgElement () {
+  get orgElement() {
     return document.querySelector('#connOrg')
   }
 
-	get usernameElement () {
-		return document.querySelector('#connUser')
-	}
+  get usernameElement() {
+    return document.querySelector('#connUser')
+  }
 
-	get passwordElement () {
-		return document.querySelector('#connPass')
-	}
+  get passwordElement() {
+    return document.querySelector('#connPass')
+  }
 
-  get form () {
+  get form() {
     return document.querySelector('form')
   }
 
-  get isV1 () {
+  get isV1() {
     return this.versionElement.value === '1'
   }
 
-  get defaultURL () {
+  get defaultURL() {
     return this.isV1 ? this.hostElement.dataset.v1 : ''
   }
 
   /* private api */
 
-  validate () {
+  validate() {
     if (!this.form.checkValidity()) {
       this.form.reportValidity()
       return false
@@ -97,7 +97,7 @@ class Actions {
     return true
   }
 
-  getData () {
+  getData() {
     const result = {
       connID: document.querySelector('#connID').value,
       connName: document.querySelector('#connName input').value,
@@ -111,11 +111,11 @@ class Actions {
 
     // trim trailing slash on connHost input
     let host = result.connHost
-    if (host[host.length-1] === '/') {
+    if (host[host.length - 1] === '/') {
       result.connHost = host.slice(0, -1)
     }
 
-    if (result.connVersion === 0) {
+    if (result.connVersion === "0") {
       result.connToken = this.tokenElement.querySelector('input').value
       result.connOrg = this.orgElement.querySelector('input').value
     } else {
@@ -126,43 +126,71 @@ class Actions {
     return result
   }
 
-  setHost (val) {
+  setHost(val) {
     this.hostElement.querySelector('input').value = val
   }
 
-  hide (element) {
+  hide(element) {
     element.classList.add('hidden')
   }
 
-  show (element) {
+  show(element) {
     element.classList.remove('hidden')
   }
 
-  toggleToV1 () {
-    this.tokenElement.querySelector('input').removeAttribute('required')
-    this.orgElement.querySelector('input').removeAttribute('required')
+  toggleToV1() {
     this.hide(this.tokenElement)
+    const tokenElementInput = this.tokenElement.querySelector('input')
+    tokenElementInput.removeAttribute('required')
+    tokenElementInput.setAttribute('disabled', 'true')
+
     this.hide(this.orgElement)
+    const orgElementInput = this.orgElement.querySelector('input')
+    orgElementInput.removeAttribute('required')
+    orgElementInput.setAttribute('disabled', 'true')
+
     this.show(this.usernameElement)
+    const usernameElementInput = this.usernameElement.querySelector('input')
+    usernameElementInput.removeAttribute('disabled')
+    usernameElementInput.setAttribute('required', 'true')
+
     this.show(this.passwordElement)
+    const passwordElementInput = this.passwordElement.querySelector('input')
+    passwordElementInput.removeAttribute('disabled')
+    passwordElementInput.setAttribute('required', 'true')
+
     this.hostElement.querySelector('input').removeAttribute('list')
   }
 
-  toggleToV2 () {
+  toggleToV2() {
     this.hide(this.usernameElement)
+    const usernameElementInput = this.usernameElement.querySelector('input')
+    usernameElementInput.removeAttribute('required')
+    usernameElementInput.setAttribute('disabled', 'true')
+
     this.hide(this.passwordElement)
+    const passwordElementInput = this.passwordElement.querySelector('input')
+    passwordElementInput.removeAttribute('required')
+    passwordElementInput.setAttribute('disabled', 'true')
+
     this.show(this.tokenElement)
+    const tokenElementInput = this.tokenElement.querySelector('input')
+    tokenElementInput.removeAttribute('disabled')
+    tokenElementInput.setAttribute('required', 'true')
+
     this.show(this.orgElement)
-    this.tokenElement.querySelector('input').setAttribute('required', 'true')
-    this.orgElement.querySelector('input').setAttribute('required', 'true')
+    const orgElementInput = this.orgElement.querySelector('input')
+    orgElementInput.removeAttribute('disabled')
+    orgElementInput.setAttribute('required', 'true')
+
     this.hostElement.querySelector('input').setAttribute('list', 'hosts')
   }
 
-  resetHost () {
+  resetHost() {
     this.setHost(this.defaultURL)
   }
 
-  toggleOptions () {
+  toggleOptions() {
     this.isV1 ? this.toggleToV1() : this.toggleToV2()
     this.resetHost()
   }
