@@ -65,7 +65,7 @@ export class InfluxDBTreeDataProvider
         return element.getTreeItem()
     }
 
-    getChildren(element ?: INode) : Thenable<INode[]> | INode[] {
+    getChildren(element?: INode) : Thenable<INode[]> | INode[] {
         if (element) {
             return element.getChildren()
         }

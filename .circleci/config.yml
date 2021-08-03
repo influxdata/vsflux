@@ -7,16 +7,13 @@ jobs:
       - checkout
       - run:
           name: download deps
-          command: npm i
-      - run:
-          name: install tsc
-          command: sudo npm i -g typescript typescript-formatter
+          command: npm i --dev
       - run:
           name: checkfmt
-          command: make checkfmt
+          command: npm run checkfmt
       - run:
           name: build
-          command: tsc
+          command: npm run compile
       - run:
           name: run tests
           command: npm test
