@@ -5,19 +5,19 @@ import { ExtensionContext } from 'vscode'
 import { Client } from './components/Client'
 import { Connection, InfluxDBTreeDataProvider } from './components/connections/Connection'
 
-let client : Client
+let languageClient : Client
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context : ExtensionContext) {
-    InfluxDBTreeDataProvider.init(context)
-    Connection.load(context)
+    languageClient = new Client(context)
+    languageClient.start()
 
-    client = new Client(context)
-    client.start()
+    const connection = new Connection(context)
+    await connection.load()
 }
 
 // this method is called when your extension is deactivated
 export async function deactivate() {
-    await client.stop()
+    await languageClient.stop()
 }

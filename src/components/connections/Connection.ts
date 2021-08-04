@@ -117,12 +117,9 @@ export class InfluxDBTreeDataProvider
             ConnectionNodes.push(
                 new ConnectionNode(connection, this.context, label)
             )
-        }
-
-        // if there is only one connection, set it to active.
-        if (ConnectionNodes.length === 1) {
-            ConnectionNodes[0].connection.isActive = true
-            Status.Current = ConnectionNodes[0].connection
+            if (connection.isActive) {
+                this.setCurrent(connection)
+            }
         }
         return ConnectionNodes
     }
@@ -178,21 +175,9 @@ export class Connection {
         this.queryViewEngine = new QueryViewEngine(context)
     }
 
-    public static load(context : vscode.ExtensionContext) {
-        const connection = new Connection(context)
-        connection.load()
-
-        return connection
-    }
-
     public async load() {
-        const nodes = await this.tree.getConnectionNodes()
-        for (let i = 0; i < nodes.length; i++) {
-            if (nodes[i].connection.isActive) {
-                this.tree.setCurrent(nodes[i].connection)
-                break
-            }
-        }
+        InfluxDBTreeDataProvider.init(this.context)
+        await this.tree.getConnectionNodes()
 
         this.context.subscriptions.push(
             vscode.window.registerTreeDataProvider('influxdb', this.tree)

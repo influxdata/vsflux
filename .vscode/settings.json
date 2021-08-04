@@ -1,5 +1,6 @@
 // Place your settings in this file to overwrite default and user settings.
 {
+    "editor.formatOnSave": false, // Something in the default VSCode is formatting differently than tsfmt wants to
     "files.exclude": {
         "out": false // set this to true to hide the "out" folder with the compiled JS files
     },

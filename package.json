@@ -161,6 +161,7 @@
     ]
   },
   "scripts": {
+    "clean": "rm -rf out/ dist/ test-resources .vs-code-test/ *.vsix",
     "copy-wasm": "rm -f dist/flux-lsp-node_bg.wasm && cp node_modules/@influxdata/flux-lsp-node/flux-lsp-node_bg.wasm dist/",
     "vscode:prepublish": "npm run webpack-prod && npm run copy-wasm",
     "webpack-dev": "webpack --mode development --watch",
