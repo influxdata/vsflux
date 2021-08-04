@@ -13,9 +13,9 @@ describe('transform query results', () => {
     const results = queryResponseToTableResult(contents)
     const [first, second] = results
 
-    expect(first.head[0]).toEqual('_start')
+    expect(first.head[0]).toEqual('table')
     expect(first.rows.length).toEqual(9)
-    expect(second.head[0]).toEqual('_start')
+    expect(second.head[0]).toEqual('table')
     expect(second.rows.length).toEqual(1)
     expect(results.length).toEqual(2)
   })

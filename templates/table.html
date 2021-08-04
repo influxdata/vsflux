@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-    <link rel="stylesheet" type="text/css" href="{{{cssPath}}}" />
-  </head>
-  <body>
-    {{#results}}
-    <table>
-      <tr>
-        {{#head}}
-        <th>{{.}}</th>
-        {{/head}}
-      </tr>
-      {{#rows}}
-      <tr>
-        {{# . }}
-        <td>{{.}}</td>
-        {{/ .}}
-      </tr>
-      {{/rows}}
-    </table>
 
-    <br />
-    {{/results}}
-  </body>
+<head>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+  <link rel="stylesheet" type="text/css" href="{{{cssPath}}}" />
+</head>
+
+<body>
+  {{#results}}
+  <table>
+    <tr>
+      {{#head}}
+      <th>{{.}}</th>
+      {{/head}}
+    </tr>
+    {{#rows}}
+    <tr>
+      {{# . }}
+      <td>{{.}}</td>
+      {{/ .}}
+    </tr>
+    {{/rows}}
+  </table>
+
+  <br />
+  {{/results}}
+</body>
+
 </html>

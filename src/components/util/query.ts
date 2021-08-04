@@ -20,8 +20,8 @@ export function queryResponseToTableResult(body : string) : TableResult[] {
         .reduce((acc, group) => {
             const rows = group.split('\n').filter((v) => !v.startsWith('#') && v)
             const result : TableResult = {
-                head: rows[0].split(',').slice(3),
-                rows: rows.slice(1).map((v) => v.split(',').slice(3))
+                head: rows[0].split(',').slice(2),
+                rows: rows.slice(1).map((v) => v.split(',').slice(2))
             }
             acc.push(result)
             return acc
