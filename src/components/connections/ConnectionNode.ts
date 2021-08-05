@@ -9,7 +9,7 @@ import {
     TreeItem,
     TreeItemCollapsibleState
 } from 'vscode'
-import { NewBucketNode } from './BucketNode'
+import { BucketNode } from './BucketNode'
 import { Status } from './Status'
 import { ConnectionView } from './ConnectionView'
 import { logger } from '../../util'
@@ -23,11 +23,11 @@ export class ConnectionNode implements INode {
         public label : string
     ) { }
 
-    public get status() {
+    private get status() {
         return this.connection.isActive ? '' : '-gray'
     }
 
-    public get iconPath() {
+    private get iconPath() {
         return this.context.asAbsolutePath(`resources/influx-logo${this.status}.svg`)
     }
 
@@ -53,7 +53,7 @@ export class ConnectionNode implements INode {
             const results = await Queries.buckets(this.connection)
 
             return (results?.rows || []).map((row) => {
-                return NewBucketNode(row[0], this.connection)
+                return new BucketNode(row[0], this.connection)
             })
         } catch (e) {
             logger.log(e)

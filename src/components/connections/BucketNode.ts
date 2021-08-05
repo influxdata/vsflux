@@ -9,13 +9,6 @@ import { MeasurementNode } from './MeasurementNode'
 
 import { logger } from '../../util'
 
-export function NewBucketNode(
-    bucket : string,
-    conn : InfluxDBConnection
-) : BucketNode {
-    return new BucketNode(bucket, conn)
-}
-
 export class BucketNode implements INode {
     constructor(
         private readonly bucket : string,

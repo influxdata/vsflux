@@ -26,13 +26,9 @@ export class MeasurementNode implements INode {
     // get all the measurements
     public async getChildren() : Promise<INode[]> {
         try {
-            const msg =
-                `Getting tag keys for bucket: ${this.bucket}, measurement: ${this.measurement}: `
-
-            logger.log(msg)
+            logger.log(`Getting tag keys for bucket: ${this.bucket}, measurement: ${this.measurement}: `)
 
             const results = await Queries.tagKeys(this.conn, this.bucket, this.measurement)
-
             return (results?.rows || []).map((row) => {
                 return new StringNode(row[0])
             })
