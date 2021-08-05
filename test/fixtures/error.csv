@@ -1,0 +1,13 @@
+#group,false,false,false
+#datatype,string,long,string
+#default,rows,,
+,result,table,url
+,,0,not_gonna_work.bar
+
+
+    
+#group,true,true
+#datatype,string,string
+#default,,
+,error,reference
+,"runtime error @18:4-18:60: map: failed to evaluate map function: Post ""not_gonna_work.bar"": unsupported protocol scheme """"",
