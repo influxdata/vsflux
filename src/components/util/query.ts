@@ -18,10 +18,15 @@ export function queryResponseToTableResult(body : string) : TableResult[] {
         .split(/\r?\n\r?\n/)
         .filter((v) => v) // kill the blank lines
         .reduce((acc, group) => {
-            const rows = group.split('\n').filter((v) => !v.startsWith('#') && v)
+            const rows = group.trim().split('\n').filter((v) => !v.startsWith('#') && v)
+            let slice_start = 2
+            const keys = rows[0].split(',')
+            if (keys[1] == "error") {
+                slice_start = 1
+            }
             const result : TableResult = {
-                head: rows[0].split(',').slice(2).map((v) => v.trim()),
-                rows: rows.slice(1).map((v) => v.split(',').slice(2).map((v) => v.trim()))
+                head: rows[0].split(',').slice(slice_start).map((v) => v.trim()),
+                rows: rows.slice(1).map((v) => v.split(',').slice(slice_start).map((v) => v.trim()))
             }
             acc.push(result)
             return acc
