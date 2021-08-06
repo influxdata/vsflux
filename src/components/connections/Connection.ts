@@ -252,7 +252,7 @@ export class Connection {
         this.context.subscriptions.push(
             vscode.commands.registerCommand(
                 'influxdb.removeThisConnection',
-                async (node: ConnectionNode) => {
+                async (node : ConnectionNode) => {
                     this.removeConnection(node)
                 },
                 this
@@ -262,7 +262,7 @@ export class Connection {
         this.context.subscriptions.push(
             vscode.commands.registerCommand(
                 'influxdb.editThisConnection',
-                async (node: ConnectionNode) => {
+                async (node : ConnectionNode) => {
                     this.editConnection(node)
                 },
                 this
@@ -272,7 +272,7 @@ export class Connection {
         this.context.subscriptions.push(
             vscode.commands.registerCommand(
                 'influxdb.switchToThisConnection',
-                async (node: ConnectionNode) => {
+                async (node : ConnectionNode) => {
                     this.switchConnection(node)
                 },
                 this
