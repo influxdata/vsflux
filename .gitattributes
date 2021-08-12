@@ -1,4 +1,6 @@
+package-lock.json binary
 *.ts text eol=lf
 
 # Required for test coverage
 test/fixtures/error.csv text eol=crlf
+
