@@ -121,14 +121,14 @@ const createStream = () => {
 
 const createStreamInfo : (
     context : ExtensionContext
-) => () => Promise<StreamInfo> = (context) => {
+) => () => Promise<StreamInfo> = (_context) => {
     return function() {
         const stream = createStream()
 
         const writer = createTransform()
         writer.pipe(stream)
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, _reject) => {
             resolve({
                 writer,
                 reader: stream
