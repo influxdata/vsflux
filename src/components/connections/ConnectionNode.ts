@@ -53,7 +53,7 @@ export class ConnectionNode implements INode {
             const results = await Queries.buckets(this.connection)
 
             return (results?.rows || []).map((row) => {
-                return new BucketNode(row[0], this.connection)
+                return new BucketNode(row[1], this.connection)
             })
         } catch (e) {
             logger.log(e)
