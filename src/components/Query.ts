@@ -165,7 +165,7 @@ export class APIRequest {
         }
     }
 
-    public static async query(conn : InfluxDBConnection, query : string, bucket : string = '') : Promise<QueryResult> {
+    public static async query(conn : InfluxDBConnection, query : string) : Promise<QueryResult> {
         return this.queryV2(conn, query)
     }
 

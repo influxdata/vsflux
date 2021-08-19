@@ -38,10 +38,6 @@ export class Status {
         this.connectionStatusBar.setIdle(conn)
     }
 
-    static SetRunningQuery(source : CancelTokenSource) {
-        this.connectionStatusBar.setQueryRunning()
-    }
-
     static SetNotRunnningQuery() {
         this.connectionStatusBar.setIdle(Status.Current)
     }
