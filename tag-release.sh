@@ -9,11 +9,11 @@ fi
 
 new_version=v$(grep -Eom 1 "([0-9]{1,}\.)+[0-9]{1,}" package.json)
 
-git tag -a -s $new_version -m "Release $new_verion"
+git tag -a -s $new_version -m "Release $new_version"
 git push origin master $new_version
 
-lsp_version=v$(grep -m 1 '"@influxdata/flux-lsp-node":' package.json | grep -Eo "([0-9]{1,}\.)+[0-9]{1,}")
-
+previous_version=`git describe --abbrev=0 ${new_version}^`
+commits=`git log --pretty=oneline ${previous_version}...${new_version} | awk '{$1="-"; print }'`
 hub release create $new_version -m "Release $new_version
 
-- Upgrade to [Flux LSP $lsp_version](https://github.com/influxdata/flux-lsp/releases/tag/$lsp_version)" -e
+${commits}" -e
