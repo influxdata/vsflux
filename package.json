@@ -28,14 +28,11 @@
   "activationEvents": [
     "onLanguage:flux",
     "onView:influxdb",
+    "onCommand:influxdb.runQuery",
     "onCommand:influxdb.addConnection",
-    "onCommand:influxdb.editConnection",
-    "onCommand:influxdb.switchConnection",
     "onCommand:influxdb.removeConnection",
-    "onCommand:influxdb.editThisConnection",
-    "onCommand:influxdb.switchToThisConnection",
-    "onCommand:influxdb.removeThisConnection",
-    "onCommand:influxdb.runQuery"
+    "onCommand:influxdb.editConnection",
+    "onCommand:influxdb.activateConnection"
   ],
   "main": "./dist/extension",
   "contributes": {
@@ -73,6 +70,11 @@
         "category": "InfluxDB"
       },
       {
+        "command": "influxdb.runQuery",
+        "title": "Run Query",
+        "category": "InfluxDB"
+      },
+      {
         "command": "influxdb.addConnection",
         "title": "Add Connection",
         "icon": {
@@ -82,18 +84,8 @@
         "category": "InfluxDB"
       },
       {
-        "command": "influxdb.runQuery",
-        "title": "Run Query",
-        "category": "InfluxDB"
-      },
-      {
         "command": "influxdb.removeConnection",
         "title": "Remove Connection",
-        "category": "InfluxDB"
-      },
-      {
-        "command": "influxdb.switchConnection",
-        "title": "Switch Connection",
         "category": "InfluxDB"
       },
       {
@@ -101,21 +93,11 @@
         "title": "Edit Connection",
         "category": "InfluxDB"
       },
-			{
-				"command": "influxdb.removeThisConnection",
-				"title": "Remove This Connection",
-				"category": "InfluxDB"
-			},
-			{
-				"command": "influxdb.editThisConnection",
-				"title": "Edit This Connection",
-				"category": "InfluxDB"
-			},
-			{
-				"command": "influxdb.switchToThisConnection",
-				"title": "Switch To This Connection",
-				"category": "InfluxDB"
-			}
+      {
+        "command": "influxdb.activateConnection",
+        "title": "Switch To This Connection",
+        "category": "InfluxDB"
+      }
     ],
     "menus": {
       "view/title": [
@@ -134,17 +116,17 @@
       ],
       "view/item/context": [
         {
-          "command": "influxdb.editThisConnection",
+          "command": "influxdb.editConnection",
           "when": "view == influxdb && viewItem == connection",
           "group": "influxdb@1"
         },
         {
-          "command": "influxdb.removeThisConnection",
+          "command": "influxdb.removeConnection",
           "when": "view == influxdb && viewItem == connection",
           "group": "influxdb@1"
         },
         {
-          "command": "influxdb.switchToThisConnection",
+          "command": "influxdb.activateConnection",
           "when": "view == influxdb && viewItem == connection",
           "group": "influxdb@1"
         }
@@ -230,6 +212,7 @@
   },
   "dependencies": {
     "@influxdata/flux-lsp-node": "^0.6.2",
+    "@influxdata/influxdb-client": "^1.16.0",
     "axios": "^0.21.1",
     "mustache": "^4.0.1",
     "through2": "^3.0.1",

@@ -1,10 +1,12 @@
 import * as path from 'path'
 import * as Mustache from 'mustache'
 import { ExtensionContext, window, ViewColumn, Uri } from 'vscode'
+import { QueryResult } from '../models'
 
 import { View } from './View'
-import { TableResult } from './util/query'
 
+// XXX: rockstar (27 Aug 2021) - This view currently renders the
+// "result" field, which the web ui does not. Should it strip it out?
 export class TableView extends View {
     public constructor(context : ExtensionContext) {
         super(context, 'templates/table.html')
@@ -16,7 +18,7 @@ export class TableView extends View {
         )
     }
 
-    public async show(results : TableResult[], title : string) {
+    public async show(results : QueryResult, title : string) {
         const panel = window.createWebviewPanel('InfluxDB', title, ViewColumn.Two, {
             retainContextWhenHidden: true
         })

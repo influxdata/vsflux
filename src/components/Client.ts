@@ -13,8 +13,6 @@ import {
 } from 'vscode-languageclient'
 
 import { Server } from '@influxdata/flux-lsp-node'
-import { Status } from './connections/Status'
-import { Queries } from '../components/Query'
 
 const isFlux = (document : TextDocument) : boolean => {
     return document.languageId === 'flux'
@@ -50,38 +48,35 @@ const createTransform = () => {
     return transform
 }
 
-async function getBuckets() {
-    if (Status.Current) {
-        const buckets = await Queries.buckets(Status.Current)
-        return (buckets?.rows || []).map(row => row[0])
-    }
-
+async function getBuckets() : Promise<string[]> {
+    // XXX: rockstar (27 Aug 2021) - These functions were disabled
+    // on the lsp side, and contained fragile, broken code. They
+    // are intentionally left here as markers.
+    console.debug('getBuckets')
     return []
 }
 
-async function getMeasurements(bucket : string) {
-    if (Status.Current) {
-        const measurements = await Queries.measurements(Status.Current, bucket)
-        return (measurements?.rows || []).map(row => row[0])
-    }
-
+async function getMeasurements(_bucket : string) : Promise<string[]> {
+    // XXX: rockstar (27 Aug 2021) - These functions were disabled
+    // on the lsp side, and contained fragile, broken code. They
+    // are intentionally left here as markers.
+    console.debug('getMeasurements')
     return []
 }
 
-async function getTagKeys(bucket : string) {
-    if (Status.Current) {
-        const tagKeys = await Queries.bucketTagKeys(Status.Current, bucket)
-        return (tagKeys?.rows || []).map(row => row[0]?.trim())
-    }
+async function getTagKeys(_bucket : string) : Promise<string[]> {
+    // XXX: rockstar (27 Aug 2021) - These functions were disabled
+    // on the lsp side, and contained fragile, broken code. They
+    // are intentionally left here as markers.
+    console.debug('getTagKeys')
     return []
 }
 
-async function getTagValues(bucket : string, field : string) {
-    if (Status.Current) {
-        const tagValues = await Queries.tagValues(Status.Current, bucket, field)
-        return (tagValues?.rows || []).map(row => row[0]?.trim())
-    }
-
+async function getTagValues(_bucket : string, _field : string) : Promise<string[]> {
+    // XXX: rockstar (27 Aug 2021) - These functions were disabled
+    // on the lsp side, and contained fragile, broken code. They
+    // are intentionally left here as markers.
+    console.debug('getTagKeys')
     return []
 }
 
@@ -178,7 +173,7 @@ export class Client {
     }
 
     async stop() {
-        this.languageClient.stop()
+        await this.languageClient.stop()
     }
 
     private onOpen = (document : TextDocument) => {
