@@ -30,7 +30,7 @@ export class BucketNode implements INode {
 
             const results = await Queries.measurements(this.conn, this.bucket)
             return (results?.rows || []).map((row) => {
-                return new MeasurementNode(this.bucket, row[0], this.conn)
+                return new MeasurementNode(this.bucket, row[1], this.conn)
             })
         } catch (e) {
             logger.log(e)
