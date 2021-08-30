@@ -199,6 +199,7 @@
     "compile": "tsc",
     "test": "mocha -r ts-node/register test/**/*.test.ts",
     "fmt": "tsfmt -r",
+    "lint": "eslint src/ --ext .ts",
     "checkfmt": "tsfmt --verify"
   },
   "devDependencies": {
@@ -210,8 +211,8 @@
     "@types/through2": "^2.0.34",
     "@types/uuid": "^8.0.0",
     "@types/vscode": "^1.57.0",
-    "@typescript-eslint/eslint-plugin": "^2.28.0",
-    "@typescript-eslint/parser": "^2.28.0",
+    "@typescript-eslint/eslint-plugin": "^2.34.0",
+    "@typescript-eslint/parser": "^2.34.0",
     "chai": "^4.2.0",
     "eslint": "^6.8.0",
     "eslint-config-standard": "^14.1.1",

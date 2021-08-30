@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  build-and-test:
+  check:
     docker:
       - image: circleci/node:14.16-browsers
     steps:
@@ -11,6 +11,17 @@ jobs:
       - run:
           name: checkfmt
           command: npm run checkfmt
+      - run:
+          name: lint
+          command: npm run lint
+  build-and-test:
+    docker:
+      - image: circleci/node:14.16-browsers
+    steps:
+      - checkout
+      - run:
+          name: download deps
+          command: npm i --dev
       - run:
           name: build
           command: npm run compile
@@ -32,6 +43,7 @@ workflows:
   verify:
     jobs:
       - build-and-test
+      - check
 
   publish:
     jobs:

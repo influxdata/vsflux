@@ -12,13 +12,13 @@ export class TableView extends View {
         super(context, 'templates/table.html')
     }
 
-    private get cssPath() {
+    private get cssPath() : Uri {
         return Uri.file(
             path.join(this.context.extensionPath, 'templates', 'table.css')
         )
     }
 
-    public async show(results : QueryResult, title : string) {
+    public async show(results : QueryResult, title : string) : Promise<void> {
         const panel = window.createWebviewPanel('InfluxDB', title, ViewColumn.Two, {
             retainContextWhenHidden: true
         })

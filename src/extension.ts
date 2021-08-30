@@ -6,7 +6,7 @@ import { Client } from './components/Client'
 import { ConnectionView } from './views/AddEditConnectionView'
 import { Connection, InfluxDBTreeProvider, InfluxDBConnectionsKey, Task } from './views/TreeView'
 import { IConnection } from './types'
-import { InfluxDB, } from '@influxdata/influxdb-client'
+import { InfluxDB } from '@influxdata/influxdb-client'
 import { TableView } from './views/TableView'
 import { QueryResult } from './models'
 
@@ -14,7 +14,7 @@ let languageClient : Client
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export async function activate(context : vscode.ExtensionContext) {
+export async function activate(context : vscode.ExtensionContext) : Promise<void> {
     languageClient = new Client(context)
     languageClient.start()
 
@@ -35,7 +35,7 @@ export async function activate(context : vscode.ExtensionContext) {
             // XXX: rockstar (26 Aug 2021) - This should really live in a controller of some sort,
             // but the current abstractions make it hard to see how that architecture should be.
             async () => {
-                const { activeTextEditor } = vscode.window;
+                const { activeTextEditor } = vscode.window
                 if (!activeTextEditor) {
                     return
                 }
@@ -51,7 +51,7 @@ export async function activate(context : vscode.ExtensionContext) {
                     return
                 }
                 try {
-                    const connections = context.globalState.get<{ [key : string] : IConnection; }>(InfluxDBConnectionsKey) || {}
+                    const connections = context.globalState.get<{ [key : string] : IConnection }>(InfluxDBConnectionsKey) || {}
                     const connection = Object.values(connections).filter((item : IConnection) => item.isActive)[0]
                     const queryApi = new InfluxDB({ url: connection.hostNport, token: connection.token }).getQueryApi(connection.org)
                     const results = await QueryResult.run(queryApi, query)
@@ -108,6 +108,6 @@ export async function activate(context : vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export async function deactivate() {
+export async function deactivate() : Promise<void> {
     await languageClient.stop()
 }

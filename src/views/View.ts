@@ -12,7 +12,7 @@ export abstract class View {
         this.template = this.readTemplate()
     }
 
-    private readTemplate() {
+    private readTemplate() : string {
         return fs.readFileSync(this.path, { encoding: 'utf8' })
     }
 }
