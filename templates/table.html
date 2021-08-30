@@ -7,11 +7,11 @@
 </head>
 
 <body>
-  {{#results}}
+  {{#results.tables}}
   <table>
     <tr>
       {{#head}}
-      <th>{{.}}</th>
+      <th>{{label}}</th>
       {{/head}}
     </tr>
     {{#rows}}
@@ -24,7 +24,7 @@
   </table>
 
   <br />
-  {{/results}}
+  {{/results.tables}}
 </body>
 
 </html>
