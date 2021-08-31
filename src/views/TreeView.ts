@@ -1,4 +1,5 @@
 import { InfluxDB, FluxTableMetaData } from '@influxdata/influxdb-client'
+import { TasksAPI, Task as TaskModel } from '@influxdata/influxdb-client-apis'
 import { v1 as uuid } from 'uuid'
 import * as vscode from 'vscode'
 
@@ -209,6 +210,61 @@ class Buckets extends vscode.TreeItem {
         });
     }
 }
+class Task extends vscode.TreeItem {
+    constructor(
+        private connection : IConnection,
+        private context : vscode.ExtensionContext,
+        private task : TaskModel,
+    ) {
+        super(connection.name, vscode.TreeItemCollapsibleState.None)
+    }
+
+    getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
+        return {
+            label: this.task.name,
+            description: `every ${this.task.every}`,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextValue: 'task'
+        }
+    }
+
+    getChildren(_element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
+        return []
+    }
+}
+class Tasks extends vscode.TreeItem {
+    constructor(
+        private connection : IConnection,
+        private context : vscode.ExtensionContext,
+    ) {
+        super(connection.name, vscode.TreeItemCollapsibleState.None)
+        this.tooltip = `All tasks in ${this.connection.name}`
+    }
+    label = 'Tasks'
+    collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
+
+    getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
+        return this
+    }
+
+    // XXX: rockstar (30 Aug 2021) - If the token isn't an "all access" token, we can't use it to fetch tasks.
+    // We should tell the user this.
+    async getChildren(_element?: ITreeNode) : Promise<ITreeNode[]> {
+        const influxDB = new InfluxDB({ url: this.connection.hostNport, token: this.connection.token })
+        const tasksApi = new TasksAPI(influxDB)
+        const response = await tasksApi.getTasks()
+        console.log(response)
+        if (response.tasks === undefined) {
+            // Why would this ever be undefined?
+            return []
+        }
+        const nodes : ITreeNode[] = []
+        response.tasks!.forEach((task, _idx) => {
+            nodes.push(new Task(this.connection, this.context, task))
+        })
+        return nodes
+    }
+}
 export class Connection extends vscode.TreeItem {
     constructor(
         private connection : IConnection,
@@ -237,9 +293,11 @@ export class Connection extends vscode.TreeItem {
     }
 
     getChildren(_element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
-        return [
-            new Buckets(this.connection, this.context)
-        ]
+        const children : ITreeNode[] = [new Buckets(this.connection, this.context)]
+        if (this.connection.version == InfluxConnectionVersion.V2) {
+            children.push(new Tasks(this.connection, this.context))
+        }
+        return children
     }
 
     public async removeConnection(_node : Connection) {
