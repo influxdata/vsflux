@@ -100,6 +100,11 @@
         "category": "InfluxDB"
       },
       {
+        "command": "influxdb.editTask",
+        "title": "Edit task",
+        "category": "InfluxDB"
+      },
+      {
         "command": "influxdb.deleteTask",
         "title": "Delete task",
         "category": "InfluxDB"
@@ -144,6 +149,11 @@
         {
           "command": "influxdb.activateConnection",
           "when": "view == influxdb && viewItem == connection",
+          "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.editTask",
+          "when": "view == influxdb && viewItem == task",
           "group": "influxdb@1"
         },
         {
