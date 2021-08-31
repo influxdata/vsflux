@@ -32,7 +32,8 @@
     "onCommand:influxdb.addConnection",
     "onCommand:influxdb.removeConnection",
     "onCommand:influxdb.editConnection",
-    "onCommand:influxdb.activateConnection"
+    "onCommand:influxdb.activateConnection",
+    "onCommand:influxdb.deleteTask"
   ],
   "main": "./dist/extension",
   "contributes": {
@@ -97,6 +98,11 @@
         "command": "influxdb.activateConnection",
         "title": "Switch To This Connection",
         "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.deleteTask",
+        "title": "Delete task",
+        "category": "InfluxDB"
       }
     ],
     "menus": {
@@ -138,6 +144,11 @@
         {
           "command": "influxdb.activateConnection",
           "when": "view == influxdb && viewItem == connection",
+          "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.deleteTask",
+          "when": "view == influxdb && viewItem == task",
           "group": "influxdb@1"
         }
       ]

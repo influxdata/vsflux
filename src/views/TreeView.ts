@@ -210,7 +210,7 @@ class Buckets extends vscode.TreeItem {
         });
     }
 }
-class Task extends vscode.TreeItem {
+export class Task extends vscode.TreeItem {
     constructor(
         private connection : IConnection,
         private context : vscode.ExtensionContext,
@@ -220,9 +220,13 @@ class Task extends vscode.TreeItem {
     }
 
     getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
+        let description = `every ${this.task.every}`
+        if (this.task.every === undefined) {
+            description = `${this.task.cron}`
+        }
         return {
             label: this.task.name,
-            description: `every ${this.task.every}`,
+            description,
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             contextValue: 'task'
         }
@@ -230,6 +234,22 @@ class Task extends vscode.TreeItem {
 
     getChildren(_element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
         return []
+    }
+
+    // Delete the associated task
+    public async deleteTask() {
+        const deleteText = 'Yes, delete it'
+        const confirmation = await vscode.window.showInformationMessage(
+            `Delete ${this.task.name}? This action cannot be undone.`, {
+            modal: true
+        }, deleteText)
+        if (confirmation !== deleteText) {
+            return
+        }
+        const influxDB = new InfluxDB({ url: this.connection.hostNport, token: this.connection.token })
+        const tasksApi = new TasksAPI(influxDB)
+        await tasksApi.deleteTasksID({ taskID: this.task.id })
+        vscode.commands.executeCommand('influxdb.refresh')
     }
 }
 class Tasks extends vscode.TreeItem {
@@ -253,7 +273,6 @@ class Tasks extends vscode.TreeItem {
         const influxDB = new InfluxDB({ url: this.connection.hostNport, token: this.connection.token })
         const tasksApi = new TasksAPI(influxDB)
         const response = await tasksApi.getTasks()
-        console.log(response)
         if (response.tasks === undefined) {
             // Why would this ever be undefined?
             return []
