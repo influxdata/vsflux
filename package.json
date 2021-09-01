@@ -223,6 +223,7 @@
   "dependencies": {
     "@influxdata/flux-lsp-node": "^0.6.2",
     "@influxdata/influxdb-client": "^1.16.0",
+    "@influxdata/influxdb-client-apis": "^1.17.0",
     "axios": "^0.21.1",
     "mustache": "^4.0.1",
     "through2": "^3.0.1",
