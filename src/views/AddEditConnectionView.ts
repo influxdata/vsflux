@@ -6,7 +6,7 @@ import { IConnection, InfluxConnectionVersion } from '../types'
 
 import * as Mustache from 'mustache'
 
-function getConfig() {
+function getConfig() : vscode.WorkspaceConfiguration {
     return vscode.workspace.getConfiguration('vsflux')
 }
 
@@ -30,18 +30,18 @@ export class ConnectionView extends View {
 
     public async edit(
         conn : IConnection
-    ) {
+    ) : Promise<void> {
         return this.show('Edit Connection', conn)
     }
 
-    public async create() {
+    public async create() : Promise<void> {
         return this.show('New Connection')
     }
 
     private async show(
         title : string,
         conn?: IConnection | undefined
-    ) {
+    ) : Promise<void> {
         const panel = vscode.window.createWebviewPanel(
             'InfluxDB',
             title,
@@ -65,13 +65,13 @@ export class ConnectionView extends View {
         await this.tree.setMessageHandler(panel)
     }
 
-    private get cssPath() {
+    private get cssPath() : vscode.Uri {
         return vscode.Uri.file(
             path.join(this.context.extensionPath, 'templates', 'form.css')
         ).with({ scheme: 'vscode-resource' })
     }
 
-    private get jsPath() {
+    private get jsPath() : vscode.Uri {
         return vscode.Uri.file(
             path.join(this.context.extensionPath, 'templates', 'editConn.js')
         ).with({ scheme: 'vscode-resource' })

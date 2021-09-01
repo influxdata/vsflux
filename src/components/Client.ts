@@ -13,12 +13,13 @@ import {
 } from 'vscode-languageclient'
 
 import { Server } from '@influxdata/flux-lsp-node'
+import { Transform } from 'stream'
 
 const isFlux = (document : TextDocument) : boolean => {
     return document.languageId === 'flux'
 }
 
-const createTransform = () => {
+function createTransform() : Transform {
     let count = 0
     let data = ''
 
@@ -28,7 +29,7 @@ const createTransform = () => {
         count += 1
         data += line
 
-        function reset() {
+        function reset() : void {
             count = 0
             data = ''
         }
@@ -80,7 +81,7 @@ async function getTagValues(_bucket : string, _field : string) : Promise<string[
     return []
 }
 
-const createStream = () => {
+function createStream() : Transform {
     const server = new Server(true, false)
 
     server.register_buckets_callback(getBuckets)
@@ -117,7 +118,7 @@ const createStream = () => {
 const createStreamInfo : (
     context : ExtensionContext
 ) => () => Promise<StreamInfo> = (_context) => {
-    return function() {
+    return function() : Promise<StreamInfo> {
         const stream = createStream()
 
         const writer = createTransform()
@@ -145,8 +146,8 @@ export class Client {
             // Register the server for flux documents
             documentSelector: [{ scheme: 'file', language: 'flux' }],
             errorHandler: {
-                error: () => ErrorAction.Continue,
-                closed: () => CloseAction.Restart
+                error: () : ErrorAction => ErrorAction.Continue,
+                closed: () : CloseAction => CloseAction.Restart
             },
             revealOutputChannelOn: RevealOutputChannelOn.Never
         }
@@ -168,15 +169,15 @@ export class Client {
         )
     }
 
-    start() {
+    start() : void {
         this.languageClient.start()
     }
 
-    async stop() {
+    async stop() : Promise<void> {
         await this.languageClient.stop()
     }
 
-    private onOpen = (document : TextDocument) => {
+    private onOpen(document : TextDocument) : void {
         if (!isFlux(document)) {
             return
         }

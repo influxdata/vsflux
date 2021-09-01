@@ -1,11 +1,13 @@
 {
     "env": {
-        "browser": true,
         "es6": true,
         "node": true
     },
     "extends": [
-        "standard"
+        "standard",
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
     ],
     "globals": {
         "Atomics": "readonly",
@@ -21,8 +23,19 @@
         "@typescript-eslint"
     ],
     "rules": {
-      "no-unused-vars": "off",
-      "no-useless-constructor": "off"
+      "@typescript-eslint/no-unused-vars": "off",
+      "no-useless-constructor": "off",
+      "promise/param-names": "off", // Some Promise functions are (resolve, _reject)
+      // XXX: rockstar (30 Aug 2021) - The following lint rule wants interfaces to *not*
+      // be prefaced with `I`. I'm not sure how I feel about that, as it makes it difficult
+      // to discern interfaces from concrete types. Disabling for now.
+      "@typescript-eslint/interface-name-prefix": "off",
+
+      // The following are disabled as they are enforced by the `tsfmt`
+      // scripts.
+      "indent" : "off",
+      "space-before-function-paren": "off",
+      "@typescript-eslint/type-annotation-spacing": "off"
     },
-    "ignorePatterns": ["dist", "out"]
+    "ignorePatterns": ["dist", "out", "node_modules"]
 }
