@@ -4,7 +4,7 @@ import * as vscode from 'vscode'
 
 import { Client } from './components/Client'
 import { ConnectionView } from './views/AddEditConnectionView'
-import { Connection, InfluxDBTreeProvider, InfluxDBConnectionsKey } from './views/TreeView'
+import { Connection, InfluxDBTreeProvider, InfluxDBConnectionsKey, Task } from './views/TreeView'
 import { IConnection } from './types'
 import { InfluxDB, } from '@influxdata/influxdb-client'
 import { TableView } from './views/TableView'
@@ -86,6 +86,14 @@ export async function activate(context : vscode.ExtensionContext) {
             'influxdb.editConnection',
             async (node : Connection) => {
                 node.editConnection()
+            }
+        )
+    )
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'influxdb.deleteTask',
+            async (node : Task) => {
+                await node.deleteTask()
             }
         )
     )
