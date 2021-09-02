@@ -4,9 +4,11 @@ import { v1 as uuid } from 'uuid'
 import * as vscode from 'vscode'
 import * as path from 'path'
 import * as os from 'os'
+import * as crypto from 'crypto'
 import { promises as fs } from 'fs'
 
-import { ConnectionView } from '../views/AddEditConnectionView'
+import { ConnectionView } from './AddEditConnectionView'
+import { AddTaskView } from './AddTaskView'
 import { IConnection, InfluxConnectionVersion } from '../types'
 
 export const InfluxDBConnectionsKey = 'influxdb.connections'
@@ -240,13 +242,13 @@ export class Task extends vscode.TreeItem {
         return []
     }
 
-    public async editTask(): Promise<void> {
+    public async editTask() : Promise<void> {
         const tmpdir = os.tmpdir()
         const newFile = vscode.Uri.parse(path.join(tmpdir, `${this.task.name}.flux`))
         await fs.writeFile(newFile.path, '')
         const document = await vscode.workspace.openTextDocument(newFile.path)
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
-        const listener = vscode.workspace.onWillSaveTextDocument(async (event_: vscode.TextDocumentWillSaveEvent) => {
+        const listener = vscode.workspace.onWillSaveTextDocument(async (event_ : vscode.TextDocumentWillSaveEvent) => {
             if (event_.document === document) {
                 const saveText = 'Save and close'
                 const confirmation = await vscode.window.showInformationMessage(
@@ -257,8 +259,6 @@ export class Task extends vscode.TreeItem {
                     return
                 }
                 const contents = event_.document.getText()
-                console.log('willsave')
-                console.log(contents)
                 const influxDB = new InfluxDB({ url: self.connection.hostNport, token: self.connection.token })
                 const tasksApi = new TasksAPI(influxDB)
                 await tasksApi.patchTasksID({ taskID: self.task.id, body: { flux: contents } })
@@ -293,7 +293,7 @@ export class Task extends vscode.TreeItem {
         vscode.commands.executeCommand('influxdb.refresh')
     }
 }
-class Tasks extends vscode.TreeItem {
+export class Tasks extends vscode.TreeItem {
     constructor(
         private connection : IConnection,
         private context : vscode.ExtensionContext
@@ -304,6 +304,7 @@ class Tasks extends vscode.TreeItem {
 
     label = 'Tasks'
     collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
+    contextValue = 'tasks'
 
     getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
         return this
@@ -323,6 +324,68 @@ class Tasks extends vscode.TreeItem {
             })
         }
         return nodes
+    }
+
+    // Add a new task
+    public addTask() : void {
+        const addTaskView = new AddTaskView(this.context)
+        const panel = addTaskView.show(this.addTaskStepTwo.bind(this))
+    }
+
+    // The second step of the "Add task" flow, this task opens the task in and editor and handles save.
+    private async addTaskStepTwo(name : string, offset : string, every : string | undefined, cron : string | undefined) : Promise<void> {
+        let head = ''
+        if (every !== undefined) {
+            head = `option task = {name: "${name}", every: ${every}, offset: ${offset}}`
+        } else {
+            head = `option task = {name: "${name}", cron: ${cron}, offset: ${offset}}`
+        }
+
+        // XXX: rockstar (2 Sep 2021) - fs.rm doesn't exist until node 14.x, but the current
+        // node environment is node 12.x. As such, we must create an entire dir to put the temp
+        // file, and then remove the entire dir with fs.rmdir.
+        const tmpdir = path.join(os.tmpdir(), crypto.randomBytes(10).toString('hex'))
+        await fs.mkdir(tmpdir)
+        const newFile = vscode.Uri.parse(path.join(tmpdir, `${name}.flux`))
+        await fs.writeFile(newFile.path, '')
+        const document = await vscode.workspace.openTextDocument(newFile.path)
+        const self = this // eslint-disable-line @typescript-eslint/no-this-alias
+        const saveListener = vscode.workspace.onDidSaveTextDocument(async (saved : vscode.TextDocument) : Promise<void> => {
+            if (saved === document) {
+                const saveText = 'Create and close'
+                const confirmation = await vscode.window.showInformationMessage(
+                    `Create ${name} task in ${self.connection.name}?`, {
+                    modal: true
+                }, saveText)
+                if (confirmation !== saveText) {
+                    return
+                }
+                const contents = saved.getText()
+                const influxDB = new InfluxDB({ url: self.connection.hostNport, token: self.connection.token })
+                const tasksApi = new TasksAPI(influxDB)
+                await tasksApi.postTasks({ body: { org: self.connection.org, flux: contents } })
+                vscode.commands.executeCommand('workbench.action.closeActiveEditor')
+                saveListener.dispose()
+                await fs.rmdir(tmpdir, { recursive: true })
+                vscode.commands.executeCommand('influxdb.refresh')
+            }
+        })
+        const closeListener = vscode.workspace.onDidCloseTextDocument(async (closed : vscode.TextDocument) : Promise<void> => {
+            if (closed === document) {
+                closeListener.dispose()
+                saveListener.dispose()
+                await fs.rmdir(tmpdir, { recursive: true })
+                vscode.commands.executeCommand('influxdb.refresh')
+            }
+        })
+        const edit = new vscode.WorkspaceEdit()
+        edit.insert(newFile, new vscode.Position(0, 0), `${head}\n\n`)
+        const success = await vscode.workspace.applyEdit(edit)
+        if (success) {
+            vscode.window.showTextDocument(document)
+        } else {
+            vscode.window.showErrorMessage('Could not open task for editing.')
+        }
     }
 }
 export class Connection extends vscode.TreeItem {
