@@ -2,6 +2,9 @@ import { InfluxDB, FluxTableMetaData } from '@influxdata/influxdb-client'
 import { TasksAPI, Task as TaskModel } from '@influxdata/influxdb-client-apis'
 import { v1 as uuid } from 'uuid'
 import * as vscode from 'vscode'
+import * as path from 'path'
+import * as os from 'os'
+import { promises as fs } from 'fs'
 
 import { ConnectionView } from '../views/AddEditConnectionView'
 import { IConnection, InfluxConnectionVersion } from '../types'
@@ -235,6 +238,43 @@ export class Task extends vscode.TreeItem {
 
     getChildren(_element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
         return []
+    }
+
+    public async editTask(): Promise<void> {
+        const tmpdir = os.tmpdir()
+        const newFile = vscode.Uri.parse(path.join(tmpdir, `${this.task.name}.flux`))
+        await fs.writeFile(newFile.path, '')
+        const document = await vscode.workspace.openTextDocument(newFile.path)
+        const self = this // eslint-disable-line @typescript-eslint/no-this-alias
+        const listener = vscode.workspace.onWillSaveTextDocument(async (event_: vscode.TextDocumentWillSaveEvent) => {
+            if (event_.document === document) {
+                const saveText = 'Save and close'
+                const confirmation = await vscode.window.showInformationMessage(
+                    `Save remote task ${self.task.name} to ${self.connection.name}?`, {
+                    modal: true
+                }, saveText)
+                if (confirmation !== saveText) {
+                    return
+                }
+                const contents = event_.document.getText()
+                console.log('willsave')
+                console.log(contents)
+                const influxDB = new InfluxDB({ url: self.connection.hostNport, token: self.connection.token })
+                const tasksApi = new TasksAPI(influxDB)
+                await tasksApi.patchTasksID({ taskID: self.task.id, body: { flux: contents } })
+                vscode.commands.executeCommand('workbench.action.closeActiveEditor')
+                listener.dispose()
+                vscode.commands.executeCommand('influxdb.refresh')
+            }
+        })
+        const edit = new vscode.WorkspaceEdit()
+        edit.insert(newFile, new vscode.Position(0, 0), this.task.flux)
+        const success = await vscode.workspace.applyEdit(edit)
+        if (success) {
+            vscode.window.showTextDocument(document)
+        } else {
+            vscode.window.showErrorMessage('Could not open task for editing.')
+        }
     }
 
     // Delete the associated task

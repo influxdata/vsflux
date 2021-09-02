@@ -89,6 +89,17 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
             }
         )
     )
+    // XXX: rockstar (30 Aug 2021) - This task should really be plumbed in when
+    // the item is selected, as detailed in the `command?` property at
+    // https://code.visualstudio.com/api/references/vscode-api#TreeItem
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'influxdb.editTask',
+            async (node: Task) => {
+                await node.editTask()
+            }
+        )
+    )
     context.subscriptions.push(
         vscode.commands.registerCommand(
             'influxdb.deleteTask',
