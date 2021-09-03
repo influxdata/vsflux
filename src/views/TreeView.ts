@@ -243,12 +243,16 @@ export class Task extends vscode.TreeItem {
     }
 
     public async editTask() : Promise<void> {
-        const tmpdir = os.tmpdir()
+        // XXX: rockstar (3 Sep 2021) - fs.rm doesn't exist until node 14.x, but the current
+        // node environment is node 12.x. As such, we must create an entire dir to put the temp
+        // file, and then remove the entire dir with fs.rmdir.
+        const tmpdir = path.join(os.tmpdir(), crypto.randomBytes(10).toString('hex'))
+        await fs.mkdir(tmpdir)
         const newFile = vscode.Uri.parse(path.join(tmpdir, `${this.task.name}.flux`))
         await fs.writeFile(newFile.path, '')
         const document = await vscode.workspace.openTextDocument(newFile.path)
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
-        const listener = vscode.workspace.onWillSaveTextDocument(async (event_ : vscode.TextDocumentWillSaveEvent) => {
+        const saveListener = vscode.workspace.onWillSaveTextDocument(async (event_ : vscode.TextDocumentWillSaveEvent) => {
             if (event_.document === document) {
                 const saveText = 'Save and close'
                 const confirmation = await vscode.window.showInformationMessage(
@@ -263,8 +267,16 @@ export class Task extends vscode.TreeItem {
                 const tasksApi = new TasksAPI(influxDB)
                 await tasksApi.patchTasksID({ taskID: self.task.id, body: { flux: contents } })
                 vscode.commands.executeCommand('workbench.action.closeActiveEditor')
-                listener.dispose()
+                saveListener.dispose()
+                await fs.rmdir(tmpdir, { recursive: true })
                 vscode.commands.executeCommand('influxdb.refresh')
+            }
+        })
+        const closeListener = vscode.workspace.onDidCloseTextDocument(async (closed : vscode.TextDocument) : Promise<void> => {
+            if (closed === document) {
+                closeListener.dispose()
+                saveListener.dispose()
+                await fs.rmdir(tmpdir, { recursive: true })
             }
         })
         const edit = new vscode.WorkspaceEdit()
