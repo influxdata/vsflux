@@ -161,11 +161,11 @@ export class Client {
         )
 
         this.context.subscriptions.push(
-            workspace.onDidSaveTextDocument(this.onSave)
+            workspace.onDidSaveTextDocument(this.onSave.bind(this))
         )
 
         context.subscriptions.push(
-            workspace.onDidOpenTextDocument(this.onOpen)
+            workspace.onDidOpenTextDocument(this.onOpen.bind(this))
         )
     }
 
