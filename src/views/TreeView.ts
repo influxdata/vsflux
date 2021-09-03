@@ -1,5 +1,6 @@
 import { InfluxDB, FluxTableMetaData } from '@influxdata/influxdb-client'
 import { TasksAPI, Task as TaskModel } from '@influxdata/influxdb-client-apis'
+import * as InfluxDB1 from 'influx'
 import { v1 as uuid } from 'uuid'
 import * as vscode from 'vscode'
 import * as path from 'path'
@@ -145,35 +146,40 @@ class Bucket extends vscode.TreeItem {
     }
 
     getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
+        const state = (this.connection.version === InfluxConnectionVersion.V2 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None)
         return {
             label: this.bucket.name,
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
+            collapsibleState: state
         }
     }
 
-    getChildren(_element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
-        // TODO: handle 1.x connections
-        const queryApi = new InfluxDB({ url: this.connection.hostNport, token: this.connection.token }).getQueryApi(this.connection.org)
-        const query = `import "influxdata/influxdb/schema"
+    async getChildren(_element?: ITreeNode) : Promise<ITreeNode[]> {
+        if (this.connection.version === InfluxConnectionVersion.V2) {
+            const queryApi = new InfluxDB({ url: this.connection.hostNport, token: this.connection.token }).getQueryApi(this.connection.org)
+            const query = `import "influxdata/influxdb/schema"
 schema.measurements(bucket: "${this.bucket.name}")`
-        const self = this // eslint-disable-line @typescript-eslint/no-this-alias
-        return new Promise((resolve, reject) => {
-            const children : Measurement[] = []
-            queryApi.queryRows(query, {
-                next(row : string[], tableMeta : FluxTableMetaData) {
-                    const object = tableMeta.toObject(row)
-                    const measurement = new MeasurementModel(object._value, self.bucket)
-                    const node = new Measurement(self.connection, self.context, measurement)
-                    children.push(node)
-                },
-                error(error : Error) {
-                    reject(error)
-                },
-                complete() {
-                    resolve(children)
-                }
+            const self = this // eslint-disable-line @typescript-eslint/no-this-alias
+            return new Promise((resolve, reject) => {
+                const children : Measurement[] = []
+                queryApi.queryRows(query, {
+                    next(row : string[], tableMeta : FluxTableMetaData) {
+                        const object = tableMeta.toObject(row)
+                        const measurement = new MeasurementModel(object._value, self.bucket)
+                        const node = new Measurement(self.connection, self.context, measurement)
+                        children.push(node)
+                    },
+                    error(error : Error) {
+                        reject(error)
+                    },
+                    complete() {
+                        resolve(children)
+                    }
+                })
             })
-        })
+        } else {
+            console.error('Attempt to get measurements in InfluxDB 1.x')
+            return []
+        }
     }
 }
 class Buckets extends vscode.TreeItem {
@@ -192,28 +198,54 @@ class Buckets extends vscode.TreeItem {
         return this
     }
 
-    getChildren(_element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
-        // TODO: handle 1.x connections
-        const queryApi = new InfluxDB({ url: this.connection.hostNport, token: this.connection.token }).getQueryApi(this.connection.org)
-        const query = 'buckets()'
-        const self = this // eslint-disable-line @typescript-eslint/no-this-alias
-        return new Promise((resolve, reject) => {
-            const children : Bucket[] = []
-            queryApi.queryRows(query, {
-                next(row : string[], tableMeta : FluxTableMetaData) {
-                    const object = tableMeta.toObject(row)
-                    const bucket = new BucketModel(object.name, object.id, object.retentionPeriod, object.retentionPolicy)
-                    const node = new Bucket(self.connection, self.context, bucket)
-                    children.push(node)
-                },
-                error(error : Error) {
-                    reject(error)
-                },
-                complete() {
-                    resolve(children)
-                }
+    async getChildren(_element?: ITreeNode) : Promise<ITreeNode[]> {
+        if (this.connection.version === InfluxConnectionVersion.V2) {
+            const queryApi = new InfluxDB({ url: this.connection.hostNport, token: this.connection.token }).getQueryApi(this.connection.org)
+            const query = 'buckets()'
+            const self = this // eslint-disable-line @typescript-eslint/no-this-alias
+            return new Promise((resolve, reject) => {
+                const children : Bucket[] = []
+                queryApi.queryRows(query, {
+                    next(row : string[], tableMeta : FluxTableMetaData) {
+                        const object = tableMeta.toObject(row)
+                        const bucket = new BucketModel(object.name, object.id, object.retentionPeriod, object.retentionPolicy)
+                        const node = new Bucket(self.connection, self.context, bucket)
+                        children.push(node)
+                    },
+                    error(error : Error) {
+                        reject(error)
+                    },
+                    complete() {
+                        resolve(children)
+                    }
+                })
             })
-        })
+        } else {
+            const hostSplit : string[] = vscode.Uri.parse(this.connection.hostNport).authority.split(':')
+            let queryApi
+            if (hostSplit.length > 1) {
+                queryApi = new InfluxDB1.InfluxDB({
+                    host: hostSplit[0], port: parseInt(hostSplit[1]), username: this.connection.user, password: this.connection.pass
+                })
+            } else {
+                queryApi = new InfluxDB1.InfluxDB({
+                    host: hostSplit[0], username: this.connection.user, password: this.connection.pass
+                })
+            }
+            try {
+                const databases = await queryApi.getDatabaseNames()
+                const children : Bucket[] = []
+                for (const index in databases) {
+                    const bucket = new BucketModel(databases[index], '', 0, '')
+                    const node = new Bucket(this.connection, this.context, bucket)
+                    children.push(node)
+                }
+                return children
+            } catch (e) {
+                console.error(e)
+                return []
+            }
+        }
     }
 }
 export class Task extends vscode.TreeItem {
@@ -540,24 +572,36 @@ export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> 
                     break
                 }
                 case MessageType.Test: {
-                    try {
-                        // TODO: handle 1.x connections
-                        const queryApi = new InfluxDB({ url: connection.hostNport, token: connection.token }).getQueryApi(connection.org)
-                        const query = 'buckets()'
-                        const self = this // eslint-disable-line @typescript-eslint/no-this-alias
-                        const children : Measurement[] = []
-                        queryApi.queryRows(query, {
-                            next(_row : string[], _tableMeta : FluxTableMetaData) { }, // eslint-disable-line @typescript-eslint/no-empty-function
-                            error(error : Error) {
-                                throw error
-                            },
-                            complete() {
-                                vscode.window.showInformationMessage('Connection successful')
-                            }
+                    if (connection.version === InfluxConnectionVersion.V2) {
+                        try {
+                            const queryApi = new InfluxDB({ url: connection.hostNport, token: connection.token }).getQueryApi(connection.org)
+                            const query = 'buckets()'
+                            const self = this // eslint-disable-line @typescript-eslint/no-this-alias
+                            const children : Measurement[] = []
+                            queryApi.queryRows(query, {
+                                next(_row : string[], _tableMeta : FluxTableMetaData) { }, // eslint-disable-line @typescript-eslint/no-empty-function
+                                error(error : Error) {
+                                    throw error
+                                },
+                                complete() {
+                                    vscode.window.showInformationMessage('Connection successful')
+                                }
+                            })
+                        } catch (e) {
+                            vscode.window.showErrorMessage('Failed to connect to database')
+                            console.error(e)
+                        }
+                    } else {
+                        const queryApi = new InfluxDB1.InfluxDB({
+                            host: connection.hostNport, username: connection.user, password: connection.pass
                         })
-                    } catch (e) {
-                        vscode.window.showErrorMessage('Failed to connect to database')
-                        console.error(e)
+                        try {
+                            await queryApi.getDatabaseNames()
+                            vscode.window.showInformationMessage('Connection successful')
+                        } catch (e) {
+                            vscode.window.showErrorMessage('Failed to connect to database')
+                            console.error(e)
+                        }
                     }
                     break
                 }
