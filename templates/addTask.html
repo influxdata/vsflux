@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+	<link rel="stylesheet" type="text/css" href="{{{cssPath}}}">
+</head>
+
+<body>
+	<form class="form">
+		<h1>Add Task</h1>
+
+		<div class="field" id="name">
+			<label>Name</label>
+			<input required="true" type="text" name="name" placeholder="My task" value="">
+		</div>
+
+		<div class="field">
+			<label>Schedule</label>
+			<select id="type">
+				<option value="0" selected="selected">Every</option>
+				<option value="1">Cron</option>
+			</select>
+		</div>
+
+		<div class="field" id="every">
+			<label>Every</label>
+			<input required="true" type="text" name="every" placeholder="3h30s" value="">
+		</div>
+
+		<div class="field hidden" id="cron">
+			<label>Cron</label>
+			<input required="false" type="text" name="cron" placeholder="0 2 * * *" value="" disabled>
+		</div>
+
+		<div class="field" id="offset">
+			<label>Offset</label>
+			<input required="true" type="offset" name="offset" placeholder="20m" value="">
+		</div>
+
+		<div class="actions">
+			<span class="blue button" id="save" tabindex="0">Save and continue</span>
+		</div>
+	</form>
+	<script src="{{{jsPath}}}"></script>
+</body>
+
+</html>

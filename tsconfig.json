@@ -18,12 +18,13 @@
 	},
 	"exclude": [
 		"dist",
-    "out",
-    "test",
+		"out",
+		"test",
 		"node_modules",
 		"test-resources",
 		".vscode-test",
 		"webpack.config.js",
-		"templates/editConn.js"
+		"templates/editConn.js",
+		"templates/addTask.js"
 	]
 }
