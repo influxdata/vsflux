@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+	<link rel="stylesheet" type="text/css" href="{{{cssPath}}}">
+</head>
+
+<body>
+	<form class="form">
+		<h1>Create Bucket</h1>
+
+		<div class="field" id="name">
+			<label>Name</label>
+			<input required="true" type="text" name="name" placeholder="My bucket" value="">
+		</div>
+
+		<div class="field" id="duration">
+			<label>Delete data</label>
+			<select>
+				<option value="">Never</option>
+				<option value="3600">After 1 hour</option>
+				<option value="21600">After 6 hours</option>
+				<option value="43200">After 12 hours</option>
+				<option value="86400">After 24 hours</option>
+				<option value="172800">After 48 hours</option>
+				<option value="604800">After 7 days</option>
+				<option value="1209600">After 14 days</option>
+				<option value="2592000">After 30 days</option>
+				<option value="7776000">After 90 days</option>
+				<option value="31536000">After 1 year</option>
+			</select>
+		</div>
+
+		<div class="actions">
+			<span class="blue button" id="save" tabindex="0">Create bucket</span>
+		</div>
+	</form>
+	<script src="{{{jsPath}}}"></script>
+</body>
+
+</html>

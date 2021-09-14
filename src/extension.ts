@@ -4,7 +4,7 @@ import * as vscode from 'vscode'
 
 import { Client } from './components/Client'
 import { ConnectionView } from './views/AddEditConnectionView'
-import { Connection, InfluxDBTreeProvider, InfluxDBConnectionsKey, Task, Tasks } from './views/TreeView'
+import { Bucket, Buckets, Connection, InfluxDBTreeProvider, InfluxDBConnectionsKey, Task, Tasks } from './views/TreeView'
 import { IConnection } from './types'
 import { InfluxDB } from '@influxdata/influxdb-client'
 import { TableView } from './views/TableView'
@@ -100,6 +100,23 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
             }
         )
     )
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'influxdb.addBucket',
+            async (node : Buckets) => {
+                node.addBucket()
+            }
+        )
+    )
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'influxdb.deleteBucket',
+            async (node : Bucket) => {
+                await node.deleteBucket()
+            }
+        )
+    )
+
     context.subscriptions.push(
         vscode.commands.registerCommand(
             'influxdb.addTask',
