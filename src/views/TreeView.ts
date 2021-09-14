@@ -1,4 +1,4 @@
-import { InfluxDB, FluxTableMetaData } from '@influxdata/influxdb-client'
+import { InfluxDB, FluxTableMetaData, QueryApi } from '@influxdata/influxdb-client'
 import { TasksAPI, Task as TaskModel } from '@influxdata/influxdb-client-apis'
 import * as InfluxDB1 from 'influx'
 import { v1 as uuid } from 'uuid'
@@ -13,6 +13,10 @@ import { AddTaskView } from './AddTaskView'
 import { IConnection, InfluxConnectionVersion } from '../types'
 
 export const InfluxDBConnectionsKey = 'influxdb.connections'
+const version = vscode.extensions.getExtension('influxdata.flux')?.packageJSON.version
+const headers = {
+    'User-agent': `influxdb-client-vscode/${version}`
+}
 
 enum MessageType {
     Test = 'testConn',
@@ -72,6 +76,31 @@ class MeasurementTagModel {
     ) { }
 }
 
+function connectionToClientV1(connection : IConnection) : InfluxDB1.InfluxDB {
+    const hostSplit : string[] = vscode.Uri.parse(connection.hostNport).authority.split(':')
+    if (hostSplit.length > 1) {
+        return new InfluxDB1.InfluxDB({
+            host: hostSplit[0], port: parseInt(hostSplit[1]), username: connection.user, password: connection.pass
+        })
+    } else {
+        return new InfluxDB1.InfluxDB({
+            host: hostSplit[0], username: connection.user, password: connection.pass
+        })
+    }
+}
+function connectionToClient(connection : IConnection) : InfluxDB {
+    return new InfluxDB({ url: connection.hostNport, token: connection.token })
+}
+function connectionToQueryApi(connection : IConnection) : QueryApi {
+    return connectionToClient(connection).getQueryApi({
+        org: connection.org,
+        headers: headers
+    })
+}
+function connectionToTasksApi(connection : IConnection) : TasksAPI {
+    return new TasksAPI(connectionToClient(connection))
+}
+
 interface ITreeNode {
     getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem;
     getChildren(element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[];
@@ -113,7 +142,7 @@ class Measurement extends vscode.TreeItem {
     }
 
     getChildren(_element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
-        const queryApi = new InfluxDB({ url: this.connection.hostNport, token: this.connection.token }).getQueryApi(this.connection.org)
+        const queryApi = connectionToQueryApi(this.connection)
         const query = `import "influxdata/influxdb/schema"
 schema.measurementTagKeys(bucket: "${this.measurement.bucket.name}", measurement: "${this.measurement.name}")`
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
@@ -155,7 +184,7 @@ class Bucket extends vscode.TreeItem {
 
     async getChildren(_element?: ITreeNode) : Promise<ITreeNode[]> {
         if (this.connection.version === InfluxConnectionVersion.V2) {
-            const queryApi = new InfluxDB({ url: this.connection.hostNport, token: this.connection.token }).getQueryApi(this.connection.org)
+            const queryApi = connectionToQueryApi(this.connection)
             const query = `import "influxdata/influxdb/schema"
 schema.measurements(bucket: "${this.bucket.name}")`
             const self = this // eslint-disable-line @typescript-eslint/no-this-alias
@@ -200,7 +229,7 @@ class Buckets extends vscode.TreeItem {
 
     async getChildren(_element?: ITreeNode) : Promise<ITreeNode[]> {
         if (this.connection.version === InfluxConnectionVersion.V2) {
-            const queryApi = new InfluxDB({ url: this.connection.hostNport, token: this.connection.token }).getQueryApi(this.connection.org)
+            const queryApi = connectionToQueryApi(this.connection)
             const query = 'buckets()'
             const self = this // eslint-disable-line @typescript-eslint/no-this-alias
             return new Promise((resolve, reject) => {
@@ -221,17 +250,7 @@ class Buckets extends vscode.TreeItem {
                 })
             })
         } else {
-            const hostSplit : string[] = vscode.Uri.parse(this.connection.hostNport).authority.split(':')
-            let queryApi
-            if (hostSplit.length > 1) {
-                queryApi = new InfluxDB1.InfluxDB({
-                    host: hostSplit[0], port: parseInt(hostSplit[1]), username: this.connection.user, password: this.connection.pass
-                })
-            } else {
-                queryApi = new InfluxDB1.InfluxDB({
-                    host: hostSplit[0], username: this.connection.user, password: this.connection.pass
-                })
-            }
+            const queryApi = connectionToClientV1(this.connection)
             try {
                 const databases = await queryApi.getDatabaseNames()
                 const children : Bucket[] = []
@@ -295,9 +314,8 @@ export class Task extends vscode.TreeItem {
                     return
                 }
                 const contents = event_.document.getText()
-                const influxDB = new InfluxDB({ url: self.connection.hostNport, token: self.connection.token })
-                const tasksApi = new TasksAPI(influxDB)
-                await tasksApi.patchTasksID({ taskID: self.task.id, body: { flux: contents } })
+                const tasksApi = connectionToTasksApi(self.connection)
+                await tasksApi.patchTasksID({ taskID: self.task.id, body: { flux: contents } }, { headers: headers })
                 vscode.commands.executeCommand('workbench.action.closeActiveEditor')
                 saveListener.dispose()
                 await fs.rmdir(tmpdir, { recursive: true })
@@ -331,9 +349,8 @@ export class Task extends vscode.TreeItem {
         if (confirmation !== deleteText) {
             return
         }
-        const influxDB = new InfluxDB({ url: this.connection.hostNport, token: this.connection.token })
-        const tasksApi = new TasksAPI(influxDB)
-        await tasksApi.deleteTasksID({ taskID: this.task.id })
+        const tasksApi = connectionToTasksApi(this.connection)
+        await tasksApi.deleteTasksID({ taskID: this.task.id }, { headers: headers })
         vscode.commands.executeCommand('influxdb.refresh')
     }
 }
@@ -357,9 +374,8 @@ export class Tasks extends vscode.TreeItem {
     // XXX: rockstar (30 Aug 2021) - If the token isn't an "all access" token, we can't use it to fetch tasks.
     // We should tell the user this.
     async getChildren(_element?: ITreeNode) : Promise<ITreeNode[]> {
-        const influxDB = new InfluxDB({ url: this.connection.hostNport, token: this.connection.token })
-        const tasksApi = new TasksAPI(influxDB)
-        const response = await tasksApi.getTasks()
+        const tasksApi = connectionToTasksApi(this.connection)
+        const response = await tasksApi.getTasks(undefined, { headers: headers })
         const nodes : ITreeNode[] = []
         if (response.tasks !== undefined) {
             // Why would this ever be undefined?
@@ -405,9 +421,8 @@ export class Tasks extends vscode.TreeItem {
                     return
                 }
                 const contents = saved.getText()
-                const influxDB = new InfluxDB({ url: self.connection.hostNport, token: self.connection.token })
-                const tasksApi = new TasksAPI(influxDB)
-                await tasksApi.postTasks({ body: { org: self.connection.org, flux: contents } })
+                const tasksApi = connectionToTasksApi(self.connection)
+                await tasksApi.postTasks({ body: { org: self.connection.org, flux: contents } }, { headers: headers })
                 vscode.commands.executeCommand('workbench.action.closeActiveEditor')
                 saveListener.dispose()
                 await fs.rmdir(tmpdir, { recursive: true })
@@ -574,7 +589,7 @@ export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> 
                 case MessageType.Test: {
                     if (connection.version === InfluxConnectionVersion.V2) {
                         try {
-                            const queryApi = new InfluxDB({ url: connection.hostNport, token: connection.token }).getQueryApi(connection.org)
+                            const queryApi = connectionToQueryApi(connection)
                             const query = 'buckets()'
                             const self = this // eslint-disable-line @typescript-eslint/no-this-alias
                             const children : Measurement[] = []
@@ -592,9 +607,7 @@ export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> 
                             console.error(e)
                         }
                     } else {
-                        const queryApi = new InfluxDB1.InfluxDB({
-                            host: connection.hostNport, username: connection.user, password: connection.pass
-                        })
+                        const queryApi = connectionToClientV1(connection)
                         try {
                             await queryApi.getDatabaseNames()
                             vscode.window.showInformationMessage('Connection successful')
