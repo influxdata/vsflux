@@ -33,6 +33,8 @@
     "onCommand:influxdb.removeConnection",
     "onCommand:influxdb.editConnection",
     "onCommand:influxdb.activateConnection",
+    "onCommand:influxdb.addBucket",
+    "onCommand:influxdb.deleteBucket",
     "onCommand:influxdb.addTask",
     "onCommand:influxdb.deleteTask"
   ],
@@ -106,18 +108,32 @@
         "category": "InfluxDB"
       },
       {
+        "command": "influxdb.addBucket",
+        "title": "Add Bucket",
+        "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.deleteBucket",
+        "title": "Delete Bucket",
+        "category": "InfluxDB"
+      },
+      {
         "command": "influxdb.addTask",
         "title": "Add Task",
         "category": "InfluxDB"
       },
       {
         "command": "influxdb.deleteTask",
-        "title": "Delete task",
+        "title": "Delete Task",
         "category": "InfluxDB"
       }
     ],
     "menus": {
       "commandPalette": [
+        {
+          "command": "influxdb.addConnection",
+          "when": "view == influxdb"
+        },
         {
           "command": "influxdb.removeConnection",
           "when": "view == influxdb"
@@ -131,7 +147,23 @@
           "when": "view == influxdb"
         },
         {
+          "command": "influxdb.addBucket",
+          "when": "view == influxdb"
+        },
+        {
+          "command": "influxdb.deleteBucket",
+          "when": "view == influxdb"
+        },
+        {
           "command": "influxdb.addTask",
+          "when": "view == influxdb"
+        },
+        {
+          "command": "influxdb.editTask",
+          "when": "view == influxdb"
+        },
+        {
+          "command": "influxdb.deleteTask",
           "when": "view == influxdb"
         }
       ],
@@ -168,6 +200,16 @@
         {
           "command": "influxdb.editTask",
           "when": "view == influxdb && viewItem == task",
+          "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.addBucket",
+          "when": "view == influxdb && viewItem == buckets",
+          "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.deleteBucket",
+          "when": "view == influxdb && viewItem == bucket",
           "group": "influxdb@1"
         },
         {

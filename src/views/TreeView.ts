@@ -1,5 +1,5 @@
 import { InfluxDB, FluxTableMetaData, QueryApi } from '@influxdata/influxdb-client'
-import { TasksAPI, Task as TaskModel } from '@influxdata/influxdb-client-apis'
+import { TasksAPI, Task as TaskModel, BucketsAPI, RetentionRule, OrgsAPI } from '@influxdata/influxdb-client-apis'
 import * as InfluxDB1 from 'influx'
 import { v1 as uuid } from 'uuid'
 import * as vscode from 'vscode'
@@ -9,6 +9,7 @@ import * as crypto from 'crypto'
 import { promises as fs } from 'fs'
 
 import { ConnectionView } from './AddEditConnectionView'
+import { AddBucketView } from './AddBucketView'
 import { AddTaskView } from './AddTaskView'
 import { IConnection, InfluxConnectionVersion } from '../types'
 
@@ -58,7 +59,7 @@ function convertMessageToConnection(
 class BucketModel {
     constructor(
         readonly name : string,
-        private id : string,
+        readonly id : string,
         private retentionPeriod : number,
         private retentionPolicy : string
     ) { }
@@ -99,6 +100,12 @@ function connectionToQueryApi(connection : IConnection) : QueryApi {
 }
 function connectionToTasksApi(connection : IConnection) : TasksAPI {
     return new TasksAPI(connectionToClient(connection))
+}
+function connectionToBucketsApi(connection : IConnection) : BucketsAPI {
+    return new BucketsAPI(connectionToClient(connection))
+}
+function connectionToOrgsApi(connection : IConnection) : OrgsAPI {
+    return new OrgsAPI(connectionToClient(connection))
 }
 
 interface ITreeNode {
@@ -165,7 +172,7 @@ schema.measurementTagKeys(bucket: "${this.measurement.bucket.name}", measurement
         })
     }
 }
-class Bucket extends vscode.TreeItem {
+export class Bucket extends vscode.TreeItem {
     constructor(
         private connection : IConnection,
         private context : vscode.ExtensionContext,
@@ -178,7 +185,8 @@ class Bucket extends vscode.TreeItem {
         const state = (this.connection.version === InfluxConnectionVersion.V2 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None)
         return {
             label: this.bucket.name,
-            collapsibleState: state
+            collapsibleState: state,
+            contextValue: 'bucket'
         }
     }
 
@@ -210,10 +218,17 @@ schema.measurements(bucket: "${this.bucket.name}")`
             return []
         }
     }
+
+    public async deleteBucket() : Promise<void> {
+        const bucketsApi = connectionToBucketsApi(this.connection)
+        await bucketsApi.deleteBucketsID({ bucketID: this.bucket.id }, { headers })
+        vscode.commands.executeCommand('influxdb.refresh')
+    }
 }
-class Buckets extends vscode.TreeItem {
+export class Buckets extends vscode.TreeItem {
     label = 'Buckets'
     collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
+    contextValue = 'buckets'
 
     constructor(
         private connection : IConnection,
@@ -265,6 +280,40 @@ class Buckets extends vscode.TreeItem {
                 return []
             }
         }
+    }
+
+    public addBucket() : void {
+        const addBucketView = new AddBucketView(this.context)
+        const panel = addBucketView.show(this.addBucketCallback.bind(this))
+    }
+
+    private async addBucketCallback(name : string, duration : number | undefined) : Promise<void> {
+        // XXX: rockstar (13 Sep 2021) - This makes me irrationally annoyed. The
+        // postBuckets api requires an orgID, not an org, so we have to fetch
+        // the orgID in order to create the bucket. The api clients are just very
+        // inconsistent.
+        const orgsAPI = connectionToOrgsApi(this.connection)
+        const organizations = await orgsAPI.getOrgs({ org: this.connection.org }, { headers })
+        if (!organizations || !organizations.orgs || !organizations.orgs.length || organizations.orgs[0].id === undefined) {
+            console.error(`No organization named "${this.connection.org}" found!`)
+            vscode.window.showErrorMessage('Unexpected error creating bucket')
+            return
+        }
+        const orgID = organizations.orgs[0].id
+
+        const bucketsApi = connectionToBucketsApi(this.connection)
+        const retentionRules : RetentionRule[] = []
+        if (duration !== undefined) {
+            retentionRules.push({ type: 'expire', shardGroupDurationSeconds: 0, everySeconds: duration })
+        }
+        await bucketsApi.postBuckets({
+            body: {
+                orgID,
+                name,
+                retentionRules
+            }
+        }, { headers })
+        vscode.commands.executeCommand('influxdb.refresh')
     }
 }
 export class Task extends vscode.TreeItem {

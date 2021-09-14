@@ -25,6 +25,7 @@
 		".vscode-test",
 		"webpack.config.js",
 		"templates/editConn.js",
+		"templates/addBucket.js",
 		"templates/addTask.js"
 	]
 }
