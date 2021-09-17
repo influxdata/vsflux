@@ -10,3 +10,8 @@ th {
 th {
   background: #444;
 }
+
+.sticky {
+  position: sticky;
+  top: 0;
+}

@@ -9,18 +9,28 @@
 <body>
   {{#results.tables}}
   <table>
-    <tr>
-      {{#head}}
-      <th>{{label}}</th>
-      {{/head}}
-    </tr>
-    {{#rows}}
-    <tr>
-      {{# . }}
-      <td>{{.}}</td>
-      {{/ .}}
-    </tr>
-    {{/rows}}
+    {{! This sticky doesn't currently work, as the user agent is too old for
+        this feature. It is here in the case that the user-agent is updated.
+      !}}
+    <thead class="sticky">
+      <tr>
+        <th colspan="{{head.length}}">{{result}}</th>
+      </tr>
+      <tr>
+        {{#head}}
+        <th>{{label}}{{#group}}*{{/group}}</th>
+        {{/head}}
+      </tr>
+    </thead>
+    <tbody>
+      {{#rows}}
+      <tr>
+        {{# . }}
+        <td>{{.}}</td>
+        {{/ .}}
+      </tr>
+      {{/rows}}
+    </tbody>
   </table>
 
   <br />

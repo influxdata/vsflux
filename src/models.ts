@@ -5,15 +5,21 @@ type TableRow = string[]
 
 class TableResult {
     public rows : TableRow[] = []
+    private result : string
 
     constructor(
         readonly head : TableHead,
         firstRow : TableRow
     ) {
-        this.rows.push(firstRow)
+        this.result = this.head[0].defaultValue
+        this.head.shift()
+        this.push(firstRow)
     }
 
     public push(row : TableRow) : void {
+        // Remove the empty "_result" column. We can get that data
+        // from the table head.
+        row.shift()
         this.rows.push(row)
     }
 }
@@ -27,20 +33,21 @@ export class QueryResult {
 
     static async run(client : QueryApi, query : string) : Promise<QueryResult> {
         const result = new QueryResult()
-        const currentTableId = -1
+        let currentSchema : FluxTableMetaData
         let currentTableResult : TableResult
         return new Promise((resolve, reject) => {
             client.queryRows(query, {
                 next(row : string[], tableMeta : FluxTableMetaData) {
-                    const idColumn = tableMeta.column('table')
-                    const idIndex = tableMeta.columns.indexOf(idColumn)
-                    if (currentTableId !== parseInt(row[idIndex])) {
+                    if (currentSchema !== tableMeta) {
                         if (currentTableResult !== undefined) {
+                            // "Complete" the table by pushing it on to the result list before creating a new
+                            // table.
                             result.push(currentTableResult)
                         }
                         // Copy the columns so there isn't a circular dependency.
                         const columns = tableMeta.columns.map(x => Object.assign({}, x))
                         currentTableResult = new TableResult(columns, row)
+                        currentSchema = tableMeta
                     } else {
                         currentTableResult.push(row)
                     }
