@@ -1,6 +1,6 @@
 {
   "name": "flux",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "publisher": "influxdata",
   "displayName": "Flux",
   "description": "Flux language extension for VSCode",
@@ -304,7 +304,7 @@
     "webpack-cli": "^4.7.2"
   },
   "dependencies": {
-    "@influxdata/flux-lsp-node": "^0.6.2",
+    "@influxdata/flux-lsp-node": "^0.6.4",
     "@influxdata/influxdb-client": "^1.16.0",
     "@influxdata/influxdb-client-apis": "^1.17.0",
     "axios": "^0.21.1",
