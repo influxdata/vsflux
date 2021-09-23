@@ -56,7 +56,9 @@ form select option {
   padding-right: 15px;
 }
 
-form input {
+form input[type=text],
+form input[type=url],
+form input[type=password] {
   width: 250px;
 }
 
