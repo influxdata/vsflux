@@ -38,7 +38,7 @@ function createTransform() : Transform {
             try {
                 this.push(data)
             } catch (e) {
-                console.log(e)
+                console.error(e)
             }
             reset()
         }
