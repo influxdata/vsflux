@@ -102,6 +102,7 @@ class Actions {
       connID: document.querySelector('#connID').value,
       connName: document.querySelector('#connName input').value,
       connHost: document.querySelector('#connHost input').value,
+      connDisableTLS: document.querySelector('#connDisableTLS input').checked,
       connVersion: document.querySelector('#connVersion').value,
       connToken: '',
       connOrg: '',

@@ -12,4 +12,7 @@ export interface IConnection {
     readonly user : string;
     readonly pass : string;
     isActive : boolean;
+    // Until there is a way to "migrate" this data, it may not
+    // exist in the data store
+    readonly disableTLS : boolean | undefined;
 }

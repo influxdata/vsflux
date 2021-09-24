@@ -8,12 +8,12 @@ import * as os from 'os'
 import * as crypto from 'crypto'
 import { promises as fs } from 'fs'
 
+import { Store } from '../components/Store'
 import { ConnectionView } from './AddEditConnectionView'
 import { AddBucketView } from './AddBucketView'
 import { AddTaskView } from './AddTaskView'
 import { IConnection, InfluxConnectionVersion } from '../types'
 
-export const InfluxDBConnectionsKey = 'influxdb.connections'
 const version = vscode.extensions.getExtension('influxdata.flux')?.packageJSON.version
 const headers = {
     'User-agent': `influxdb-client-vscode/${version}`
@@ -33,26 +33,32 @@ interface Message {
     readonly connOrg : string;
     readonly connUser : string;
     readonly connPass : string;
+    readonly connDisableTLS : boolean;
 }
 
 function convertMessageToConnection(
-    message : Message,
-    id : string,
-    isActive = false
+    message : Message
 ) : IConnection {
+    let isActive = false
+    if (message.connID !== '') {
+        const store = Store.getStore()
+        const connection = store.getConnection(message.connID)
+        isActive = connection.isActive
+    }
     return {
         version:
             message.connVersion > 0
                 ? InfluxConnectionVersion.V1
                 : InfluxConnectionVersion.V2,
-        id: id,
+        id: message.connID || uuid(),
         name: message.connName,
         hostNport: message.connHost,
         token: message.connToken,
         org: message.connOrg,
         user: message.connUser,
         pass: message.connPass,
-        isActive: isActive
+        isActive,
+        disableTLS: message.connDisableTLS
     }
 }
 
@@ -90,7 +96,11 @@ function connectionToClientV1(connection : IConnection) : InfluxDB1.InfluxDB {
     }
 }
 function connectionToClient(connection : IConnection) : InfluxDB {
-    return new InfluxDB({ url: connection.hostNport, token: connection.token })
+    const transportOptions = { rejectUnauthorized: true }
+    if (connection.disableTLS !== undefined && connection.disableTLS) {
+        transportOptions.rejectUnauthorized = false
+    }
+    return new InfluxDB({ url: connection.hostNport, token: connection.token, transportOptions })
 }
 function connectionToQueryApi(connection : IConnection) : QueryApi {
     return connectionToClient(connection).getQueryApi({
@@ -115,7 +125,6 @@ interface ITreeNode {
 class Tag extends vscode.TreeItem {
     constructor(
         private connection : IConnection,
-        private context : vscode.ExtensionContext,
         private tag : MeasurementTagModel
     ) {
         super(connection.name, vscode.TreeItemCollapsibleState.None)
@@ -135,7 +144,6 @@ class Tag extends vscode.TreeItem {
 class Measurement extends vscode.TreeItem {
     constructor(
         private connection : IConnection,
-        private context : vscode.ExtensionContext,
         private measurement : MeasurementModel
     ) {
         super(connection.name, vscode.TreeItemCollapsibleState.Collapsed)
@@ -159,7 +167,7 @@ schema.measurementTagKeys(bucket: "${this.measurement.bucket.name}", measurement
                 next(row : string[], tableMeta : FluxTableMetaData) {
                     const object = tableMeta.toObject(row)
                     const tag = new MeasurementTagModel(object._value, self.measurement)
-                    const node = new Tag(self.connection, self.context, tag)
+                    const node = new Tag(self.connection, tag)
                     children.push(node)
                 },
                 error(error : Error) {
@@ -175,7 +183,6 @@ schema.measurementTagKeys(bucket: "${this.measurement.bucket.name}", measurement
 export class Bucket extends vscode.TreeItem {
     constructor(
         private connection : IConnection,
-        private context : vscode.ExtensionContext,
         private bucket : BucketModel
     ) {
         super(connection.name, vscode.TreeItemCollapsibleState.Collapsed)
@@ -202,7 +209,7 @@ schema.measurements(bucket: "${this.bucket.name}")`
                     next(row : string[], tableMeta : FluxTableMetaData) {
                         const object = tableMeta.toObject(row)
                         const measurement = new MeasurementModel(object._value, self.bucket)
-                        const node = new Measurement(self.connection, self.context, measurement)
+                        const node = new Measurement(self.connection, measurement)
                         children.push(node)
                     },
                     error(error : Error) {
@@ -253,7 +260,7 @@ export class Buckets extends vscode.TreeItem {
                     next(row : string[], tableMeta : FluxTableMetaData) {
                         const object = tableMeta.toObject(row)
                         const bucket = new BucketModel(object.name, object.id, object.retentionPeriod, object.retentionPolicy)
-                        const node = new Bucket(self.connection, self.context, bucket)
+                        const node = new Bucket(self.connection, bucket)
                         children.push(node)
                     },
                     error(error : Error) {
@@ -271,7 +278,7 @@ export class Buckets extends vscode.TreeItem {
                 const children : Bucket[] = []
                 for (const index in databases) {
                     const bucket = new BucketModel(databases[index], '', 0, '')
-                    const node = new Bucket(this.connection, this.context, bucket)
+                    const node = new Bucket(this.connection, bucket)
                     children.push(node)
                 }
                 return children
@@ -319,7 +326,6 @@ export class Buckets extends vscode.TreeItem {
 export class Task extends vscode.TreeItem {
     constructor(
         private connection : IConnection,
-        private context : vscode.ExtensionContext,
         private task : TaskModel
     ) {
         super(connection.name, vscode.TreeItemCollapsibleState.None)
@@ -429,7 +435,7 @@ export class Tasks extends vscode.TreeItem {
         if (response.tasks !== undefined) {
             // Why would this ever be undefined?
             response.tasks.forEach((task, _idx) => {
-                nodes.push(new Task(this.connection, this.context, task))
+                nodes.push(new Task(this.connection, task))
             })
         }
         return nodes
@@ -542,17 +548,8 @@ export class Connection extends vscode.TreeItem {
         if (confirmation !== removeText) {
             return
         }
-        const connections = this.context.globalState.get<{
-            [key : string] : IConnection;
-        }>(InfluxDBConnectionsKey) || {}
-
-        const connection = connections[this.connection.id]
-        delete connections[this.connection.id]
-        if (connection.isActive) {
-            connections[Object.values(connections)[0].id].isActive = true
-        }
-
-        await this.context.globalState.update(InfluxDBConnectionsKey, connections)
+        const store = Store.getStore()
+        await store.deleteConnection(this.connection.id)
         vscode.commands.executeCommand('influxdb.refresh')
     }
 
@@ -564,18 +561,11 @@ export class Connection extends vscode.TreeItem {
     // XXX: rockstar (27 Aug 2021) - This should live on a ConnectionModel of some sort.
     // Set the currently active connection.
     public async activate() : Promise<void> {
-        const connections = this.context.globalState.get<{
-            [key : string] : IConnection;
-        }>(InfluxDBConnectionsKey) || {}
+        const store = Store.getStore()
+        const connection = store.getConnection(this.connection.id)
+        connection.isActive = true
+        await store.saveConnection(connection)
 
-        for (const connection of Object.values(connections)) {
-            connection.isActive = false
-        }
-
-        this.connection.isActive = true
-        connections[this.connection.id] = this.connection
-
-        await this.context.globalState.update(InfluxDBConnectionsKey, connections)
         vscode.commands.executeCommand('influxdb.refresh')
     }
 }
@@ -597,7 +587,7 @@ export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> 
         if (element) {
             return element.getChildren()
         }
-        const connections = this.context.globalState.get<{ [key : string] : IConnection }>(InfluxDBConnectionsKey) || {}
+        const connections = Store.getStore().getConnections()
         const nodes = []
         for (const [id, connection] of Object.entries(connections)) {
             let version = '2.x'
@@ -617,20 +607,12 @@ export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> 
         panel : vscode.WebviewPanel
     ) : Promise<void> {
         panel.webview.onDidReceiveMessage(async (message : Message) => {
-            const connection = convertMessageToConnection(message, uuid())
+            const connection = convertMessageToConnection(message)
             switch (message.command) {
                 case MessageType.Save: {
-                    const id = message.connID || uuid()
-                    const target = convertMessageToConnection(message, id, true)
+                    const store = Store.getStore()
+                    await store.saveConnection(connection)
 
-                    const connections = this.context.globalState.get<{
-                        [key : string] : IConnection;
-                    }>(InfluxDBConnectionsKey) || {}
-                    for (const connection of Object.values(connections)) {
-                        connection.isActive = false
-                    }
-                    connections[target.id] = target
-                    await this.context.globalState.update(InfluxDBConnectionsKey, connections)
                     vscode.commands.executeCommand('influxdb.refresh')
                     panel.dispose()
                     break
@@ -640,8 +622,6 @@ export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> 
                         try {
                             const queryApi = connectionToQueryApi(connection)
                             const query = 'buckets()'
-                            const self = this // eslint-disable-line @typescript-eslint/no-this-alias
-                            const children : Measurement[] = []
                             queryApi.queryRows(query, {
                                 next(_row : string[], _tableMeta : FluxTableMetaData) { }, // eslint-disable-line @typescript-eslint/no-empty-function
                                 error(error : Error) {

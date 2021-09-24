@@ -2,9 +2,10 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
 
+import { Store } from './components/Store'
 import { Client } from './components/Client'
 import { ConnectionView } from './views/AddEditConnectionView'
-import { Bucket, Buckets, Connection, InfluxDBTreeProvider, InfluxDBConnectionsKey, Task, Tasks } from './views/TreeView'
+import { Bucket, Buckets, Connection, InfluxDBTreeProvider, Task, Tasks } from './views/TreeView'
 import { IConnection } from './types'
 import { InfluxDB } from '@influxdata/influxdb-client'
 import { TableView } from './views/TableView'
@@ -15,6 +16,7 @@ let languageClient : Client
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context : vscode.ExtensionContext) : Promise<void> {
+    Store.init(context)
     languageClient = new Client(context)
     languageClient.start()
 
@@ -51,9 +53,13 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
                     return
                 }
                 try {
-                    const connections = context.globalState.get<{ [key : string] : IConnection }>(InfluxDBConnectionsKey) || {}
-                    const connection = Object.values(connections).filter((item : IConnection) => item.isActive)[0]
-                    const queryApi = new InfluxDB({ url: connection.hostNport, token: connection.token }).getQueryApi(connection.org)
+                    const store = Store.getStore()
+                    const connection = Object.values(store.getConnections()).filter((item : IConnection) => item.isActive)[0]
+                    const transportOptions = { rejectUnauthorized: true }
+                    if (connection.disableTLS !== undefined && connection.disableTLS) {
+                        transportOptions.rejectUnauthorized = false
+                    }
+                    const queryApi = new InfluxDB({ url: connection.hostNport, token: connection.token, transportOptions }).getQueryApi(connection.org)
                     const results = await QueryResult.run(queryApi, query)
                     const tableView = new TableView(context)
                     tableView.show(results, connection.name)

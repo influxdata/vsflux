@@ -36,6 +36,11 @@
 			</input>
 		</div>
 
+		<div class="field" id="connDisableTLS">
+			<input type="checkbox" name="disableTLS" value="1" {{#disableTLS}}checked{{/disableTLS}}>
+			<span>Disable TLS verification</span>
+		</div>
+
 		<div class="field" id="connToken">
 			<label>Token</label>
 			<input required="true" name="token" placeholder="yOuRtOkEn==" value="{{token}}">
