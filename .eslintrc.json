@@ -23,6 +23,7 @@
         "@typescript-eslint"
     ],
     "rules": {
+      "no-console": [2, { "allow": ["error", "warn", "debug"]}],
       "@typescript-eslint/no-unused-vars": "off",
       "no-useless-constructor": "off",
       "promise/param-names": "off", // Some Promise functions are (resolve, _reject)

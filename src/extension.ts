@@ -1,22 +1,35 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
+import { InfluxDB } from '@influxdata/influxdb-client'
 
 import { Store } from './components/Store'
 import { Client } from './components/Client'
+import { activateDebug } from './components/Debug'
 import { ConnectionView } from './views/AddEditConnectionView'
 import { Bucket, Buckets, Connection, InfluxDBTreeProvider, Task, Tasks } from './views/TreeView'
 import { IConnection } from './types'
-import { InfluxDB } from '@influxdata/influxdb-client'
 import { TableView } from './views/TableView'
 import { QueryResult } from './models'
 
 let languageClient : Client
 
+const runMode : 'external' | 'server' | 'namedPipeServer' | 'inline' = 'inline'
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context : vscode.ExtensionContext) : Promise<void> {
     Store.init(context)
+    switch (runMode) {
+        case 'inline':
+            activateDebug(context)
+            break
+        default:
+            // We want to explicitly disallow these other run modes for now.
+            vscode.window.showWarningMessage(`Unsupported debugger run mode: ${runMode}`)
+            break
+    }
+
     languageClient = new Client(context)
     languageClient.start()
 
@@ -42,7 +55,6 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
                     return
                 }
                 let query = ''
-                // Is this functionality actually important?
                 if (activeTextEditor.selection.isEmpty) {
                     query = activeTextEditor.document.getText()
                 } else {
@@ -64,7 +76,11 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
                     const tableView = new TableView(context)
                     tableView.show(results, connection.name)
                 } catch (error) {
-                    vscode.window.showErrorMessage(error.message)
+                    let errorMessage = 'Error executing query'
+                    if (error instanceof Error) {
+                        errorMessage = error.message
+                    }
+                    vscode.window.showErrorMessage(errorMessage)
                     console.error(error)
                 }
             }

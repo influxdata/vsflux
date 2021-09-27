@@ -23,7 +23,7 @@
     "theme": "light"
   },
   "engines": {
-    "vscode": "^1.57.1"
+    "vscode": "^1.59.0"
   },
   "activationEvents": [
     "onLanguage:flux",
@@ -36,7 +36,9 @@
     "onCommand:influxdb.addBucket",
     "onCommand:influxdb.deleteBucket",
     "onCommand:influxdb.addTask",
-    "onCommand:influxdb.deleteTask"
+    "onCommand:influxdb.deleteTask",
+    "onDebugResolve:flux",
+    "onDebugDynamicConfigurations:flux"
   ],
   "main": "./dist/extension",
   "contributes": {
@@ -259,6 +261,21 @@
           }
         }
       }
+    ],
+    "breakpoints": [
+      {
+        "language": "flux"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "flux",
+        "languages": [
+          "flux"
+        ],
+        "label": "Flux Debugger",
+        "runtime": "node"
+      }
     ]
   },
   "scripts": {
@@ -278,7 +295,7 @@
     "@types/glob": "^7.1.1",
     "@types/mocha": "^7.0.2",
     "@types/mustache": "^4.0.1",
-    "@types/node": "^13.11.1",
+    "@types/node": "^13.13.52",
     "@types/through2": "^2.0.34",
     "@types/uuid": "^8.0.0",
     "@types/vscode": "^1.57.0",
@@ -307,11 +324,13 @@
     "@influxdata/flux-lsp-node": "^0.6.4",
     "@influxdata/influxdb-client": "^1.16.0",
     "@influxdata/influxdb-client-apis": "^1.17.0",
+    "await-notify": "^1.0.1",
     "axios": "^0.21.2",
     "influx": "^5.9.2",
     "mustache": "^4.0.1",
     "through2": "^3.0.1",
     "uuid": "^8.3.2",
+    "vscode-debugadapter": "^1.49.0",
     "vscode-languageclient": "^6.1.3"
   },
   "homepage": "https://github.com/influxdata/vsflux#readme",
