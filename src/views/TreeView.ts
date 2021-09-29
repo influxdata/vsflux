@@ -142,6 +142,8 @@ class Tag extends vscode.TreeItem {
     }
 }
 class Measurement extends vscode.TreeItem {
+    private HIDDEN_MEASUREMENTS = ['_start', '_stop', '_measurement']
+
     constructor(
         private connection : IConnection,
         private measurement : MeasurementModel
@@ -166,6 +168,9 @@ schema.measurementTagKeys(bucket: "${this.measurement.bucket.name}", measurement
             queryApi.queryRows(query, {
                 next(row : string[], tableMeta : FluxTableMetaData) {
                     const object = tableMeta.toObject(row)
+                    if (self.HIDDEN_MEASUREMENTS.includes(object._value)) {
+                        return
+                    }
                     const tag = new MeasurementTagModel(object._value, self.measurement)
                     const node = new Tag(self.connection, tag)
                     children.push(node)
