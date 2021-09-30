@@ -4,7 +4,7 @@ import { DebugProtocol } from 'vscode-debugprotocol'
 import { InfluxDB } from '@influxdata/influxdb-client'
 
 import { Store } from '../components/Store'
-import { IConnection } from '../types'
+import { IInstance } from '../types'
 import { QueryResult } from '../models'
 import { TableView } from '../views/TableView'
 import { runQuery } from './QueryRunner'

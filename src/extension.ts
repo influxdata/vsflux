@@ -5,8 +5,8 @@ import * as vscode from 'vscode'
 import { Store } from './components/Store'
 import { Client } from './components/Client'
 import { activateDebug } from './components/Debug'
-import { ConnectionView } from './views/AddEditConnectionView'
-import { Bucket, Buckets, Connection, InfluxDBTreeProvider, Task, Tasks } from './views/TreeView'
+import { InstanceView } from './views/AddInstanceView'
+import { Bucket, Buckets, Instance, InfluxDBTreeProvider, Task, Tasks } from './views/TreeView'
 import { runQuery } from './components/QueryRunner'
 
 let languageClient : Client
@@ -67,26 +67,26 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
     )
     context.subscriptions.push(
         vscode.commands.registerCommand(
-            'influxdb.addConnection',
+            'influxdb.addInstance',
             async () => {
-                const addConnectionView = new ConnectionView(context, treeProvider)
-                await addConnectionView.create()
+                const addInstanceView = new InstanceView(context, treeProvider)
+                await addInstanceView.create()
             }
         )
     )
     context.subscriptions.push(
         vscode.commands.registerCommand(
-            'influxdb.removeConnection',
-            async (node : Connection) => {
-                node.removeConnection(node)
+            'influxdb.removeInstance',
+            async (node : Instance) => {
+                node.removeInstance(node)
             }
         )
     )
     context.subscriptions.push(
         vscode.commands.registerCommand(
-            'influxdb.editConnection',
-            async (node : Connection) => {
-                node.editConnection()
+            'influxdb.editInstance',
+            async (node : Instance) => {
+                node.editInstance()
             }
         )
     )
@@ -136,8 +136,8 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
     )
     context.subscriptions.push(
         vscode.commands.registerCommand(
-            'influxdb.activateConnection',
-            async (node : Connection) => {
+            'influxdb.activateInstance',
+            async (node : Instance) => {
                 node.activate()
             }
         )

@@ -2,14 +2,14 @@ import * as vscode from 'vscode'
 import { InfluxDB } from '@influxdata/influxdb-client'
 
 import { Store } from './Store'
-import { IConnection } from '../types'
+import { IInstance } from '../types'
 import { TableView } from '../views/TableView'
 import { QueryResult } from '../models'
 
-export async function runQuery(query: string, context: vscode.ExtensionContext): Promise<void> {
+export async function runQuery(query : string, context : vscode.ExtensionContext) : Promise<void> {
     try {
         const store = Store.getStore()
-        const connection = Object.values(store.getConnections()).filter((item : IConnection) => item.isActive)[0]
+        const connection = Object.values(store.getInstances()).filter((item : IInstance) => item.isActive)[0]
         const transportOptions = { rejectUnauthorized: true }
         if (connection.disableTLS !== undefined && connection.disableTLS) {
             transportOptions.rejectUnauthorized = false

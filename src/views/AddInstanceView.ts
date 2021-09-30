@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 import * as path from 'path'
 import { View } from './View'
 import { InfluxDBTreeProvider } from './TreeView'
-import { IConnection, InfluxConnectionVersion } from '../types'
+import { IInstance, InfluxVersion } from '../types'
 
 import * as Mustache from 'mustache'
 
@@ -18,7 +18,7 @@ function defaultV2URLList() : string[] {
     return getConfig()?.get<string[]>('defaultInfluxDBURLs', [''])
 }
 
-export class ConnectionView extends View {
+export class InstanceView extends View {
     // XXX: rockstar (25 Aug 2021) - This shouldn't take a reference to the tree,
     // but does currently because the tree is the "controller" for this web view.
     public constructor(
@@ -29,7 +29,7 @@ export class ConnectionView extends View {
     }
 
     public async edit(
-        conn : IConnection
+        conn : IInstance
     ) : Promise<void> {
         return this.show('Edit Connection', conn)
     }
@@ -40,7 +40,7 @@ export class ConnectionView extends View {
 
     private async show(
         title : string,
-        conn ?: IConnection | undefined
+        conn ?: IInstance | undefined
     ) : Promise<void> {
         const panel = vscode.window.createWebviewPanel(
             'InfluxDB',
@@ -78,7 +78,7 @@ export class ConnectionView extends View {
     }
 
     private async html(
-        conn : IConnection | undefined,
+        conn : IInstance | undefined,
         params : { cssPath : vscode.Uri; jsPath : vscode.Uri; title : string }
     ) : Promise<string> {
         const context = {
@@ -90,7 +90,7 @@ export class ConnectionView extends View {
 
         }
         if (conn !== undefined) {
-            context.isV1 = conn.version === InfluxConnectionVersion.V1
+            context.isV1 = conn.version === InfluxVersion.V1
         }
         return Mustache.render(this.template, context)
     }
