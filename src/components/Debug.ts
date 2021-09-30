@@ -7,6 +7,7 @@ import { Store } from '../components/Store'
 import { IConnection } from '../types'
 import { QueryResult } from '../models'
 import { TableView } from '../views/TableView'
+import { runQuery } from './QueryRunner'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { Subject } = require('await-notify') // await-notify doesn't provide types, and we don't allow implicit any
@@ -84,22 +85,7 @@ class DebugSession extends LoggingDebugSession {
         await this.configurationDone.wait(1000)
 
         // Execute the flux
-        try {
-            const store = Store.getStore()
-            const connections = store.getConnections()
-            const connection = Object.values(connections).filter((item : IConnection) => item.isActive)[0]
-            const queryApi = new InfluxDB({ url: connection.hostNport, token: connection.token }).getQueryApi(connection.org)
-            const results = await QueryResult.run(queryApi, args.query)
-            const tableView = new TableView(this.context)
-            tableView.show(results, connection.name)
-        } catch (error) {
-            let errorMessage = 'Error executing query'
-            if (error instanceof Error) {
-                errorMessage = error.message
-            }
-            vscode.window.showErrorMessage(errorMessage)
-            console.error(error)
-        }
+        runQuery(args.query, this.context)
 
         this.sendResponse(response)
 

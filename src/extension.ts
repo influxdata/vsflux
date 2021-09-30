@@ -1,16 +1,13 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
-import { InfluxDB } from '@influxdata/influxdb-client'
 
 import { Store } from './components/Store'
 import { Client } from './components/Client'
 import { activateDebug } from './components/Debug'
 import { ConnectionView } from './views/AddEditConnectionView'
 import { Bucket, Buckets, Connection, InfluxDBTreeProvider, Task, Tasks } from './views/TreeView'
-import { IConnection } from './types'
-import { TableView } from './views/TableView'
-import { QueryResult } from './models'
+import { runQuery } from './components/QueryRunner'
 
 let languageClient : Client
 
@@ -64,25 +61,7 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
                     vscode.window.showWarningMessage('No flux file selected')
                     return
                 }
-                try {
-                    const store = Store.getStore()
-                    const connection = Object.values(store.getConnections()).filter((item : IConnection) => item.isActive)[0]
-                    const transportOptions = { rejectUnauthorized: true }
-                    if (connection.disableTLS !== undefined && connection.disableTLS) {
-                        transportOptions.rejectUnauthorized = false
-                    }
-                    const queryApi = new InfluxDB({ url: connection.hostNport, token: connection.token, transportOptions }).getQueryApi(connection.org)
-                    const results = await QueryResult.run(queryApi, query)
-                    const tableView = new TableView(context)
-                    tableView.show(results, connection.name)
-                } catch (error) {
-                    let errorMessage = 'Error executing query'
-                    if (error instanceof Error) {
-                        errorMessage = error.message
-                    }
-                    vscode.window.showErrorMessage(errorMessage)
-                    console.error(error)
-                }
+                runQuery(query, context)
             }
         )
     )
