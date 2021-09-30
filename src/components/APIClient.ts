@@ -11,6 +11,9 @@ const version = vscode.extensions.getExtension('influxdata.flux')?.packageJSON.v
    InfluxDB instances.
  */
 export class APIClient {
+    // This `any` is how the transport options are expressed in the
+    // client library.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private transportOptions : { [key : string] : any }
 
     constructor(private instance : IInstance) {
@@ -20,18 +23,17 @@ export class APIClient {
                 'User-agent': `influxdb-client-vscode/${version}`
             }
         }
-        console.log(this.transportOptions)
     }
 
     private getInfluxDB() : InfluxDB {
-        if (this.instance.version != InfluxVersion.V2) {
+        if (this.instance.version !== InfluxVersion.V2) {
             throw Error('Could not get InfluxDB 2.x api handler for 1.x instance')
         }
         return new InfluxDB({ url: this.instance.hostNport, token: this.instance.token, transportOptions: this.transportOptions })
     }
 
     getV1Api() : InfluxDB1.InfluxDB {
-        if (this.instance.version != InfluxVersion.V1) {
+        if (this.instance.version !== InfluxVersion.V1) {
             throw Error('Could not get InfluxDB 1.x api handler for 2.x instance')
         }
         const hostSplit : string[] = vscode.Uri.parse(this.instance.hostNport).authority.split(':')
@@ -45,15 +47,19 @@ export class APIClient {
             })
         }
     }
+
     getQueryApi() : QueryApi {
         return this.getInfluxDB().getQueryApi({ org: this.instance.org })
     }
+
     getTasksApi() : TasksAPI {
         return new TasksAPI(this.getInfluxDB())
     }
+
     getBucketsApi() : BucketsAPI {
         return new BucketsAPI(this.getInfluxDB())
     }
+
     getOrgsApi() : OrgsAPI {
         return new OrgsAPI(this.getInfluxDB())
     }
