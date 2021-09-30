@@ -3,13 +3,13 @@
 import * as vscode from 'vscode'
 
 import { Store } from './components/Store'
-import { Client } from './components/Client'
+import { LSPClient } from './components/LSPClient'
 import { activateDebug } from './components/Debug'
 import { InstanceView } from './views/AddInstanceView'
 import { Bucket, Buckets, Instance, InfluxDBTreeProvider, Task, Tasks } from './views/TreeView'
 import { runQuery } from './components/QueryRunner'
 
-let languageClient : Client
+let languageClient : LSPClient
 
 const runMode : 'external' | 'server' | 'namedPipeServer' | 'inline' = 'inline'
 
@@ -27,7 +27,7 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
             break
     }
 
-    languageClient = new Client(context)
+    languageClient = new LSPClient(context)
     languageClient.start()
 
     const treeProvider = new InfluxDBTreeProvider(context)

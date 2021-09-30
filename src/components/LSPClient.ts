@@ -133,7 +133,7 @@ const createStreamInfo : (
     }
 }
 
-export class Client {
+export class LSPClient {
     private languageClient : LanguageClient
     private context : ExtensionContext
 
