@@ -7,10 +7,10 @@ import { View } from './View'
 interface AddBucketMessage {
     readonly command : string;
     readonly name : string;
-    readonly duration?: string;
+    readonly duration ?: string;
 }
 
-type AddBucketCallback = (name : string, duration?: number) => void;
+type AddBucketCallback = (name : string, duration ?: number) => void;
 
 export class AddBucketView extends View {
     public constructor(

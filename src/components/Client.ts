@@ -10,7 +10,7 @@ import {
     ErrorAction,
     CloseAction,
     RevealOutputChannelOn
-} from 'vscode-languageclient'
+} from 'vscode-languageclient/node'
 
 import { Server } from '@influxdata/flux-lsp-node'
 import { Transform } from 'stream'
