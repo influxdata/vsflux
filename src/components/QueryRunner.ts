@@ -6,6 +6,7 @@ import { TableView } from '../views/TableView'
 import { QueryResult } from '../models'
 import { APIClient } from './APIClient'
 
+/* Take a flux query, execute it against the currently active Instance, and show the results. */
 export async function runQuery(query : string, context : vscode.ExtensionContext) : Promise<void> {
     try {
         const store = Store.getStore()
