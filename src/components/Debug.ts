@@ -122,7 +122,7 @@ class FluxDebugConfigurationProvider implements vscode.DebugConfigurationProvide
      * If launch.json doesn't exist or is empty (most cases), massage the config to contain all the needed
      * debug configuration information.
      */
-    resolveDebugConfiguration(_folder : vscode.WorkspaceFolder | undefined, config : vscode.DebugConfiguration, _token?: vscode.CancellationToken) : vscode.ProviderResult<vscode.DebugConfiguration> {
+    resolveDebugConfiguration(_folder : vscode.WorkspaceFolder | undefined, config : vscode.DebugConfiguration, _token ?: vscode.CancellationToken) : vscode.ProviderResult<vscode.DebugConfiguration> {
         if (!config.type && !config.request && !config.name) {
             const editor = vscode.window.activeTextEditor
             if (editor && editor.document.languageId === 'flux') {

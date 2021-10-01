@@ -4,23 +4,24 @@ import * as vscode from 'vscode'
 import { IConnection } from '../types'
 
 const InfluxDBConnectionsKey = 'influxdb.connections'
-let store : Store | undefined
 
 /*
  * An interface for querying and saving data to various Code data stores.
  */
 export class Store {
+    static store : Store | undefined
+
     constructor(private context : vscode.ExtensionContext) { }
 
     static init(context : vscode.ExtensionContext) : void {
-        store = new Store(context)
+        this.store = new Store(context)
     }
 
     static getStore() : Store {
-        if (!store) {
+        if (!this.store) {
             throw new Error('Store unitialized. Cannot get store')
         }
-        return store
+        return this.store
     }
 
     getConnections() : { [key : string] : IConnection } {

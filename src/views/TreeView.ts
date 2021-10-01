@@ -120,7 +120,7 @@ function connectionToOrgsApi(connection : IConnection) : OrgsAPI {
 
 interface ITreeNode {
     getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem;
-    getChildren(element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[];
+    getChildren(element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[];
 }
 class Tag extends vscode.TreeItem {
     constructor(
@@ -137,7 +137,7 @@ class Tag extends vscode.TreeItem {
         }
     }
 
-    getChildren(_element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
+    getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
         return []
     }
 }
@@ -158,7 +158,7 @@ class Measurement extends vscode.TreeItem {
         }
     }
 
-    getChildren(_element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
+    getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
         const queryApi = connectionToQueryApi(this.connection)
         const query = `import "influxdata/influxdb/schema"
 schema.measurementTagKeys(bucket: "${this.measurement.bucket.name}", measurement: "${this.measurement.name}")`
@@ -202,7 +202,7 @@ export class Bucket extends vscode.TreeItem {
         }
     }
 
-    async getChildren(_element?: ITreeNode) : Promise<ITreeNode[]> {
+    async getChildren(_element ?: ITreeNode) : Promise<ITreeNode[]> {
         if (this.connection.version === InfluxConnectionVersion.V2) {
             const queryApi = connectionToQueryApi(this.connection)
             const query = `import "influxdata/influxdb/schema"
@@ -254,7 +254,7 @@ export class Buckets extends vscode.TreeItem {
         return this
     }
 
-    async getChildren(_element?: ITreeNode) : Promise<ITreeNode[]> {
+    async getChildren(_element ?: ITreeNode) : Promise<ITreeNode[]> {
         if (this.connection.version === InfluxConnectionVersion.V2) {
             const queryApi = connectionToQueryApi(this.connection)
             const query = 'buckets()'
@@ -349,7 +349,7 @@ export class Task extends vscode.TreeItem {
         }
     }
 
-    getChildren(_element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
+    getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
         return []
     }
 
@@ -433,7 +433,7 @@ export class Tasks extends vscode.TreeItem {
 
     // XXX: rockstar (30 Aug 2021) - If the token isn't an "all access" token, we can't use it to fetch tasks.
     // We should tell the user this.
-    async getChildren(_element?: ITreeNode) : Promise<ITreeNode[]> {
+    async getChildren(_element ?: ITreeNode) : Promise<ITreeNode[]> {
         const tasksApi = connectionToTasksApi(this.connection)
         const response = await tasksApi.getTasks(undefined, { headers: headers })
         const nodes : ITreeNode[] = []
@@ -535,7 +535,7 @@ export class Connection extends vscode.TreeItem {
         }
     }
 
-    getChildren(_element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
+    getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
         const children : ITreeNode[] = [new Buckets(this.connection, this.context)]
         if (this.connection.version === InfluxConnectionVersion.V2) {
             children.push(new Tasks(this.connection, this.context))
@@ -588,7 +588,7 @@ export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> 
         return element.getTreeItem()
     }
 
-    getChildren(element?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
+    getChildren(element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
         if (element) {
             return element.getChildren()
         }

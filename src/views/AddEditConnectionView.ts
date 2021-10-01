@@ -40,7 +40,7 @@ export class ConnectionView extends View {
 
     private async show(
         title : string,
-        conn?: IConnection | undefined
+        conn ?: IConnection | undefined
     ) : Promise<void> {
         const panel = vscode.window.createWebviewPanel(
             'InfluxDB',
