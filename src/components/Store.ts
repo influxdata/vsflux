@@ -1,9 +1,9 @@
 import { consoleLogger } from '@influxdata/influxdb-client'
 import * as vscode from 'vscode'
 
-import { IConnection } from '../types'
+import { IInstance } from '../types'
 
-const InfluxDBConnectionsKey = 'influxdb.connections'
+const InfluxDBInstancesKey = 'influxdb.connections'
 
 /*
  * An interface for querying and saving data to various Code data stores.
@@ -24,18 +24,18 @@ export class Store {
         return this.store
     }
 
-    getConnections() : { [key : string] : IConnection } {
+    getInstances() : { [key : string] : IInstance } {
         return this.context.globalState.get<{
-            [key : string] : IConnection;
-        }>(InfluxDBConnectionsKey) || {}
+            [key : string] : IInstance;
+        }>(InfluxDBInstancesKey) || {}
     }
 
-    getConnection(id : string) : IConnection {
-        return this.getConnections()[id]
+    getInstance(id : string) : IInstance {
+        return this.getInstances()[id]
     }
 
-    async saveConnection(connection : IConnection) : Promise<void> {
-        const connections = this.getConnections()
+    async saveInstance(connection : IInstance) : Promise<void> {
+        const connections = this.getInstances()
         if (connection.isActive) {
             // Ensure no other connection is marked active
             for (const [key, _] of Object.entries(connections)) {
@@ -45,12 +45,12 @@ export class Store {
             }
         }
         connections[connection.id] = connection
-        await this.context.globalState.update(InfluxDBConnectionsKey, connections)
+        await this.context.globalState.update(InfluxDBInstancesKey, connections)
     }
 
-    async deleteConnection(id : string) : Promise<void> {
-        const connections = this.getConnections()
-        const connection = this.getConnection(id)
+    async deleteInstance(id : string) : Promise<void> {
+        const connections = this.getInstances()
+        const connection = this.getInstance(id)
         if (connection.isActive) {
             // Set a new active connection
             for (const [key, _] of Object.entries(connections)) {
@@ -61,6 +61,6 @@ export class Store {
             }
         }
         delete connections[id]
-        await this.context.globalState.update(InfluxDBConnectionsKey, connections)
+        await this.context.globalState.update(InfluxDBInstancesKey, connections)
     }
 }

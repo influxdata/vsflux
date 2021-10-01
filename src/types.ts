@@ -1,9 +1,9 @@
-export enum InfluxConnectionVersion {
+export enum InfluxVersion {
     V2 = 0,
     V1 = 1
 }
-export interface IConnection {
-    readonly version : InfluxConnectionVersion;
+export interface IInstance {
+    readonly version : InfluxVersion;
     readonly id : string;
     readonly name : string;
     readonly hostNport : string;

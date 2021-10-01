@@ -1,18 +1,15 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
-import { InfluxDB } from '@influxdata/influxdb-client'
 
 import { Store } from './components/Store'
-import { Client } from './components/Client'
+import { LSPClient } from './components/LSPClient'
 import { activateDebug } from './components/Debug'
-import { ConnectionView } from './views/AddEditConnectionView'
-import { Bucket, Buckets, Connection, InfluxDBTreeProvider, Task, Tasks } from './views/TreeView'
-import { IConnection } from './types'
-import { TableView } from './views/TableView'
-import { QueryResult } from './models'
+import { InstanceView } from './views/AddInstanceView'
+import { Bucket, Buckets, Instance, InfluxDBTreeProvider, Task, Tasks } from './views/TreeView'
+import { runQuery } from './components/QueryRunner'
 
-let languageClient : Client
+let languageClient : LSPClient
 
 const runMode : 'external' | 'server' | 'namedPipeServer' | 'inline' = 'inline'
 
@@ -30,7 +27,7 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
             break
     }
 
-    languageClient = new Client(context)
+    languageClient = new LSPClient(context)
     languageClient.start()
 
     const treeProvider = new InfluxDBTreeProvider(context)
@@ -64,50 +61,32 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
                     vscode.window.showWarningMessage('No flux file selected')
                     return
                 }
-                try {
-                    const store = Store.getStore()
-                    const connection = Object.values(store.getConnections()).filter((item : IConnection) => item.isActive)[0]
-                    const transportOptions = { rejectUnauthorized: true }
-                    if (connection.disableTLS !== undefined && connection.disableTLS) {
-                        transportOptions.rejectUnauthorized = false
-                    }
-                    const queryApi = new InfluxDB({ url: connection.hostNport, token: connection.token, transportOptions }).getQueryApi(connection.org)
-                    const results = await QueryResult.run(queryApi, query)
-                    const tableView = new TableView(context)
-                    tableView.show(results, connection.name)
-                } catch (error) {
-                    let errorMessage = 'Error executing query'
-                    if (error instanceof Error) {
-                        errorMessage = error.message
-                    }
-                    vscode.window.showErrorMessage(errorMessage)
-                    console.error(error)
-                }
+                runQuery(query, context)
             }
         )
     )
     context.subscriptions.push(
         vscode.commands.registerCommand(
-            'influxdb.addConnection',
+            'influxdb.addInstance',
             async () => {
-                const addConnectionView = new ConnectionView(context, treeProvider)
-                await addConnectionView.create()
+                const addInstanceView = new InstanceView(context, treeProvider)
+                await addInstanceView.create()
             }
         )
     )
     context.subscriptions.push(
         vscode.commands.registerCommand(
-            'influxdb.removeConnection',
-            async (node : Connection) => {
-                node.removeConnection(node)
+            'influxdb.removeInstance',
+            async (node : Instance) => {
+                node.removeInstance(node)
             }
         )
     )
     context.subscriptions.push(
         vscode.commands.registerCommand(
-            'influxdb.editConnection',
-            async (node : Connection) => {
-                node.editConnection()
+            'influxdb.editInstance',
+            async (node : Instance) => {
+                node.editInstance()
             }
         )
     )
@@ -157,8 +136,8 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
     )
     context.subscriptions.push(
         vscode.commands.registerCommand(
-            'influxdb.activateConnection',
-            async (node : Connection) => {
+            'influxdb.activateInstance',
+            async (node : Instance) => {
                 node.activate()
             }
         )
