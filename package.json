@@ -29,10 +29,10 @@
     "onLanguage:flux",
     "onView:influxdb",
     "onCommand:influxdb.runQuery",
-    "onCommand:influxdb.addConnection",
-    "onCommand:influxdb.removeConnection",
-    "onCommand:influxdb.editConnection",
-    "onCommand:influxdb.activateConnection",
+    "onCommand:influxdb.addInstance",
+    "onCommand:influxdb.removeInstance",
+    "onCommand:influxdb.editInstance",
+    "onCommand:influxdb.activateInstance",
     "onCommand:influxdb.addBucket",
     "onCommand:influxdb.deleteBucket",
     "onCommand:influxdb.addTask",
@@ -81,7 +81,7 @@
         "category": "InfluxDB"
       },
       {
-        "command": "influxdb.addConnection",
+        "command": "influxdb.addInstance",
         "title": "Add Connection",
         "icon": {
           "light": "resources/light/add.svg",
@@ -90,17 +90,17 @@
         "category": "InfluxDB"
       },
       {
-        "command": "influxdb.removeConnection",
+        "command": "influxdb.removeInstance",
         "title": "Remove Connection",
         "category": "InfluxDB"
       },
       {
-        "command": "influxdb.editConnection",
+        "command": "influxdb.editInstance",
         "title": "Edit Connection",
         "category": "InfluxDB"
       },
       {
-        "command": "influxdb.activateConnection",
+        "command": "influxdb.activateInstance",
         "title": "Switch To This Connection",
         "category": "InfluxDB"
       },
@@ -133,19 +133,19 @@
     "menus": {
       "commandPalette": [
         {
-          "command": "influxdb.addConnection",
+          "command": "influxdb.addInstance",
           "when": "view == influxdb"
         },
         {
-          "command": "influxdb.removeConnection",
+          "command": "influxdb.removeInstance",
           "when": "view == influxdb"
         },
         {
-          "command": "influxdb.editConnection",
+          "command": "influxdb.editInstance",
           "when": "view == influxdb"
         },
         {
-          "command": "influxdb.activateConnection",
+          "command": "influxdb.activateInstance",
           "when": "view == influxdb"
         },
         {
@@ -171,7 +171,7 @@
       ],
       "view/title": [
         {
-          "command": "influxdb.addConnection",
+          "command": "influxdb.addInstance",
           "when": "view == influxdb",
           "group": "navigation@1"
         }
@@ -185,18 +185,18 @@
       ],
       "view/item/context": [
         {
-          "command": "influxdb.editConnection",
-          "when": "view == influxdb && viewItem == connection",
+          "command": "influxdb.editInstance",
+          "when": "view == influxdb && viewItem == instance",
           "group": "influxdb@1"
         },
         {
-          "command": "influxdb.removeConnection",
-          "when": "view == influxdb && viewItem == connection",
+          "command": "influxdb.removeInstance",
+          "when": "view == influxdb && viewItem == instance",
           "group": "influxdb@1"
         },
         {
-          "command": "influxdb.activateConnection",
-          "when": "view == influxdb && viewItem == connection",
+          "command": "influxdb.activateInstance",
+          "when": "view == influxdb && viewItem == instance",
           "group": "influxdb@1"
         },
         {
