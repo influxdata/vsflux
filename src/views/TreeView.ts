@@ -577,10 +577,16 @@ export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> 
         panel : vscode.WebviewPanel
     ) : Promise<void> {
         panel.webview.onDidReceiveMessage(async (message : Message) => {
-            const instance = convertMessageToInstance(message)
+            const instance : IInstance = convertMessageToInstance(message)
             switch (message.command) {
                 case MessageType.Save: {
                     const store = Store.getStore()
+                    const activeInstance = Object.values(store.getInstances()).filter((item : IInstance) => item.isActive)[0]
+                    if (activeInstance === undefined) {
+                        // There is no currently active instance, meaning this
+                        // is probably the first one. Set it to be active.
+                        instance.isActive = true
+                    }
                     await store.saveInstance(instance)
 
                     vscode.commands.executeCommand('influxdb.refresh')
