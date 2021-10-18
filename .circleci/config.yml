@@ -9,11 +9,11 @@ jobs:
           name: download deps
           command: npm i --dev
       - run:
-          name: checkfmt
-          command: npm run checkfmt
-      - run:
-          name: lint
-          command: npm run lint
+          name: lint and fmt
+          command: |
+            npm run checkfmt
+            npm run lint
+
   build-and-test:
     docker:
       - image: circleci/node:14.16-browsers
