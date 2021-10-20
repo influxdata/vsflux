@@ -9,7 +9,6 @@ import { promises as fs } from 'fs'
 
 import { Store } from '../components/Store'
 import { InstanceView } from './AddInstanceView'
-import { AddBucketView } from './AddBucketView'
 import { AddTaskView } from './AddTaskView'
 import { IInstance, InfluxVersion } from '../types'
 import { APIClient } from '../components/APIClient'
@@ -208,7 +207,7 @@ export class Buckets extends vscode.TreeItem {
     contextValue = 'buckets'
 
     constructor(
-        private instance : IInstance,
+        readonly instance : IInstance,
         private context : vscode.ExtensionContext
     ) {
         super(instance.name, vscode.TreeItemCollapsibleState.None)
@@ -257,40 +256,6 @@ export class Buckets extends vscode.TreeItem {
                 return []
             }
         }
-    }
-
-    public addBucket() : void {
-        const addBucketView = new AddBucketView(this.context)
-        const panel = addBucketView.show(this.addBucketCallback.bind(this))
-    }
-
-    private async addBucketCallback(name : string, duration : number | undefined) : Promise<void> {
-        // XXX: rockstar (13 Sep 2021) - This makes me irrationally annoyed. The
-        // postBuckets api requires an orgID, not an org, so we have to fetch
-        // the orgID in order to create the bucket. The api clients are just very
-        // inconsistent.
-        const orgsAPI = new APIClient(this.instance).getOrgsApi()
-        const organizations = await orgsAPI.getOrgs({ org: this.instance.org }, { headers })
-        if (!organizations || !organizations.orgs || !organizations.orgs.length || organizations.orgs[0].id === undefined) {
-            console.error(`No organization named "${this.instance.org}" found!`)
-            vscode.window.showErrorMessage('Unexpected error creating bucket')
-            return
-        }
-        const orgID = organizations.orgs[0].id
-
-        const bucketsApi = new APIClient(this.instance).getBucketsApi()
-        const retentionRules : RetentionRule[] = []
-        if (duration !== undefined) {
-            retentionRules.push({ type: 'expire', shardGroupDurationSeconds: 0, everySeconds: duration })
-        }
-        await bucketsApi.postBuckets({
-            body: {
-                orgID,
-                name,
-                retentionRules
-            }
-        }, { headers })
-        vscode.commands.executeCommand('influxdb.refresh')
     }
 }
 export class Task extends vscode.TreeItem {

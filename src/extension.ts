@@ -8,6 +8,7 @@ import { activateDebug } from './components/Debug'
 import { InstanceView } from './views/AddInstanceView'
 import { Bucket, Buckets, Instance, InfluxDBTreeProvider, Task, Tasks } from './views/TreeView'
 import { runQuery } from './components/QueryRunner'
+import { AddBucketController } from './controllers/AddBucketController'
 
 let languageClient : LSPClient
 
@@ -105,7 +106,7 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
         vscode.commands.registerCommand(
             'influxdb.addBucket',
             async (node : Buckets) => {
-                node.addBucket()
+                const _controller = new AddBucketController(node.instance, context)
             }
         )
     )
