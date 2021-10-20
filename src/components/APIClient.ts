@@ -4,6 +4,7 @@ import * as InfluxDB1 from 'influx'
 import { BucketsAPI, OrgsAPI, TasksAPI } from '@influxdata/influxdb-client-apis'
 
 import { IInstance, InfluxVersion } from '../types'
+import { ScriptsAPI } from '../components/FunctionsAPI'
 
 // XXX: rockstar (30 Sep 2021) - the following is why we self-medicate.
 // VSCode is an electron app, and a node and electron both ship with their
@@ -104,5 +105,9 @@ export class APIClient {
 
     getOrgsApi() : OrgsAPI {
         return new OrgsAPI(this.getInfluxDB())
+    }
+
+    getScriptsApi() : ScriptsAPI {
+        return new ScriptsAPI(this.getInfluxDB())
     }
 }

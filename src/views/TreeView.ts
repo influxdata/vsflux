@@ -12,6 +12,8 @@ import { InstanceView } from './AddInstanceView'
 import { AddTaskView } from './AddTaskView'
 import { IInstance, InfluxVersion } from '../types'
 import { APIClient } from '../components/APIClient'
+import { Script as ScriptModel } from '../components/FunctionsAPI'
+import { AddScriptController } from '../controllers/AddScriptController'
 
 const version = vscode.extensions.getExtension('influxdata.flux')?.packageJSON.version
 const headers = {
@@ -346,7 +348,7 @@ export class Task extends vscode.TreeItem {
 }
 export class Tasks extends vscode.TreeItem {
     constructor(
-        private instance : IInstance,
+        readonly instance : IInstance,
         private context : vscode.ExtensionContext
     ) {
         super(instance.name, vscode.TreeItemCollapsibleState.None)
@@ -437,6 +439,86 @@ export class Tasks extends vscode.TreeItem {
         }
     }
 }
+export class Scripts extends vscode.TreeItem {
+    constructor(
+        readonly instance : IInstance,
+        private context : vscode.ExtensionContext
+    ) {
+        super(instance.name, vscode.TreeItemCollapsibleState.None)
+        this.tooltip = `All invocable scripts in ${this.instance.name}`
+    }
+
+    label = 'Scripts'
+    collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
+    contextValue = 'scripts'
+
+    getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
+        return this
+    }
+
+    async getChildren(_element ?: ITreeNode) : Promise<ITreeNode[]> {
+        const scriptsApi = new APIClient(this.instance).getScriptsApi()
+        const response = await scriptsApi.getScripts()
+        const nodes : ITreeNode[] = []
+        if (response.scripts !== undefined) {
+            response.scripts.forEach((script, _idx) => {
+                nodes.push(new Script(this.instance, this.context, script))
+            })
+        }
+        return nodes
+    }
+}
+export class Script extends vscode.TreeItem {
+    constructor(
+        private instance : IInstance,
+        private context : vscode.ExtensionContext,
+        private script : ScriptModel
+    ) {
+        super(instance.name, vscode.TreeItemCollapsibleState.None)
+    }
+
+    getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
+        return {
+            label: this.script.name,
+            description: this.script.language,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextValue: 'script'
+        }
+    }
+
+    getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
+        return []
+    }
+
+    public async editScript() : Promise<void> {
+        const controller = new AddScriptController(this.instance, this.context)
+        await controller.editScript(this.script)
+    }
+
+    public async deleteScript() : Promise<void> {
+        const deleteText = 'Yes, delete it'
+        const confirmation = await vscode.window.showInformationMessage(
+            `Delete ${this.script.name}? This action cannot be undone.`, {
+            modal: true
+        }, deleteText)
+        if (confirmation !== deleteText) {
+            return
+        }
+        const scriptsApi = new APIClient(this.instance).getScriptsApi()
+        if (this.script.id !== undefined) {
+            // This should never be undefined.
+            try {
+                await scriptsApi.deleteScriptsID({ id: this.script.id })
+            } catch (error) {
+                // XXX: rockstar (21 Oct 2021) - *Something* is trying to parse JSON now, and it
+                // seems to coincide with the change from `v2/functions/...` to `v2/scripts/...`. As
+                // the current `ScriptsApi` is temporary (see file), workaround it for now.
+            }
+        }
+        vscode.commands.executeCommand('influxdb.refresh')
+    }
+}
+
 export class Instance extends vscode.TreeItem {
     constructor(
         private instance : IInstance,
@@ -468,6 +550,11 @@ export class Instance extends vscode.TreeItem {
     getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
         const children : ITreeNode[] = [new Buckets(this.instance, this.context)]
         if (this.instance.version === InfluxVersion.V2) {
+            // Enable this for scripts support
+            // eslint-disable-next-line no-constant-condition
+            if (false) {
+                children.push(new Scripts(this.instance, this.context))
+            }
             children.push(new Tasks(this.instance, this.context))
         }
         return children
