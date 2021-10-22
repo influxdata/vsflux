@@ -35,6 +35,9 @@
     "onCommand:influxdb.activateInstance",
     "onCommand:influxdb.addBucket",
     "onCommand:influxdb.deleteBucket",
+    "onCommand:influxdb.addScript",
+    "onCommand:influxdb.editScript",
+    "onCommand:influxdb.deleteScript",
     "onCommand:influxdb.addTask",
     "onCommand:influxdb.deleteTask",
     "onDebugResolve:flux",
@@ -120,6 +123,21 @@
         "category": "InfluxDB"
       },
       {
+        "command": "influxdb.addScript",
+        "title": "Add script",
+        "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.editScript",
+        "title": "Edit Script",
+        "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.deleteScript",
+        "title": "Delete Script",
+        "category": "InfluxDB"
+      },
+      {
         "command": "influxdb.addTask",
         "title": "Add Task",
         "category": "InfluxDB"
@@ -154,6 +172,18 @@
         },
         {
           "command": "influxdb.deleteBucket",
+          "when": "view == influxdb"
+        },
+        {
+          "command": "influxdb.addScript",
+          "when": "view == influxdb"
+        },
+        {
+          "command": "influxdb.editScript",
+          "when": "view == influxdb"
+        },
+        {
+          "command": "influxdb.deleteScript",
           "when": "view == influxdb"
         },
         {
@@ -212,6 +242,21 @@
         {
           "command": "influxdb.deleteBucket",
           "when": "view == influxdb && viewItem == bucket",
+          "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.addScript",
+          "when": "view == influxdb && viewItem == scripts",
+          "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.editScript",
+          "when": "view == influxdb && viewItem == script",
+          "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.deleteScript",
+          "when": "view == influxdb && viewItem == script",
           "group": "influxdb@1"
         },
         {

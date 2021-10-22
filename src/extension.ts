@@ -6,9 +6,10 @@ import { Store } from './components/Store'
 import { LSPClient } from './components/LSPClient'
 import { activateDebug } from './components/Debug'
 import { InstanceView } from './views/AddInstanceView'
-import { Bucket, Buckets, Instance, InfluxDBTreeProvider, Task, Tasks } from './views/TreeView'
+import { Bucket, Buckets, Instance, InfluxDBTreeProvider, Script, Scripts, Task, Tasks } from './views/TreeView'
 import { runQuery } from './components/QueryRunner'
 import { AddBucketController } from './controllers/AddBucketController'
+import { AddScriptController } from './controllers/AddScriptController'
 
 let languageClient : LSPClient
 
@@ -115,6 +116,30 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
             'influxdb.deleteBucket',
             async (node : Bucket) => {
                 await node.deleteBucket()
+            }
+        )
+    )
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('influxdb.addScript',
+            async (node : Scripts) => {
+                const controller = new AddScriptController(node.instance, context)
+                controller.addScript()
+            })
+    )
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'influxdb.deleteScript',
+            async (node : Script) => {
+                await node.deleteScript()
+            }
+        )
+    )
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'influxdb.editScript',
+            async (node : Script) => {
+                await node.editScript()
             }
         )
     )
