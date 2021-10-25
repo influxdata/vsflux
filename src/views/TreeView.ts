@@ -561,8 +561,10 @@ export class Instance extends vscode.TreeItem {
     getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
         const children : ITreeNode[] = [new Buckets(this.instance, this.context)]
         if (this.instance.version === InfluxVersion.V2) {
-            // eslint-disable-next-line no-constant-condition
-            children.push(new Scripts(this.instance, this.context))
+            const cloudURLs = vscode.workspace.getConfiguration('vsflux')?.get<string[]>('defaultInfluxDBURLs', [''])
+            if (cloudURLs.indexOf(this.instance.hostNport) !== -1) {
+                children.push(new Scripts(this.instance, this.context))
+            }
             children.push(new Tasks(this.instance, this.context))
         }
         return children
