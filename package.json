@@ -265,11 +265,6 @@
           "group": "influxdb@1"
         },
         {
-          "command": "influxdb.invokeScript",
-          "when": "view == influxdb && viewItem == script",
-          "group": "influxdb@1"
-        },
-        {
           "command": "influxdb.deleteScript",
           "when": "view == influxdb && viewItem == script",
           "group": "influxdb@1"
