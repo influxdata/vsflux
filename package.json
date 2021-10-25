@@ -306,14 +306,16 @@
           "vsflux.defaultInfluxDBURLs": {
             "default": [
               "http://localhost:8086",
-              "https://us-central1-1.gcp.cloud2.influxdata.com",
               "https://us-west-2-1.aws.cloud2.influxdata.com",
               "https://us-east-1-1.aws.cloud2.influxdata.com",
               "https://eu-central-1-1.aws.cloud2.influxdata.com",
+              "https://ap-southeast-2-1.aws.cloud2.influxdata.com",
+              "https://us-central1-1.gcp.cloud2.influxdata.com",
+              "https://europe-west1-1.gcp.cloud2.influxdata.com",
               "https://westeurope-1.azure.cloud2.influxdata.com",
               "https://eastus-1.azure.cloud2.influxdata.com"
             ],
-            "description": "The URL lists of influxdb 2"
+            "description": "The URL lists of influxdb 2. Cloud instance list found at https://docs.influxdata.com/influxdb/cloud/reference/regions/"
           },
           "vsflux.defaultInfluxDBV1URL": {
             "default": "http://localhost:8086",
