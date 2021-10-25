@@ -31,7 +31,7 @@ class Actions {
         const result = {
             name: document.querySelector('#name input').value,
             description: document.querySelector('#description textarea').value,
-            language: document.querySelector('#language select').value
+            language: document.querySelector('#language input').value
         }
         return result
     }
