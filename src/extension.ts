@@ -143,6 +143,14 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
             }
         )
     )
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'influxdb.invokeScript',
+            async (node : Script) => {
+                await node.invokeScript()
+            }
+        )
+    )
 
     context.subscriptions.push(
         vscode.commands.registerCommand(

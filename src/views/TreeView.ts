@@ -495,6 +495,17 @@ export class Script extends vscode.TreeItem {
         await controller.editScript(this.script)
     }
 
+    public async invokeScript() : Promise<void> {
+        const scriptsApi = new APIClient(this.instance).getScriptsApi()
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const _response = await scriptsApi.postScriptsIDInvoke({ id: this.script.id!, body: {} })
+            vscode.window.showInformationMessage('Script invoked successfully.')
+        } catch (e) {
+            vscode.window.showErrorMessage(`Could not invoke script. Got error: ${e}`)
+        }
+    }
+
     public async deleteScript() : Promise<void> {
         const deleteText = 'Yes, delete it'
         const confirmation = await vscode.window.showInformationMessage(

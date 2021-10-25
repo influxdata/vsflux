@@ -114,6 +114,13 @@ type PatchScriptResponse = Script
 interface DeleteScriptRequest {
     id : string
 }
+interface ScriptInvocationParams {
+    params ?: any
+}
+interface PostScriptsIDInvokeRequest {
+    id : string
+    body : ScriptInvocationParams
+}
 
 export class ScriptsAPI {
     private base : APIBase
@@ -173,6 +180,16 @@ export class ScriptsAPI {
             `/api/v2/scripts/${request.id}`,
             request,
             requestOptions
+        )
+    }
+
+    postScriptsIDInvoke(request : PostScriptsIDInvokeRequest, requestOptions ?: RequestOptions) : Promise<void> {
+        return this.base.request(
+            'POST',
+            `/api/v2/scripts/${request.id}/invoke`,
+            request,
+            requestOptions,
+            'application/json'
         )
     }
 }
