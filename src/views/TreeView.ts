@@ -550,11 +550,8 @@ export class Instance extends vscode.TreeItem {
     getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
         const children : ITreeNode[] = [new Buckets(this.instance, this.context)]
         if (this.instance.version === InfluxVersion.V2) {
-            // Enable this for scripts support
             // eslint-disable-next-line no-constant-condition
-            if (false) {
-                children.push(new Scripts(this.instance, this.context))
-            }
+            children.push(new Scripts(this.instance, this.context))
             children.push(new Tasks(this.instance, this.context))
         }
         return children
