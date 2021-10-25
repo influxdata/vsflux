@@ -1,6 +1,6 @@
 {
   "name": "flux",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "publisher": "influxdata",
   "displayName": "Flux",
   "description": "Flux language extension for VSCode",
@@ -325,17 +325,14 @@
   },
   "scripts": {
     "clean": "rm -rf out/ dist/ test-resources .vs-code-test/ *.vsix",
-
     "checkfmt": "tsfmt --verify",
     "fmt": "tsfmt -r",
     "lint": "eslint src --ext ts",
-
     "compile": "webpack --mode development",
     "copy-wasm": "rm -f dist/flux-lsp-node_bg.wasm && cp node_modules/@influxdata/flux-lsp-node/flux-lsp-node_bg.wasm dist/",
     "package": "webpack --mode production --devtool hidden-source-map && npm run copy-wasm",
     "vscode:prepublish": "npm run package",
     "watch": "webpack --watch",
-
     "compile-tests": "tsc -p . --outDir out",
     "pretest": "npm run compile-tests && npm run compile",
     "test": "node ./out/test/runTest.js",
