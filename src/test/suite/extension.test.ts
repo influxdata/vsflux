@@ -132,7 +132,7 @@ suite('Extension Test Suite', () => {
         const context = new FauxContext()
         vsflux.activate(context)
 
-        // There are 19 subscriptions that should be activated as part of this run.
-        assert.equal(19, context.subscriptions.length)
+        // There are 20 subscriptions that should be activated as part of this run.
+        assert.equal(20, context.subscriptions.length)
     })
 })
