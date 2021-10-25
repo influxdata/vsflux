@@ -100,6 +100,7 @@ class Actions {
   getData() {
     const result = {
       connID: document.querySelector('#connID').value,
+      orgID: document.querySelector('#orgID').value,
       connName: document.querySelector('#connName input').value,
       connHost: document.querySelector('#connHost input').value,
       connDisableTLS: document.querySelector('#connDisableTLS input').checked,

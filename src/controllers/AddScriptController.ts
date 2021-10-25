@@ -159,14 +159,19 @@ export class AddScriptController {
                 }
                 const script = saved.getText()
 
-                const orgsAPI = new APIClient(this.instance).getOrgsApi()
-                const organizations = await orgsAPI.getOrgs({ org: this.instance.org })
-                if (!organizations || !organizations.orgs || !organizations.orgs.length || organizations.orgs[0].id === undefined) {
-                    console.error(`No organization named "${this.instance.org}" found!`)
-                    vscode.window.showErrorMessage('Unexpected error creating bucket')
-                    return
+                let orgID = ''
+                if (this.instance.orgID === undefined) {
+                    const orgsAPI = new APIClient(this.instance).getOrgsApi()
+                    const organizations = await orgsAPI.getOrgs({ org: this.instance.org })
+                    if (!organizations || !organizations.orgs || !organizations.orgs.length || organizations.orgs[0].id === undefined) {
+                        console.error(`No organization named "${this.instance.org}" found!`)
+                        vscode.window.showErrorMessage('Unexpected error creating bucket')
+                        return
+                    }
+                    orgID = organizations.orgs[0].id
+                } else {
+                    orgID = this.instance.orgID
                 }
-                const orgID = organizations.orgs[0].id
 
                 const scriptsAPI = new APIClient(this.instance).getScriptsApi()
                 await scriptsAPI.postScripts({
