@@ -1,10 +1,9 @@
 import * as vscode from 'vscode'
 import { InfluxDB, QueryApi } from '@influxdata/influxdb-client'
 import * as InfluxDB1 from 'influx'
-import { BucketsAPI, OrgsAPI, TasksAPI } from '@influxdata/influxdb-client-apis'
+import { BucketsAPI, OrgsAPI, TasksAPI, ScriptsAPI } from '@influxdata/influxdb-client-apis'
 
 import { IInstance, InfluxVersion } from '../types'
-import { ScriptsAPI } from '../components/FunctionsAPI'
 
 // XXX: rockstar (30 Sep 2021) - the following is why we self-medicate.
 // VSCode is an electron app, and a node and electron both ship with their
