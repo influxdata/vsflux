@@ -74,18 +74,19 @@ export class AddBucketController {
     }
 
     private async addBucketCallback(name : string, duration : number | undefined) : Promise<void> {
-        // XXX: rockstar (13 Sep 2021) - This makes me irrationally annoyed. The
-        // postBuckets api requires an orgID, not an org, so we have to fetch
-        // the orgID in order to create the bucket. The api clients are just very
-        // inconsistent.
-        const orgsAPI = new APIClient(this.instance).getOrgsApi()
-        const organizations = await orgsAPI.getOrgs({ org: this.instance.org })
-        if (!organizations || !organizations.orgs || !organizations.orgs.length || organizations.orgs[0].id === undefined) {
-            console.error(`No organization named "${this.instance.org}" found!`)
-            vscode.window.showErrorMessage('Unexpected error creating bucket')
-            return
+        let orgID = ''
+        if (this.instance.orgID === undefined) {
+            const orgsAPI = new APIClient(this.instance).getOrgsApi()
+            const organizations = await orgsAPI.getOrgs({ org: this.instance.org })
+            if (!organizations || !organizations.orgs || !organizations.orgs.length || organizations.orgs[0].id === undefined) {
+                console.error(`No organization named "${this.instance.org}" found!`)
+                vscode.window.showErrorMessage('Unexpected error creating bucket')
+                return
+            }
+            orgID = organizations.orgs[0].id
+        } else {
+            orgID = this.instance.orgID
         }
-        const orgID = organizations.orgs[0].id
 
         const bucketsApi = new APIClient(this.instance).getBucketsApi()
         const retentionRules : RetentionRule[] = []

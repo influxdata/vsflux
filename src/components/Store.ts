@@ -1,9 +1,9 @@
-import { consoleLogger } from '@influxdata/influxdb-client'
 import * as vscode from 'vscode'
 
-import { IInstance } from '../types'
+import { IInstance, IMigration } from '../types'
 
 const InfluxDBInstancesKey = 'influxdb.connections'
+const InfluxDBMigrationsKey = 'influxdb.migrations'
 
 /*
  * An interface for querying and saving data to various Code data stores.
@@ -62,5 +62,25 @@ export class Store {
         }
         delete connections[id]
         await this.context.globalState.update(InfluxDBInstancesKey, connections)
+    }
+
+    getAppliedMigrations() : { [key : string] : IMigration } {
+        return this.context.globalState.get<{
+            [key : string] : IMigration;
+        }>(InfluxDBMigrationsKey) || {}
+    }
+
+    async setAppliedMigration(name : string) : Promise<void> {
+        const migrations = this.getAppliedMigrations()
+        if (migrations[name] !== undefined) {
+            console.error(`Attempt to overwrite an existing migration: ${name}`)
+            return
+        }
+        const migration = {
+            name,
+            appliedOn: new Date()
+        }
+        migrations[name] = migration
+        await this.context.globalState.update(InfluxDBMigrationsKey, migrations)
     }
 }

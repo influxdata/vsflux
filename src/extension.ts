@@ -2,14 +2,15 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
 
+import { MigrationManager } from './components/Migration'
 import { Store } from './components/Store'
 import { LSPClient } from './components/LSPClient'
 import { activateDebug } from './components/Debug'
-import { InstanceView } from './views/AddInstanceView'
 import { Bucket, Buckets, Instance, InfluxDBTreeProvider, Script, Scripts, Task, Tasks } from './views/TreeView'
 import { runQuery } from './components/QueryRunner'
 import { AddBucketController } from './controllers/AddBucketController'
 import { AddScriptController } from './controllers/AddScriptController'
+import { AddInstanceController } from './controllers/AddInstanceController'
 
 let languageClient : LSPClient
 
@@ -71,8 +72,7 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
         vscode.commands.registerCommand(
             'influxdb.addInstance',
             async () => {
-                const addInstanceView = new InstanceView(context, treeProvider)
-                await addInstanceView.create()
+                const _controller = new AddInstanceController(context)
             }
         )
     )
@@ -176,6 +176,10 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
             }
         )
     )
+
+    /* Migrate database */
+    const migrationManager = new MigrationManager()
+    await migrationManager.migrate()
 }
 
 // this method is called when your extension is deactivated

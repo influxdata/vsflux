@@ -1,6 +1,5 @@
 import { FluxTableMetaData } from '@influxdata/influxdb-client'
 import { Task as TaskModel, RetentionRule } from '@influxdata/influxdb-client-apis'
-import { v1 as uuid } from 'uuid'
 import * as vscode from 'vscode'
 import * as path from 'path'
 import * as os from 'os'
@@ -8,59 +7,16 @@ import * as crypto from 'crypto'
 import { promises as fs } from 'fs'
 
 import { Store } from '../components/Store'
-import { InstanceView } from './AddInstanceView'
 import { AddTaskView } from './AddTaskView'
 import { IInstance, InfluxVersion } from '../types'
 import { APIClient } from '../components/APIClient'
 import { Script as ScriptModel } from '../components/FunctionsAPI'
 import { AddScriptController } from '../controllers/AddScriptController'
+import { AddInstanceController } from '../controllers/AddInstanceController'
 
 const version = vscode.extensions.getExtension('influxdata.flux')?.packageJSON.version
 const headers = {
     'User-agent': `influxdb-client-vscode/${version}`
-}
-
-enum MessageType {
-    Test = 'testConn',
-    Save = 'save'
-}
-interface Message {
-    readonly command : MessageType;
-    readonly connID : string;
-    readonly connVersion : number;
-    readonly connName : string;
-    readonly connHost : string;
-    readonly connToken : string;
-    readonly connOrg : string;
-    readonly connUser : string;
-    readonly connPass : string;
-    readonly connDisableTLS : boolean;
-}
-
-function convertMessageToInstance(
-    message : Message
-) : IInstance {
-    let isActive = false
-    if (message.connID !== '') {
-        const store = Store.getStore()
-        const instance = store.getInstance(message.connID)
-        isActive = instance.isActive
-    }
-    return {
-        version:
-            message.connVersion > 0
-                ? InfluxVersion.V1
-                : InfluxVersion.V2,
-        id: message.connID || uuid(),
-        name: message.connName,
-        hostNport: message.connHost,
-        token: message.connToken,
-        org: message.connOrg,
-        user: message.connUser,
-        pass: message.connPass,
-        isActive,
-        disableTLS: message.connDisableTLS
-    }
 }
 
 class BucketModel {
@@ -586,8 +542,7 @@ export class Instance extends vscode.TreeItem {
     }
 
     public async editInstance() : Promise<void> {
-        const view = new InstanceView(this.context, this.parent)
-        await view.edit(this.instance)
+        const _controller = new AddInstanceController(this.context, this.instance)
     }
 
     // XXX: rockstar (27 Aug 2021) - This should live on a InstanceModel of some sort.
@@ -630,64 +585,5 @@ export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> 
             nodes.push(node)
         }
         return nodes
-    }
-
-    // XXX: rockstar (25 Aug 2021) - This method exists here out of
-    // laziness/lack of a better place to put it. It doesn't really belong here.
-    // Handle messages sent from the Add/Edit Instance view
-    public async setMessageHandler(
-        panel : vscode.WebviewPanel
-    ) : Promise<void> {
-        panel.webview.onDidReceiveMessage(async (message : Message) => {
-            const instance : IInstance = convertMessageToInstance(message)
-            switch (message.command) {
-                case MessageType.Save: {
-                    const store = Store.getStore()
-                    const activeInstance = Object.values(store.getInstances()).filter((item : IInstance) => item.isActive)[0]
-                    if (activeInstance === undefined) {
-                        // There is no currently active instance, meaning this
-                        // is probably the first one. Set it to be active.
-                        instance.isActive = true
-                    }
-                    await store.saveInstance(instance)
-
-                    vscode.commands.executeCommand('influxdb.refresh')
-                    panel.dispose()
-                    break
-                }
-                case MessageType.Test: {
-                    if (instance.version === InfluxVersion.V2) {
-                        try {
-                            const queryApi = new APIClient(instance).getQueryApi()
-                            const query = 'buckets()'
-                            queryApi.queryRows(query, {
-                                next(_row : string[], _tableMeta : FluxTableMetaData) { }, // eslint-disable-line @typescript-eslint/no-empty-function
-                                error(error : Error) {
-                                    throw error
-                                },
-                                complete() {
-                                    vscode.window.showInformationMessage('Connection successful')
-                                }
-                            })
-                        } catch (e) {
-                            vscode.window.showErrorMessage('Failed to connect to database')
-                            console.error(e)
-                        }
-                    } else {
-                        const queryApi = new APIClient(instance).getV1Api()
-                        try {
-                            await queryApi.getDatabaseNames()
-                            vscode.window.showInformationMessage('Connection successful')
-                        } catch (e) {
-                            vscode.window.showErrorMessage('Failed to connect to database')
-                            console.error(e)
-                        }
-                    }
-                    break
-                }
-                default:
-                    console.error(`Unhandled message type: ${message.command}`)
-            }
-        }, null)
     }
 }
