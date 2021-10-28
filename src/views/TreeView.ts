@@ -1,5 +1,5 @@
 import { FluxTableMetaData } from '@influxdata/influxdb-client'
-import { Task as TaskModel, RetentionRule } from '@influxdata/influxdb-client-apis'
+import { Script as ScriptModel, Task as TaskModel } from '@influxdata/influxdb-client-apis'
 import * as vscode from 'vscode'
 import * as path from 'path'
 import * as os from 'os'
@@ -10,7 +10,6 @@ import { Store } from '../components/Store'
 import { AddTaskView } from './AddTaskView'
 import { IInstance, InfluxVersion } from '../types'
 import { APIClient } from '../components/APIClient'
-import { Script as ScriptModel } from '../components/FunctionsAPI'
 import { AddScriptController } from '../controllers/AddScriptController'
 import { AddInstanceController } from '../controllers/AddInstanceController'
 
@@ -455,7 +454,7 @@ export class Script extends vscode.TreeItem {
         const scriptsApi = new APIClient(this.instance).getScriptsApi()
         try {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const _response = await scriptsApi.postScriptsIDInvoke({ id: this.script.id!, body: {} })
+            const _response = await scriptsApi.postScriptsIDInvoke({ scriptID: this.script.id!, body: {} })
             vscode.window.showInformationMessage('Script invoked successfully.')
         } catch (e) {
             vscode.window.showErrorMessage(`Could not invoke script. Got error: ${e}`)
@@ -475,7 +474,7 @@ export class Script extends vscode.TreeItem {
         if (this.script.id !== undefined) {
             // This should never be undefined.
             try {
-                await scriptsApi.deleteScriptsID({ id: this.script.id })
+                await scriptsApi.deleteScriptsID({ scriptID: this.script.id })
             } catch (error) {
                 // XXX: rockstar (21 Oct 2021) - *Something* is trying to parse JSON now, and it
                 // seems to coincide with the change from `v2/functions/...` to `v2/scripts/...`. As

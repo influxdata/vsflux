@@ -3,18 +3,18 @@ import * as Mustache from 'mustache'
 import * as os from 'os'
 import * as path from 'path'
 import * as vscode from 'vscode'
+import { Script } from '@influxdata/influxdb-client-apis'
 import { promises as fs } from 'fs'
 
 import { IInstance } from '../types'
 import { View } from '../views/View'
 import { APIClient } from '../components/APIClient'
-import { Script } from '../components/FunctionsAPI'
 
 interface AddScriptMessage {
     readonly command : string,
     readonly name : string,
     readonly description : string,
-    readonly language : 'flux' | 'python'
+    readonly language : 'flux'
 }
 
 class AddScriptView extends View {
@@ -83,7 +83,7 @@ export class AddScriptController {
         }
         const tmpdir = path.join(os.tmpdir(), crypto.randomBytes(10).toString('hex'))
         await fs.mkdir(tmpdir)
-        const fileExtension = (script.language === 'python') ? 'py' : 'flux'
+        const fileExtension = 'flux'
         const newFile = vscode.Uri.parse(path.join(tmpdir, `${script.name}.${fileExtension}`))
         await fs.writeFile(newFile.path, '')
         const document = await vscode.workspace.openTextDocument(newFile.path)
@@ -104,7 +104,7 @@ export class AddScriptController {
 
                 const scriptsAPI = new APIClient(this.instance).getScriptsApi()
                 await scriptsAPI.patchScriptsID({
-                    id: script.id!, // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                    scriptID: script.id!, // eslint-disable-line @typescript-eslint/no-non-null-assertion
                     body: {
                         script: textContents
                     }
@@ -142,7 +142,7 @@ export class AddScriptController {
 
         const tmpdir = path.join(os.tmpdir(), crypto.randomBytes(10).toString('hex'))
         await fs.mkdir(tmpdir)
-        const fileExtension = (message.language === 'python') ? 'py' : 'flux'
+        const fileExtension = 'flux'
         const newFile = vscode.Uri.parse(path.join(tmpdir, `${message.name}.${fileExtension}`))
         await fs.writeFile(newFile.path, '')
         const document = await vscode.workspace.openTextDocument(newFile.path)
