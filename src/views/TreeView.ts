@@ -513,12 +513,15 @@ export class Instance extends vscode.TreeItem {
         }
     }
 
-    getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
+    async getChildren(_element ?: ITreeNode) : Promise<ITreeNode[]> {
         const children : ITreeNode[] = [new Buckets(this.instance, this.context)]
         if (this.instance.version === InfluxVersion.V2) {
-            const cloudURLs = vscode.workspace.getConfiguration('vsflux')?.get<string[]>('defaultInfluxDBURLs', [''])
-            if (cloudURLs.indexOf(this.instance.hostNport) !== -1) {
+            try {
+                const scriptsApi = new APIClient(this.instance).getScriptsApi()
+                await scriptsApi.getScripts()
                 children.push(new Scripts(this.instance, this.context))
+            } catch (e) {
+                console.debug('Scripts capability not available')
             }
             children.push(new Tasks(this.instance, this.context))
         }
