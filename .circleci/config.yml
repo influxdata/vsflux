@@ -35,8 +35,7 @@ jobs:
     steps:
       - checkout
       - run: npm i
-      - run: sudo npm i -g vsce
-      - run: vsce publish -p $AZURE_TOKEN
+      - run: npm run publish
 
 workflows:
   version: 2.1
