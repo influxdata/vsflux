@@ -379,7 +379,7 @@
     "webpack-cli": "^4.7.2"
   },
   "dependencies": {
-    "@influxdata/flux-lsp-node": "^0.6.9",
+    "@influxdata/flux-lsp-node": "^0.6.11",
     "@influxdata/influxdb-client": "^1.16.0",
     "@influxdata/influxdb-client-apis": "^1.20.0",
     "await-notify": "^1.0.1",
