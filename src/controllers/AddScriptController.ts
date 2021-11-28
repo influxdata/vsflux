@@ -83,8 +83,7 @@ export class AddScriptController {
         }
         const tmpdir = path.join(os.tmpdir(), crypto.randomBytes(10).toString('hex'))
         await fs.mkdir(tmpdir)
-        const fileExtension = 'flux'
-        const newFile = vscode.Uri.parse(path.join(tmpdir, `${script.name}.${fileExtension}`))
+        const newFile = vscode.Uri.parse(path.join(tmpdir, `${script.name.replace(path.sep, '-')}.flux`))
         await fs.writeFile(newFile.path, '')
         const document = await vscode.workspace.openTextDocument(newFile.path)
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
@@ -142,8 +141,7 @@ export class AddScriptController {
 
         const tmpdir = path.join(os.tmpdir(), crypto.randomBytes(10).toString('hex'))
         await fs.mkdir(tmpdir)
-        const fileExtension = 'flux'
-        const newFile = vscode.Uri.parse(path.join(tmpdir, `${message.name}.${fileExtension}`))
+        const newFile = vscode.Uri.parse(path.join(tmpdir, `${message.name.replace(path.sep, '-')}.flux`))
         await fs.writeFile(newFile.path, '')
         const document = await vscode.workspace.openTextDocument(newFile.path)
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
