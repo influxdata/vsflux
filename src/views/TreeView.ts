@@ -32,7 +32,7 @@ class MeasurementModel {
         readonly bucket : BucketModel
     ) { }
 }
-class MeasurementTagModel {
+class MeasurementFieldModel {
     constructor(
         readonly name : string,
         private measurement : MeasurementModel
@@ -43,17 +43,17 @@ interface ITreeNode {
     getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem;
     getChildren(element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[];
 }
-class Tag extends vscode.TreeItem {
+class Field extends vscode.TreeItem {
     constructor(
         private instance : IInstance,
-        private tag : MeasurementTagModel
+        private field : MeasurementFieldModel
     ) {
         super(instance.name, vscode.TreeItemCollapsibleState.None)
     }
 
     getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
         return {
-            label: this.tag.name,
+            label: this.field.name,
             collapsibleState: vscode.TreeItemCollapsibleState.None
         }
     }
@@ -82,18 +82,18 @@ class Measurement extends vscode.TreeItem {
     getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
         const queryApi = new APIClient(this.instance).getQueryApi()
         const query = `import "influxdata/influxdb/schema"
-schema.measurementTagKeys(bucket: "${this.measurement.bucket.name}", measurement: "${this.measurement.name}")`
+schema.measurementFieldKeys(bucket: "${this.measurement.bucket.name}", measurement: "${this.measurement.name}")`
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
         return new Promise((resolve, reject) => {
-            const children : Tag[] = []
+            const children : Field[] = []
             queryApi.queryRows(query, {
                 next(row : string[], tableMeta : FluxTableMetaData) {
                     const object = tableMeta.toObject(row)
                     if (self.HIDDEN_MEASUREMENTS.includes(object._value)) {
                         return
                     }
-                    const tag = new MeasurementTagModel(object._value, self.measurement)
-                    const node = new Tag(self.instance, tag)
+                    const field = new MeasurementFieldModel(object._value, self.measurement)
+                    const node = new Field(self.instance, field)
                     children.push(node)
                 },
                 error(error : Error) {
