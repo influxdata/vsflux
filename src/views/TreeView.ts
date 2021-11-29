@@ -246,7 +246,7 @@ export class Task extends vscode.TreeItem {
         // file, and then remove the entire dir with fs.rmdir.
         const tmpdir = path.join(os.tmpdir(), crypto.randomBytes(10).toString('hex'))
         await fs.mkdir(tmpdir)
-        const newFile = vscode.Uri.parse(path.join(tmpdir, `${this.task.name}.flux`))
+        const newFile = vscode.Uri.parse(path.join(tmpdir, `${this.task.name.replace(path.sep, '-')}.flux`))
         await fs.writeFile(newFile.path, '')
         const document = await vscode.workspace.openTextDocument(newFile.path)
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
@@ -353,7 +353,7 @@ export class Tasks extends vscode.TreeItem {
         // file, and then remove the entire dir with fs.rmdir.
         const tmpdir = path.join(os.tmpdir(), crypto.randomBytes(10).toString('hex'))
         await fs.mkdir(tmpdir)
-        const newFile = vscode.Uri.parse(path.join(tmpdir, `${name}.flux`))
+        const newFile = vscode.Uri.parse(path.join(tmpdir, `${name.replace(path.sep, '-')}.flux`))
         await fs.writeFile(newFile.path, '')
         const document = await vscode.workspace.openTextDocument(newFile.path)
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
