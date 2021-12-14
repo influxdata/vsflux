@@ -195,14 +195,16 @@ export class AddInstanceController {
                     try {
                         const queryApi = new APIClient(instance).getQueryApi()
                         const query = 'buckets()'
-                        queryApi.queryRows(query, {
-                            next(_row : string[], _tableMeta : FluxTableMetaData) { }, // eslint-disable-line @typescript-eslint/no-empty-function
-                            error(error : Error) {
-                                throw error
-                            },
-                            complete() {
-                                vscode.window.showInformationMessage('Connection successful')
-                            }
+                        await new Promise<void>((resolve, reject) => {
+                            queryApi.queryRows(query, {
+                                next(_row : string[], _tableMeta : FluxTableMetaData) { }, // eslint-disable-line @typescript-eslint/no-empty-function
+                                error(error : Error) {
+                                    reject(error)
+                                },
+                                complete() {
+                                    resolve()
+                                }
+                            })
                         })
                     } catch (e) {
                         vscode.window.showErrorMessage('Failed to connect to database')
