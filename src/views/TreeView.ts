@@ -305,13 +305,13 @@ export class Task extends vscode.TreeItem {
         try {
             const scriptsAPI = new APIClient(this.instance).getTasksApi()
             const name = await vscode.window.showInputBox({
-                title: "Rename task",
-                prompt: "Enter the new name of the task",
+                title: 'Rename task',
+                prompt: 'Enter the new name of the task'
             })
             await scriptsAPI.patchTasksID({
                 taskID: this.task.id!, // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 body: {
-                    name,
+                    name
                 }
             })
             await vscode.commands.executeCommand('influxdb.refresh')
@@ -468,13 +468,13 @@ export class Script extends vscode.TreeItem {
         try {
             const scriptsAPI = new APIClient(this.instance).getScriptsApi()
             const name = await vscode.window.showInputBox({
-                title: "Rename script",
-                prompt: "Enter the new name of the script",
+                title: 'Rename script',
+                prompt: 'Enter the new name of the script'
             })
             await scriptsAPI.patchScriptsID({
                 scriptID: this.script.id!, // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 body: {
-                    name,
+                    name
                 }
             })
             await vscode.commands.executeCommand('influxdb.refresh')
