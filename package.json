@@ -112,7 +112,7 @@
       },
       {
         "command": "influxdb.editTask",
-        "title": "Edit task",
+        "title": "Edit Task",
         "category": "InfluxDB"
       },
       {
@@ -127,7 +127,7 @@
       },
       {
         "command": "influxdb.addScript",
-        "title": "Add script",
+        "title": "Add Script",
         "category": "InfluxDB"
       },
       {
