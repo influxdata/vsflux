@@ -145,6 +145,14 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
     )
     context.subscriptions.push(
         vscode.commands.registerCommand(
+            'influxdb.renameScript',
+            async (node : Script) => {
+                await node.renameScript()
+            }
+        )
+    )
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
             'influxdb.invokeScript',
             async (node : Script) => {
                 await node.invokeScript()
@@ -165,6 +173,14 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
             'influxdb.deleteTask',
             async (node : Task) => {
                 await node.deleteTask()
+            }
+        )
+    )
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'influxdb.renameTask',
+            async (node : Task) => {
+                await node.renameTask()
             }
         )
     )

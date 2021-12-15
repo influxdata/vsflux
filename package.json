@@ -37,10 +37,12 @@
     "onCommand:influxdb.deleteBucket",
     "onCommand:influxdb.addScript",
     "onCommand:influxdb.editScript",
+    "onCommand:influxdb.renameScript",
     "onCommand:influxdb.invokeScript",
     "onCommand:influxdb.deleteScript",
     "onCommand:influxdb.addTask",
     "onCommand:influxdb.deleteTask",
+    "onCommand:influxdb.renameTask",
     "onDebugResolve:flux",
     "onDebugDynamicConfigurations:flux"
   ],
@@ -110,7 +112,7 @@
       },
       {
         "command": "influxdb.editTask",
-        "title": "Edit task",
+        "title": "Edit Task",
         "category": "InfluxDB"
       },
       {
@@ -125,12 +127,17 @@
       },
       {
         "command": "influxdb.addScript",
-        "title": "Add script",
+        "title": "Add Script",
         "category": "InfluxDB"
       },
       {
         "command": "influxdb.editScript",
         "title": "Edit Script",
+        "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.renameScript",
+        "title": "Rename Script",
         "category": "InfluxDB"
       },
       {
@@ -151,6 +158,11 @@
       {
         "command": "influxdb.deleteTask",
         "title": "Delete Task",
+        "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.renameTask",
+        "title": "Rename Task",
         "category": "InfluxDB"
       }
     ],
@@ -189,6 +201,10 @@
           "when": "view == influxdb"
         },
         {
+          "command": "influxdb.renameScript",
+          "when": "view == influxdb"
+        },
+        {
           "command": "influxdb.invokeScript",
           "when": "view == influxdb"
         },
@@ -206,6 +222,10 @@
         },
         {
           "command": "influxdb.deleteTask",
+          "when": "view == influxdb"
+        },
+        {
+          "command": "influxdb.renameTask",
           "when": "view == influxdb"
         }
       ],
@@ -265,6 +285,11 @@
           "group": "influxdb@1"
         },
         {
+          "command": "influxdb.renameScript",
+          "when": "view == influxdb && viewItem == script",
+          "group": "influxdb@1"
+        },
+        {
           "command": "influxdb.deleteScript",
           "when": "view == influxdb && viewItem == script",
           "group": "influxdb@1"
@@ -276,6 +301,11 @@
         },
         {
           "command": "influxdb.deleteTask",
+          "when": "view == influxdb && viewItem == task",
+          "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.renameTask",
           "when": "view == influxdb && viewItem == task",
           "group": "influxdb@1"
         }

@@ -300,6 +300,25 @@ export class Task extends vscode.TreeItem {
         await tasksApi.deleteTasksID({ taskID: this.task.id }, { headers: headers })
         vscode.commands.executeCommand('influxdb.refresh')
     }
+
+    public async renameTask() : Promise<void> {
+        try {
+            const scriptsAPI = new APIClient(this.instance).getTasksApi()
+            const name = await vscode.window.showInputBox({
+                title: 'Rename task',
+                prompt: 'Enter the new name of the task'
+            })
+            await scriptsAPI.patchTasksID({
+                taskID: this.task.id!, // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                body: {
+                    name
+                }
+            })
+            await vscode.commands.executeCommand('influxdb.refresh')
+        } catch (e) {
+            vscode.window.showErrorMessage(`Could not rename task. Got error: ${e}`)
+        }
+    }
 }
 export class Tasks extends vscode.TreeItem {
     constructor(
@@ -450,6 +469,25 @@ export class Script extends vscode.TreeItem {
 
     getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
         return []
+    }
+
+    public async renameScript() : Promise<void> {
+        try {
+            const scriptsAPI = new APIClient(this.instance).getScriptsApi()
+            const name = await vscode.window.showInputBox({
+                title: 'Rename script',
+                prompt: 'Enter the new name of the script'
+            })
+            await scriptsAPI.patchScriptsID({
+                scriptID: this.script.id!, // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                body: {
+                    name
+                }
+            })
+            await vscode.commands.executeCommand('influxdb.refresh')
+        } catch (e) {
+            vscode.window.showErrorMessage(`Could not rename script. Got error: ${e}`)
+        }
     }
 
     public async editScript() : Promise<void> {
