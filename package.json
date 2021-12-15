@@ -37,6 +37,7 @@
     "onCommand:influxdb.deleteBucket",
     "onCommand:influxdb.addScript",
     "onCommand:influxdb.editScript",
+    "onCommand:influxdb.renameScript",
     "onCommand:influxdb.invokeScript",
     "onCommand:influxdb.deleteScript",
     "onCommand:influxdb.addTask",
@@ -134,6 +135,11 @@
         "category": "InfluxDB"
       },
       {
+        "command": "influxdb.renameScript",
+        "title": "Rename Script",
+        "category": "InfluxDB"
+      },
+      {
         "command": "influxdb.invokeScript",
         "title": "Invoke Script",
         "category": "InfluxDB"
@@ -186,6 +192,10 @@
         },
         {
           "command": "influxdb.editScript",
+          "when": "view == influxdb"
+        },
+        {
+          "command": "influxdb.renameScript",
           "when": "view == influxdb"
         },
         {
@@ -261,6 +271,11 @@
         },
         {
           "command": "influxdb.editScript",
+          "when": "view == influxdb && viewItem == script",
+          "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.renameScript",
           "when": "view == influxdb && viewItem == script",
           "group": "influxdb@1"
         },

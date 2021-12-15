@@ -445,6 +445,25 @@ export class Script extends vscode.TreeItem {
         return []
     }
 
+    public async renameScript() : Promise<void> {
+        try {
+            const scriptsAPI = new APIClient(this.instance).getScriptsApi()
+            const name = await vscode.window.showInputBox({
+                title: "Rename script",
+                prompt: "Enter the new name of the script",
+            })
+            await scriptsAPI.patchScriptsID({
+                scriptID: this.script.id!, // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                body: {
+                    name,
+                }
+            })
+            await vscode.commands.executeCommand('influxdb.refresh')
+        } catch (e) {
+            vscode.window.showErrorMessage(`Could not rename script. Got error: ${e}`)
+        }
+    }
+
     public async editScript() : Promise<void> {
         const controller = new AddScriptController(this.instance, this.context)
         await controller.editScript(this.script)
