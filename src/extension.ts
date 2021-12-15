@@ -178,6 +178,14 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
     )
     context.subscriptions.push(
         vscode.commands.registerCommand(
+            'influxdb.renameTask',
+            async (node : Task) => {
+                await node.renameTask()
+            }
+        )
+    )
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
             'influxdb.activateInstance',
             async (node : Instance) => {
                 node.activate()

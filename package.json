@@ -42,6 +42,7 @@
     "onCommand:influxdb.deleteScript",
     "onCommand:influxdb.addTask",
     "onCommand:influxdb.deleteTask",
+    "onCommand:influxdb.renameTask",
     "onDebugResolve:flux",
     "onDebugDynamicConfigurations:flux"
   ],
@@ -158,6 +159,11 @@
         "command": "influxdb.deleteTask",
         "title": "Delete Task",
         "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.renameTask",
+        "title": "Rename Task",
+        "category": "InfluxDB"
       }
     ],
     "menus": {
@@ -216,6 +222,10 @@
         },
         {
           "command": "influxdb.deleteTask",
+          "when": "view == influxdb"
+        },
+        {
+          "command": "influxdb.renameTask",
           "when": "view == influxdb"
         }
       ],
@@ -291,6 +301,11 @@
         },
         {
           "command": "influxdb.deleteTask",
+          "when": "view == influxdb && viewItem == task",
+          "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.renameTask",
           "when": "view == influxdb && viewItem == task",
           "group": "influxdb@1"
         }
