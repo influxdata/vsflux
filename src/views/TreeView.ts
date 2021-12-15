@@ -358,22 +358,29 @@ export class Tasks extends vscode.TreeItem {
         const document = await vscode.workspace.openTextDocument(newFile.path)
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
         const saveListener = vscode.workspace.onDidSaveTextDocument(async (saved : vscode.TextDocument) : Promise<void> => {
-            if (saved === document) {
-                const saveText = 'Create and close'
-                const confirmation = await vscode.window.showInformationMessage(
-                    `Create ${name} task in ${self.instance.name}?`, {
-                    modal: true
-                }, saveText)
-                if (confirmation !== saveText) {
-                    return
+            try {
+                if (saved === document) {
+                    const saveText = 'Create and close'
+                    const confirmation = await vscode.window.showInformationMessage(
+                        `Create ${name} task in ${self.instance.name}?`, {
+                        modal: true
+                    }, saveText)
+                    if (confirmation !== saveText) {
+                        return
+                    }
+                    const contents = saved.getText()
+                    const tasksApi = new APIClient(self.instance).getTasksApi()
+                    await tasksApi.postTasks({ body: { org: self.instance.org, flux: contents } }, { headers: headers })
+                    vscode.commands.executeCommand('workbench.action.closeActiveEditor')
+                    saveListener.dispose()
+                    await fs.rmdir(tmpdir, { recursive: true })
+                    vscode.commands.executeCommand('influxdb.refresh')
                 }
-                const contents = saved.getText()
-                const tasksApi = new APIClient(self.instance).getTasksApi()
-                await tasksApi.postTasks({ body: { org: self.instance.org, flux: contents } }, { headers: headers })
-                vscode.commands.executeCommand('workbench.action.closeActiveEditor')
-                saveListener.dispose()
-                await fs.rmdir(tmpdir, { recursive: true })
-                vscode.commands.executeCommand('influxdb.refresh')
+            } catch (e) {
+                console.error(e)
+                if (e instanceof Error) {
+                    vscode.window.showErrorMessage(`Unable to create task: ${e}`)
+                }
             }
         })
         const closeListener = vscode.workspace.onDidCloseTextDocument(async (closed : vscode.TextDocument) : Promise<void> => {
