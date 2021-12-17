@@ -427,6 +427,8 @@ export class Scripts extends vscode.TreeItem {
     }
 }
 export class Script extends vscode.TreeItem {
+    private output : vscode.OutputChannel | undefined;
+
     constructor(
         private instance : IInstance,
         private context : vscode.ExtensionContext,
@@ -473,10 +475,31 @@ export class Script extends vscode.TreeItem {
     }
 
     public async invokeScript() : Promise<void> {
-        const scriptsApi = new APIClient(this.instance).getScriptsApi()
+        const scriptsApi = new APIClient(this.instance).getScriptInvocationApi()
         try {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const _response = await scriptsApi.postScriptsIDInvoke({ scriptID: this.script.id!, body: {} })
+            if (this.output) {
+                this.output.clear()
+            }
+            const self = this // eslint-disable-line @typescript-eslint/no-this-alias
+            let first = true
+            await new Promise<void>((resolve, reject) => {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                scriptsApi.invoke(this.script.id!).consumeRows({
+                    complete: resolve,
+                    error: reject,
+                    next(row, tableMetaData) {
+                        if (!self.output) {
+                            self.output = vscode.window.createOutputChannel(self.script.name)
+                        }
+                        if (first) {
+                            first = false
+                            self.output.show()
+                            self.output.appendLine(tableMetaData.columns.map(col => col.label).join(','))
+                        }
+                        self.output.appendLine(row.join(','))
+                    }
+                })
+            })
             vscode.window.showInformationMessage('Script invoked successfully.')
         } catch (e) {
             vscode.window.showErrorMessage(`Could not invoke script. Got error: ${e}`)
