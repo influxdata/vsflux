@@ -192,6 +192,14 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
             }
         )
     )
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'influxdb.copyResourceID',
+            async (node : Script) => {
+                node.copyResourceID()
+            }
+        )
+    )
 
     /* Migrate database */
     const migrationManager = new MigrationManager()

@@ -43,6 +43,7 @@
     "onCommand:influxdb.addTask",
     "onCommand:influxdb.deleteTask",
     "onCommand:influxdb.renameTask",
+    "onCommand:influxdb.copyResourceID",
     "onDebugResolve:flux",
     "onDebugDynamicConfigurations:flux"
   ],
@@ -164,6 +165,11 @@
         "command": "influxdb.renameTask",
         "title": "Rename Task",
         "category": "InfluxDB"
+      },
+      {
+        "command": "influxdb.copyResourceID",
+        "title": "Copy ID",
+        "category": "InfluxDB"
       }
     ],
     "menus": {
@@ -226,6 +232,10 @@
         },
         {
           "command": "influxdb.renameTask",
+          "when": "view == influxdb"
+        },
+        {
+          "command": "influxdb.copyResourceID",
           "when": "view == influxdb"
         }
       ],
@@ -307,6 +317,11 @@
         {
           "command": "influxdb.renameTask",
           "when": "view == influxdb && viewItem == task",
+          "group": "influxdb@1"
+        },
+        {
+          "command": "influxdb.copyResourceID",
+          "when": "view == influxdb && viewItem == script",
           "group": "influxdb@1"
         }
       ]
