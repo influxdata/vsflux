@@ -136,7 +136,7 @@ suite('Extension Test Suite', () => {
             assert.equal('', e)
         }
 
-        // There are 22 subscriptions that should be activated as part of this run.
-        assert.equal(context.subscriptions.length, 22)
+        // There are 23 subscriptions that should be activated as part of this run.
+        assert.equal(context.subscriptions.length, 23)
     })
 })

@@ -528,6 +528,16 @@ export class Script extends vscode.TreeItem {
         }
         vscode.commands.executeCommand('influxdb.refresh')
     }
+
+    public async copyResourceID() : Promise<void> {
+        if (this.script.id === undefined) {
+            // Scripts are persisted before being presented to the UI. This should never be undefined.
+            console.error('tried to copy id of script without an id!')
+            return
+        }
+        await vscode.env.clipboard.writeText(this.script.id)
+        await vscode.window.showInformationMessage(`ID for Script '${this.script.name}' copied to clipboard!`)
+    }
 }
 
 export class Instance extends vscode.TreeItem {
