@@ -175,10 +175,6 @@
     "menus": {
       "commandPalette": [
         {
-          "command": "influxdb.addInstance",
-          "when": "view == influxdb"
-        },
-        {
           "command": "influxdb.removeInstance",
           "when": "view == influxdb"
         },
