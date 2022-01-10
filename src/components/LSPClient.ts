@@ -1,6 +1,7 @@
-import { workspace, ExtensionContext, TextDocument } from 'vscode'
-import through from 'through2'
+import { Transform } from 'stream'
 
+import { Server } from '@influxdata/flux-lsp-node'
+import * as vscode from 'vscode'
 import {
     LanguageClient,
     LanguageClientOptions,
@@ -12,135 +13,77 @@ import {
     RevealOutputChannelOn
 } from 'vscode-languageclient/node'
 
-import { Server } from '@influxdata/flux-lsp-node'
-import { Transform } from 'stream'
+// Handle writes to the LSP server
+//
+// The data comes across as a header (with terminating \r\n\r\n) or
+// the body. This transform joins those messages into a single message
+// to send down the pipe.
+class WriteTransform extends Transform {
+    private count : number
+    private data : string
 
-const isFlux = (document : TextDocument) : boolean => {
-    return document.languageId === 'flux'
-}
+    constructor(options : Record<string, unknown>) {
+        super(options)
+        this.count = 0
+        this.data = ''
+    }
 
-function createTransform() : Transform {
-    let count = 0
-    let data = ''
-
-    // NOTE: LSP server expects the content header and message as one message
-    const transform = through(function(message, _encoding, done) {
-        const line = message.toString()
-        count += 1
-        data += line
-
-        function reset() : void {
-            count = 0
-            data = ''
-        }
-
-        if (count % 2 === 0) {
+    _transform(chunk : string, _encoding : string, callback : (error ?: Error) => void) {
+        this.count += 1
+        this.data += chunk.toString()
+        if (this.count % 2 === 0) {
             try {
-                this.push(data)
+                this.push(this.data)
             } catch (e) {
                 console.error(e)
+            } finally {
+                // Reset the state
+                this.count = 0
+                this.data = ''
             }
-            reset()
         }
-
-        done()
-    })
-
-    return transform
+        callback()
+    }
 }
 
-async function getBuckets() : Promise<string[]> {
-    // XXX: rockstar (27 Aug 2021) - These functions were disabled
-    // on the lsp side, and contained fragile, broken code. They
-    // are intentionally left here as markers.
-    console.debug('getBuckets')
-    return []
-}
+class ReadTransform extends Transform {
+    private server : Server
 
-async function getMeasurements(_bucket : string) : Promise<string[]> {
-    // XXX: rockstar (27 Aug 2021) - These functions were disabled
-    // on the lsp side, and contained fragile, broken code. They
-    // are intentionally left here as markers.
-    console.debug('getMeasurements')
-    return []
-}
+    constructor(options : Record<string, unknown>) {
+        super(options)
 
-async function getTagKeys(_bucket : string) : Promise<string[]> {
-    // XXX: rockstar (27 Aug 2021) - These functions were disabled
-    // on the lsp side, and contained fragile, broken code. They
-    // are intentionally left here as markers.
-    console.debug('getTagKeys')
-    return []
-}
+        this.server = new Server(true, false)
+    }
 
-async function getTagValues(_bucket : string, _field : string) : Promise<string[]> {
-    // XXX: rockstar (27 Aug 2021) - These functions were disabled
-    // on the lsp side, and contained fragile, broken code. They
-    // are intentionally left here as markers.
-    console.debug('getTagKeys')
-    return []
-}
-
-function createStream() : Transform {
-    const server = new Server(true, false)
-
-    server.register_buckets_callback(getBuckets)
-    server.register_measurements_callback(getMeasurements)
-    server.register_tag_keys_callback(getTagKeys)
-    server.register_tag_values_callback(getTagValues)
-
-    return through(async function(data, _enc, cb) {
-        const input = data.toString()
-
+    _transform(chunk : string, _encoding : string, callback : (error ?: Error) => void) {
+        const input = chunk.toString()
         console.debug(`>\n${input}\n`)
 
-        try {
-            const response = await server.process(input)
-            const msg = response.get_message()
+        this.server.process(input)
+            .then((response) => {
+                const msg = response.get_message()
+                if (msg) {
+                    console.debug(`<\n${msg}\n`)
+                    this.push(msg)
+                }
 
-            if (msg) {
-                console.debug(`<\n${msg}\n`)
-                this.push(msg)
-            }
-
-            const err = response.get_error()
-            if (err) {
-                console.error(`LSP Error: ${err}`)
-            }
-
-            cb()
-        } catch (e) {
-            cb(e)
-        }
-    })
-}
-
-const createStreamInfo : (
-    context : ExtensionContext
-) => () => Promise<StreamInfo> = (_context) => {
-    return function() : Promise<StreamInfo> {
-        const stream = createStream()
-
-        const writer = createTransform()
-        writer.pipe(stream)
-
-        return new Promise((resolve, _reject) => {
-            resolve({
-                writer,
-                reader: stream
+                const err = response.get_error()
+                if (err) {
+                    console.error(`LSP Error: ${err}`)
+                }
+                callback()
             })
-        })
+            .catch((err) => {
+                callback(err)
+            })
     }
 }
 
 export class LSPClient {
     private languageClient : LanguageClient
-    private context : ExtensionContext
 
     // constructor
-    constructor(context : ExtensionContext) {
-        this.context = context
-
+    constructor(context : vscode.ExtensionContext) {
         // Options to control the language client
         const clientOptions : LanguageClientOptions = {
             // Register the server for flux documents
@@ -152,20 +95,32 @@ export class LSPClient {
             revealOutputChannelOn: RevealOutputChannelOn.Never
         }
 
+        const streamInfo = () : Promise<StreamInfo> => {
+            const reader = new ReadTransform({})
+            const writer = new WriteTransform({})
+            writer.pipe(reader)
+
+            return new Promise((resolve, _reject) => {
+                resolve({
+                    writer,
+                    reader
+                })
+            })
+        }
+
         // Create the language client and start the client.
         this.languageClient = new LanguageClient(
             'flux lsp server',
             'flux language',
-            createStreamInfo(context),
+            streamInfo,
             clientOptions
         )
 
-        this.context.subscriptions.push(
-            workspace.onDidSaveTextDocument(this.onSave.bind(this))
-        )
-
         context.subscriptions.push(
-            workspace.onDidOpenTextDocument(this.onOpen.bind(this))
+            vscode.workspace.onDidSaveTextDocument(this.onSave.bind(this))
+        )
+        context.subscriptions.push(
+            vscode.workspace.onDidOpenTextDocument(this.onOpen.bind(this))
         )
     }
 
@@ -177,19 +132,15 @@ export class LSPClient {
         await this.languageClient.stop()
     }
 
-    private onOpen(document : TextDocument) : void {
-        if (!isFlux(document)) {
-            return
-        }
-
-        const { languageId, version } = document
+    private onOpen(document : vscode.TextDocument) : void {
+        if (document.languageId !== 'flux') { return }
 
         this.languageClient.sendNotification(
             DidOpenTextDocumentNotification.type,
             {
                 textDocument: {
-                    languageId,
-                    version,
+                    languageId: document.languageId,
+                    version: document.version,
                     uri: document.uri.toString(),
                     text: document.getText()
                 }
@@ -197,17 +148,16 @@ export class LSPClient {
         )
     }
 
-    private onSave = (document : TextDocument) : void => {
-        if (!isFlux(document)) {
-            return
-        }
-
-        const { version, uri } = document
-        const textDocument = { uri: uri.toString(), version }
+    private onSave(document : vscode.TextDocument) : void {
+        if (document.languageId !== 'flux') { return }
 
         this.languageClient.sendNotification(
             DidSaveTextDocumentNotification.type,
-            { textDocument }
+            {
+                textDocument: {
+                    uri: document.uri.toString()
+                }
+            }
         )
     }
 }
