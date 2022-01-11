@@ -8,10 +8,12 @@ import { promises as fs } from 'fs'
 
 import { Store } from '../components/Store'
 import { AddTaskView } from './AddTaskView'
+import { TableView } from '../views/TableView'
 import { IInstance } from '../types'
 import { APIClient } from '../components/APIClient'
 import { AddScriptController } from '../controllers/AddScriptController'
 import { AddInstanceController } from '../controllers/AddInstanceController'
+import { QueryResult } from '../models'
 
 const version = vscode.extensions.getExtension('influxdata.flux')?.packageJSON.version
 const headers = {
@@ -427,8 +429,6 @@ export class Scripts extends vscode.TreeItem {
     }
 }
 export class Script extends vscode.TreeItem {
-    private output : vscode.OutputChannel | undefined;
-
     constructor(
         private instance : IInstance,
         private context : vscode.ExtensionContext,
@@ -477,29 +477,10 @@ export class Script extends vscode.TreeItem {
     public async invokeScript() : Promise<void> {
         const scriptsApi = new APIClient(this.instance).getScriptInvocationApi()
         try {
-            if (this.output) {
-                this.output.clear()
-            }
-            const self = this // eslint-disable-line @typescript-eslint/no-this-alias
-            let first = true
-            await new Promise<void>((resolve, reject) => {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                scriptsApi.invoke(this.script.id!).consumeRows({
-                    complete: resolve,
-                    error: reject,
-                    next(row, tableMetaData) {
-                        if (!self.output) {
-                            self.output = vscode.window.createOutputChannel(self.script.name)
-                        }
-                        if (first) {
-                            first = false
-                            self.output.show()
-                            self.output.appendLine(tableMetaData.columns.map(col => col.label).join(','))
-                        }
-                        self.output.appendLine(row.join(','))
-                    }
-                })
-            })
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const results = await QueryResult.parseCSVResponse(scriptsApi.invoke(this.script.id!))
+            const tableView = new TableView(this.context)
+            tableView.show(results, this.instance.name)
             vscode.window.showInformationMessage('Script invoked successfully.')
         } catch (e) {
             vscode.window.showErrorMessage(`Could not invoke script. Got error: ${e}`)
