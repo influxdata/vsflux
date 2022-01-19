@@ -8,7 +8,7 @@ import { promises as fs } from 'fs'
 
 import { Store } from '../components/Store'
 import { AddTaskView } from './AddTaskView'
-import { IInstance, InfluxVersion } from '../types'
+import { IInstance } from '../types'
 import { APIClient } from '../components/APIClient'
 import { AddScriptController } from '../controllers/AddScriptController'
 import { AddInstanceController } from '../controllers/AddInstanceController'
@@ -115,41 +115,35 @@ export class Bucket extends vscode.TreeItem {
     }
 
     getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
-        const state = (this.instance.version === InfluxVersion.V2 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None)
         return {
             label: this.bucket.name,
-            collapsibleState: state,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             contextValue: 'bucket'
         }
     }
 
     async getChildren(_element ?: ITreeNode) : Promise<ITreeNode[]> {
-        if (this.instance.version === InfluxVersion.V2) {
-            const queryApi = new APIClient(this.instance).getQueryApi()
-            const query = `import "influxdata/influxdb/schema"
+        const queryApi = new APIClient(this.instance).getQueryApi()
+        const query = `import "influxdata/influxdb/schema"
 schema.measurements(bucket: "${this.bucket.name}")`
-            const self = this // eslint-disable-line @typescript-eslint/no-this-alias
-            return new Promise((resolve, reject) => {
-                const children : Measurement[] = []
-                queryApi.queryRows(query, {
-                    next(row : string[], tableMeta : FluxTableMetaData) {
-                        const object = tableMeta.toObject(row)
-                        const measurement = new MeasurementModel(object._value, self.bucket)
-                        const node = new Measurement(self.instance, measurement)
-                        children.push(node)
-                    },
-                    error(error : Error) {
-                        reject(error)
-                    },
-                    complete() {
-                        resolve(children)
-                    }
-                })
+        const self = this // eslint-disable-line @typescript-eslint/no-this-alias
+        return new Promise((resolve, reject) => {
+            const children : Measurement[] = []
+            queryApi.queryRows(query, {
+                next(row : string[], tableMeta : FluxTableMetaData) {
+                    const object = tableMeta.toObject(row)
+                    const measurement = new MeasurementModel(object._value, self.bucket)
+                    const node = new Measurement(self.instance, measurement)
+                    children.push(node)
+                },
+                error(error : Error) {
+                    reject(error)
+                },
+                complete() {
+                    resolve(children)
+                }
             })
-        } else {
-            console.error('Attempt to get measurements in InfluxDB 1.x')
-            return []
-        }
+        })
     }
 
     public async deleteBucket() : Promise<void> {
@@ -176,43 +170,26 @@ export class Buckets extends vscode.TreeItem {
     }
 
     async getChildren(_element ?: ITreeNode) : Promise<ITreeNode[]> {
-        if (this.instance.version === InfluxVersion.V2) {
-            const queryApi = new APIClient(this.instance).getQueryApi()
-            const query = 'buckets()'
-            const self = this // eslint-disable-line @typescript-eslint/no-this-alias
-            return new Promise((resolve, reject) => {
-                const children : Bucket[] = []
-                queryApi.queryRows(query, {
-                    next(row : string[], tableMeta : FluxTableMetaData) {
-                        const object = tableMeta.toObject(row)
-                        const bucket = new BucketModel(object.name, object.id, object.retentionPeriod, object.retentionPolicy)
-                        const node = new Bucket(self.instance, bucket)
-                        children.push(node)
-                    },
-                    error(error : Error) {
-                        reject(error)
-                    },
-                    complete() {
-                        resolve(children)
-                    }
-                })
-            })
-        } else {
-            const queryApi = new APIClient(this.instance).getV1Api()
-            try {
-                const databases = await queryApi.getDatabaseNames()
-                const children : Bucket[] = []
-                for (const index in databases) {
-                    const bucket = new BucketModel(databases[index], '', 0, '')
-                    const node = new Bucket(this.instance, bucket)
+        const queryApi = new APIClient(this.instance).getQueryApi()
+        const query = 'buckets()'
+        const self = this // eslint-disable-line @typescript-eslint/no-this-alias
+        return new Promise((resolve, reject) => {
+            const children : Bucket[] = []
+            queryApi.queryRows(query, {
+                next(row : string[], tableMeta : FluxTableMetaData) {
+                    const object = tableMeta.toObject(row)
+                    const bucket = new BucketModel(object.name, object.id, object.retentionPeriod, object.retentionPolicy)
+                    const node = new Bucket(self.instance, bucket)
                     children.push(node)
+                },
+                error(error : Error) {
+                    reject(error)
+                },
+                complete() {
+                    resolve(children)
                 }
-                return children
-            } catch (e) {
-                console.error(e)
-                return []
-            }
-        }
+            })
+        })
     }
 }
 export class Task extends vscode.TreeItem {
@@ -554,14 +531,10 @@ export class Instance extends vscode.TreeItem {
     }
 
     getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
-        let version = '2.x'
-        if (this.instance.version === InfluxVersion.V1) {
-            version = '1.x'
-        }
         return {
             label: this.instance.name,
             tooltip: `${this.instance.name}-${version}`,
-            description: version,
+            description: '2.x',
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             iconPath: this.context.asAbsolutePath(`resources/influx-logo${this.status}.svg`),
             contextValue: 'instance'
@@ -570,16 +543,14 @@ export class Instance extends vscode.TreeItem {
 
     async getChildren(_element ?: ITreeNode) : Promise<ITreeNode[]> {
         const children : ITreeNode[] = [new Buckets(this.instance, this.context)]
-        if (this.instance.version === InfluxVersion.V2) {
-            try {
-                const scriptsApi = new APIClient(this.instance).getScriptsApi()
-                await scriptsApi.getScripts()
-                children.push(new Scripts(this.instance, this.context))
-            } catch (e) {
-                console.debug('Scripts capability not available')
-            }
-            children.push(new Tasks(this.instance, this.context))
+        try {
+            const scriptsApi = new APIClient(this.instance).getScriptsApi()
+            await scriptsApi.getScripts()
+            children.push(new Scripts(this.instance, this.context))
+        } catch (e) {
+            console.debug('Scripts capability not available')
         }
+        children.push(new Tasks(this.instance, this.context))
         return children
     }
 
@@ -634,10 +605,6 @@ export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> 
         const instances = Store.getStore().getInstances()
         const nodes = []
         for (const [id, instance] of Object.entries(instances)) {
-            let version = '2.x'
-            if (instance.version === InfluxVersion.V1) {
-                version = '1.x'
-            }
             const node = new Instance(instance, this.context, this)
             nodes.push(node)
         }

@@ -1,9 +1,8 @@
 import * as vscode from 'vscode'
 import { InfluxDB, QueryApi } from '@influxdata/influxdb-client'
-import * as InfluxDB1 from 'influx'
 import { BucketsAPI, OrgsAPI, TasksAPI, ScriptsAPI } from '@influxdata/influxdb-client-apis'
 
-import { IInstance, InfluxVersion } from '../types'
+import { IInstance } from '../types'
 
 // XXX: rockstar (30 Sep 2021) - the following is why we self-medicate.
 // VSCode is an electron app, and a node and electron both ship with their
@@ -68,26 +67,7 @@ export class APIClient {
     }
 
     private getInfluxDB() : InfluxDB {
-        if (this.instance.version !== InfluxVersion.V2) {
-            throw Error('Could not get InfluxDB 2.x api handler for 1.x instance')
-        }
         return new InfluxDB({ url: this.instance.hostNport, token: this.instance.token, transportOptions: this.transportOptions })
-    }
-
-    getV1Api() : InfluxDB1.InfluxDB {
-        if (this.instance.version !== InfluxVersion.V1) {
-            throw Error('Could not get InfluxDB 1.x api handler for 2.x instance')
-        }
-        const hostSplit : string[] = vscode.Uri.parse(this.instance.hostNport).authority.split(':')
-        if (hostSplit.length > 1) {
-            return new InfluxDB1.InfluxDB({
-                host: hostSplit[0], port: parseInt(hostSplit[1]), username: this.instance.user, password: this.instance.pass
-            })
-        } else {
-            return new InfluxDB1.InfluxDB({
-                host: hostSplit[0], username: this.instance.user, password: this.instance.pass
-            })
-        }
     }
 
     getQueryApi() : QueryApi {
