@@ -16,6 +16,8 @@ export interface IInstance {
     // Until there is a way to "migrate" this data, it may not
     // exist in the data store
     readonly disableTLS : boolean | undefined;
+    // Marker for instances provided by influx CLI
+    readonly cli ?: boolean;
 }
 
 export interface IMigration {
