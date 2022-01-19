@@ -174,7 +174,6 @@ export class AddScriptController {
                 const scriptsAPI = new APIClient(this.instance).getScriptsApi()
                 await scriptsAPI.postScripts({
                     body: {
-                        orgID,
                         name: message.name,
                         description: message.description,
                         language: message.language,

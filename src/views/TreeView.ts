@@ -587,8 +587,8 @@ export class Instance extends vscode.TreeItem {
 
 export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> {
     constructor(private context : vscode.ExtensionContext) { }
-    private _onDidChangeTreeData : vscode.EventEmitter<Instance | undefined | null | void> = new vscode.EventEmitter<Instance | undefined | null | void>();
-    readonly onDidChangeTreeData : vscode.Event<Instance | undefined | null | void> = this._onDidChangeTreeData.event;
+    private _onDidChangeTreeData : vscode.EventEmitter<Instance | undefined | null | void> = new vscode.EventEmitter<Instance | undefined | null | void>()
+    readonly onDidChangeTreeData : vscode.Event<Instance | undefined | null | void> = this._onDidChangeTreeData.event
 
     refresh() : void {
         this._onDidChangeTreeData.fire()

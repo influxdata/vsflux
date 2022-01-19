@@ -49,7 +49,7 @@ class FauxMemento {
 }
 
 class FauxSecretStorage {
-    onDidChange : vscode.Event<vscode.SecretStorageChangeEvent>;
+    onDidChange : vscode.Event<vscode.SecretStorageChangeEvent>
 
     constructor() {
         this.onDidChange = (_listener : (e : vscode.SecretStorageChangeEvent) => any, _thisArgs ?: any, _disposables ?: vscode.Disposable[]) : vscode.Disposable => {
@@ -87,42 +87,42 @@ class FauxContext {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    readonly subscriptions : { dispose() : any }[];
+    readonly subscriptions : { dispose() : any }[]
 
-    readonly workspaceState : vscode.Memento;
+    readonly workspaceState : vscode.Memento
 
     readonly globalState : vscode.Memento & {
         setKeysForSync(keys : readonly string[]) : void;
-    };
+    }
 
-    readonly secrets : vscode.SecretStorage;
+    readonly secrets : vscode.SecretStorage
 
-    readonly extensionUri : vscode.Uri;
+    readonly extensionUri : vscode.Uri
 
-    readonly extensionPath : string;
+    readonly extensionPath : string
 
-    readonly environmentVariableCollection : vscode.EnvironmentVariableCollection;
+    readonly environmentVariableCollection : vscode.EnvironmentVariableCollection
 
     asAbsolutePath(relativePath : string) : string {
         return `/an/absolute/path/${relativePath}`
     }
 
-    readonly storageUri : vscode.Uri | undefined;
+    readonly storageUri : vscode.Uri | undefined
 
-    readonly storagePath : string | undefined;
+    readonly storagePath : string | undefined
 
-    readonly globalStorageUri : vscode.Uri;
+    readonly globalStorageUri : vscode.Uri
 
-    readonly globalStoragePath : string;
+    readonly globalStoragePath : string
 
-    readonly logUri : vscode.Uri;
+    readonly logUri : vscode.Uri
 
-    readonly logPath : string;
+    readonly logPath : string
 
-    readonly extensionMode : vscode.ExtensionMode;
+    readonly extensionMode : vscode.ExtensionMode
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    readonly extension : vscode.Extension<any>;
+    readonly extension : vscode.Extension<any>
 }
 
 suite('Extension Test Suite', () => {
