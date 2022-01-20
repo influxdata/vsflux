@@ -51,37 +51,27 @@ class InstanceView extends View {
             }
         )
 
-        this.panel.webview.html = await this.html(conn, title)
-
-        this.panel.webview.onDidReceiveMessage(this.controller.handleMessage.bind(this.controller))
-    }
-
-    private get cssPath() : vscode.Uri {
-        return vscode.Uri.file(
+        const cssPath = this.panel.webview.asWebviewUri(vscode.Uri.file(
             path.join(this.context.extensionPath, 'templates', 'form.css')
-        ).with({ scheme: 'vscode-resource' })
-    }
+        ))
 
-    private get jsPath() : vscode.Uri {
-        return vscode.Uri.file(
+        const jsPath = this.panel.webview.asWebviewUri(vscode.Uri.file(
             path.join(this.context.extensionPath, 'templates', 'editConn.js')
-        ).with({ scheme: 'vscode-resource' })
-    }
+        ))
 
-    private async html(
-        conn : IInstance | undefined,
-        title : string
-    ) : Promise<string> {
         const context = {
             ...conn,
             title: title,
-            cssPath: this.cssPath,
-            jsPath: this.jsPath,
+            cssPath: cssPath,
+            jsPath: jsPath,
             isV1: false,
             defaultHostLists: defaultV2URLList()
 
         }
-        return Mustache.render(this.template, context)
+
+        this.panel.webview.html = Mustache.render(this.template, context)
+
+        this.panel.webview.onDidReceiveMessage(this.controller.handleMessage.bind(this.controller))
     }
 
     public close() {
