@@ -1,9 +1,19 @@
+import { notDeepStrictEqual } from 'assert'
+import * as childProcess from 'child_process'
 import * as vscode from 'vscode'
 
-import { IInstance, IMigration } from '../types'
+import { IInstance, IMigration, InfluxVersion } from '../types'
+import { Instance } from '../views/TreeView'
 
 const InfluxDBInstancesKey = 'influxdb.connections'
 const InfluxDBMigrationsKey = 'influxdb.migrations'
+
+interface CLIConfig {
+    url: string;
+    token: string;
+    org: string;
+    active?: boolean;
+}
 
 /*
  * An interface for querying and saving data to various Code data stores.
@@ -24,18 +34,57 @@ export class Store {
         return this.store
     }
 
-    getInstances() : { [key : string] : IInstance } {
-        return this.context.globalState.get<{
+    async getInstances() : Promise<{ [key : string] : IInstance }> {
+        const instances = this.context.globalState.get<{
             [key : string] : IInstance;
-        }>(InfluxDBInstancesKey) || {}
+        }>(InfluxDBInstancesKey) || {};
+
+        return new Promise<{ [key : string] : IInstance }>((resolve, reject) => {
+            // Try to load any CLI configurations and add them as available connections
+            childProcess.exec('influx config list --json', (error, stdout) => {
+                // Just ignore the error as the user likely just do not have the CLI installed
+                if (!error) {
+                    try {
+                        const json: { [key: string]: CLIConfig } = JSON.parse(stdout)
+                        for (const [id, config] of Object.entries(json)) {
+                            const cliInstance = {
+                                id,
+                                version: InfluxVersion.V2,
+                                token: config.token,
+                                org: config.org,
+                                hostNport: config.url,
+                                isActive: false,
+                                disableTLS: false,
+                                name: id,
+                                user: '',
+                                pass: '',
+                                cli: true
+                            }
+                            const instance = instances[cliInstance.id]
+                            // Reuse the instance if it exists in the vscode configuration because we loaded it earlier
+                            if (instance && instance.cli) {
+                                cliInstance.isActive = instance.isActive
+                                instances[cliInstance.id] = cliInstance
+                                continue
+                            }
+                            instances[instance.id] = cliInstance
+                        }
+                    } catch (error) {
+                        reject(error)
+                        return
+                    }
+                }
+                resolve(instances)
+            })
+        })
     }
 
-    getInstance(id : string) : IInstance {
-        return this.getInstances()[id]
+    async getInstance(id : string) : Promise<IInstance> {
+        return (await this.getInstances())[id]
     }
 
     async saveInstance(connection : IInstance) : Promise<void> {
-        const connections = this.getInstances()
+        const connections = await this.getInstances()
         if (connection.isActive) {
             // Ensure no other connection is marked active
             for (const [key, _] of Object.entries(connections)) {
@@ -49,8 +98,8 @@ export class Store {
     }
 
     async deleteInstance(id : string) : Promise<void> {
-        const connections = this.getInstances()
-        const connection = this.getInstance(id)
+        const connections = await this.getInstances()
+        const connection = connections[id]
         if (connection.isActive) {
             // Set a new active connection
             for (const [key, _] of Object.entries(connections)) {

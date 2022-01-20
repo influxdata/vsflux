@@ -1,6 +1,5 @@
 import { FluxTableMetaData } from '@influxdata/influxdb-client'
 import { Script as ScriptModel, Task as TaskModel } from '@influxdata/influxdb-client-apis'
-import * as childProcess from 'child_process'
 import * as vscode from 'vscode'
 import * as path from 'path'
 import * as os from 'os'
@@ -609,19 +608,12 @@ export class Instance extends vscode.TreeItem {
     // Set the currently active instance.
     public async activate(): Promise<void> {
         const store = Store.getStore()
-        const instance = store.getInstance(this.instance.id)
+        const instance = await store.getInstance(this.instance.id)
         instance.isActive = true
         await store.saveInstance(instance)
 
         vscode.commands.executeCommand('influxdb.refresh')
     }
-}
-
-interface CLIConfig {
-    url: string;
-    token: string;
-    org: string;
-    active?: boolean;
 }
 
 export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> {
@@ -652,43 +644,6 @@ export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> 
             nodes.push(node)
         }
 
-        return new Promise<ITreeNode[]>((resolve, reject) => {
-            // Try to load any CLI configurations and add them as available connections
-            childProcess.exec('influx config list --json', (error, stdout) => {
-                // Just ignore the error as the user likely just do not have the CLI installed
-                if (!error) {
-                    try {
-                        const json: { [key: string]: CLIConfig } = JSON.parse(stdout)
-                        for (const [id, config] of Object.entries(json)) {
-                            const instance = {
-                                id,
-                                version: InfluxVersion.V2,
-                                token: config.token,
-                                org: config.org,
-                                hostNport: config.url,
-                                isActive: false,
-                                disableTLS: false,
-                                name: id,
-                                user: '',
-                                pass: '',
-                                cli: true
-                            }
-                            const node = nodes.find((node) => node.instance.cli && id === node.instance.id)
-                            // Reuse the instance if it exists in the vscode configuration because we loaded it earlier
-                            if (node) {
-                                instance.isActive = node.instance.isActive
-                                node.instance = instance
-                                continue
-                            }
-                            nodes.push(new Instance(instance, this.context, this))
-                        }
-                    } catch (error) {
-                        reject(error)
-                        return
-                    }
-                }
-                resolve(nodes)
-            })
-        })
+        return nodes
     }
 }

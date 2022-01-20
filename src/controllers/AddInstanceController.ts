@@ -127,7 +127,7 @@ async function convertMessageToInstance(
     let isActive = false
     if (message.connID !== '') {
         const store = Store.getStore()
-        const instance = store.getInstance(message.connID)
+        const instance = await store.getInstance(message.connID)
         isActive = instance.isActive
     }
     const instance = {
