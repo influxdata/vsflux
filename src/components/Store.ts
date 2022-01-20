@@ -9,10 +9,10 @@ const InfluxDBInstancesKey = 'influxdb.connections'
 const InfluxDBMigrationsKey = 'influxdb.migrations'
 
 interface CLIConfig {
-    url: string;
-    token: string;
-    org: string;
-    active?: boolean;
+    url : string;
+    token : string;
+    org : string;
+    active ?: boolean;
 }
 
 /*
@@ -37,7 +37,7 @@ export class Store {
     async getInstances() : Promise<{ [key : string] : IInstance }> {
         const instances = this.context.globalState.get<{
             [key : string] : IInstance;
-        }>(InfluxDBInstancesKey) || {};
+        }>(InfluxDBInstancesKey) || {}
 
         return new Promise<{ [key : string] : IInstance }>((resolve, reject) => {
             // Try to load any CLI configurations and add them as available connections
@@ -45,7 +45,7 @@ export class Store {
                 // Just ignore the error as the user likely just do not have the CLI installed
                 if (!error) {
                     try {
-                        const json: { [key: string]: CLIConfig } = JSON.parse(stdout)
+                        const json : { [key : string] : CLIConfig } = JSON.parse(stdout)
                         for (const [id, config] of Object.entries(json)) {
                             const cliInstance = {
                                 id,
