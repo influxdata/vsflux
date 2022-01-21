@@ -9,16 +9,8 @@ import { APIClient } from '../components/APIClient'
 import { Store } from '../components/Store'
 import * as Mustache from 'mustache'
 
-function getConfig() : vscode.WorkspaceConfiguration {
-    return vscode.workspace.getConfiguration('vsflux')
-}
-
-function defaultV1URL() : string {
-    return getConfig()?.get<string>('defaultInfluxDBV1URL', '')
-}
-
 function defaultV2URLList() : string[] {
-    return getConfig()?.get<string[]>('defaultInfluxDBURLs', [''])
+    return vscode.workspace.getConfiguration('vsflux')?.get<string[]>('defaultInfluxDBURLs', [''])
 }
 
 class InstanceView extends View {
@@ -59,41 +51,27 @@ class InstanceView extends View {
             }
         )
 
-        this.panel.webview.html = await this.html(conn, title)
-
-        this.panel.webview.onDidReceiveMessage(this.controller.handleMessage.bind(this.controller))
-    }
-
-    private get cssPath() : vscode.Uri {
-        return vscode.Uri.file(
+        const cssPath = this.panel.webview.asWebviewUri(vscode.Uri.file(
             path.join(this.context.extensionPath, 'templates', 'form.css')
-        ).with({ scheme: 'vscode-resource' })
-    }
+        ))
 
-    private get jsPath() : vscode.Uri {
-        return vscode.Uri.file(
+        const jsPath = this.panel.webview.asWebviewUri(vscode.Uri.file(
             path.join(this.context.extensionPath, 'templates', 'editConn.js')
-        ).with({ scheme: 'vscode-resource' })
-    }
+        ))
 
-    private async html(
-        conn : IInstance | undefined,
-        title : string
-    ) : Promise<string> {
         const context = {
             ...conn,
             title: title,
-            cssPath: this.cssPath,
-            jsPath: this.jsPath,
+            cssPath: cssPath,
+            jsPath: jsPath,
             isV1: false,
-            defaultHostV1: defaultV1URL(),
             defaultHostLists: defaultV2URLList()
 
         }
-        if (conn !== undefined) {
-            context.isV1 = conn.version === InfluxVersion.V1
-        }
-        return Mustache.render(this.template, context)
+
+        this.panel.webview.html = Mustache.render(this.template, context)
+
+        this.panel.webview.onDidReceiveMessage(this.controller.handleMessage.bind(this.controller))
     }
 
     public close() {
@@ -131,10 +109,7 @@ async function convertMessageToInstance(
         isActive = instance.isActive
     }
     const instance = {
-        version:
-            message.connVersion > 0
-                ? InfluxVersion.V1
-                : InfluxVersion.V2,
+        version: InfluxVersion.V2,
         id: message.connID || uuid(),
         name: message.connName,
         hostNport: message.connHost,
@@ -191,34 +166,23 @@ export class AddInstanceController {
                 break
             }
             case MessageType.Test: {
-                if (instance.version === InfluxVersion.V2) {
-                    try {
-                        const queryApi = new APIClient(instance).getQueryApi()
-                        const query = 'buckets()'
-                        await new Promise<void>((resolve, reject) => {
-                            queryApi.queryRows(query, {
-                                next(_row : string[], _tableMeta : FluxTableMetaData) { }, // eslint-disable-line @typescript-eslint/no-empty-function
-                                error(error : Error) {
-                                    reject(error)
-                                },
-                                complete() {
-                                    resolve()
-                                }
-                            })
+                try {
+                    const queryApi = new APIClient(instance).getQueryApi()
+                    const query = 'buckets()'
+                    await new Promise<void>((resolve, reject) => {
+                        queryApi.queryRows(query, {
+                            next(_row : string[], _tableMeta : FluxTableMetaData) { }, // eslint-disable-line @typescript-eslint/no-empty-function
+                            error(error : Error) {
+                                reject(error)
+                            },
+                            complete() {
+                                resolve()
+                            }
                         })
-                    } catch (e) {
-                        vscode.window.showErrorMessage('Failed to connect to database')
-                        console.error(e)
-                    }
-                } else {
-                    const queryApi = new APIClient(instance).getV1Api()
-                    try {
-                        await queryApi.getDatabaseNames()
-                        vscode.window.showInformationMessage('Connection successful')
-                    } catch (e) {
-                        vscode.window.showErrorMessage('Failed to connect to database')
-                        console.error(e)
-                    }
+                    })
+                } catch (e) {
+                    vscode.window.showErrorMessage('Failed to connect to database')
+                    console.error(e)
                 }
                 break
             }

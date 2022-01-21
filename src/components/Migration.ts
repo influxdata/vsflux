@@ -57,3 +57,13 @@ async function migrateOrgID(store : Store) : Promise<void> {
     })
 }
 migrations.push({ name: 'migrateOrgId', func: migrateOrgID })
+
+async function removeV1(store : Store) : Promise<void> {
+    const instances = store.getInstances()
+    Object.entries(instances).forEach(async ([id, instance], _idx) => {
+        if (instance.version === InfluxVersion.V1) {
+            await store.deleteInstance(id)
+        }
+    })
+}
+migrations.push({ name: 'removeV1', func: removeV1 })

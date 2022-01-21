@@ -11,20 +11,12 @@
 	<form class="form">
 		<h1>{{title}}</h1>
 
-		<div class="field">
-			<label>Type</label>
-			<select id="connVersion">
-				<option value="0" {{^isV1}}selected="selected" {{/isV1}}>InfluxDB v2</option>
-				<option value="1" {{#isV1}}selected="selected" {{/isV1}}>InfluxDB v1</option>
-			</select>
-		</div>
-
 		<div class="field" id="connName">
 			<label>Name</label>
 			<input required="true" type="text" name="name" placeholder="local" value="{{name}}">
 		</div>
 
-		<div class="field" id="connHost" data-v1="{{defaultHostV1}}">
+		<div class="field" id="connHost">
 			<label>Hostname and Port</label>
 			<input required="true" list="hosts" type="url" name="host" placeholder="http://localhost:8086"
 				value="{{hostNport}}">
@@ -49,16 +41,6 @@
 		<div class="field" id="connOrg">
 			<label>Organization Name</label>
 			<input required="true" type="text" name="org" placeholder="YourOrg" value="{{org}}">
-		</div>
-
-		<div class="field hidden" id="connUser">
-			<label>Username</label>
-			<input required="false" type="text" name="user" placeholder="username" value="{{user}}" disabled>
-		</div>
-
-		<div class="field hidden" id="connPass">
-			<label>Password</label>
-			<input required="false" type="password" name="pass" placeholder="password" value="{{pass}}" disabled>
 		</div>
 
 		<input type="hidden" id="connID" value="{{id}}">
