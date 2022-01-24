@@ -6,11 +6,11 @@ import { v1 as uuid } from 'uuid'
 import { IInstance, InfluxVersion } from '../types'
 
 import { APIClient } from '../components/APIClient'
-import { Store } from '../components/Store'
+import { Store, InstanceDataSource } from '../components/Store'
 import * as Mustache from 'mustache'
 
 function defaultV2URLList() : string[] {
-    return vscode.workspace.getConfiguration('vsflux')?.get<string[]>('defaultInfluxDBURLs', [''])
+    return Store.getStore().config?.get<string[]>('defaultInfluxDBURLs', [''])
 }
 
 class InstanceView extends View {
@@ -65,8 +65,9 @@ class InstanceView extends View {
             cssPath: cssPath,
             jsPath: jsPath,
             isV1: false,
-            defaultHostLists: defaultV2URLList()
-
+            defaultHostLists: defaultV2URLList(),
+            canDisableTLS: Store.getStore().config?.get<string>('datasource') === InstanceDataSource.DB,
+            readonly: conn !== undefined ? conn.id === conn.name : false
         }
 
         this.panel.webview.html = Mustache.render(this.template, context)
@@ -89,13 +90,10 @@ interface Message {
     readonly command : MessageType;
     readonly connID : string;
     readonly orgID : string;
-    readonly connVersion : number;
     readonly connName : string;
     readonly connHost : string;
     readonly connToken : string;
     readonly connOrg : string;
-    readonly connUser : string;
-    readonly connPass : string;
     readonly connDisableTLS : boolean;
 }
 
@@ -105,19 +103,16 @@ async function convertMessageToInstance(
     let isActive = false
     if (message.connID !== '') {
         const store = Store.getStore()
-        const instance = store.getInstance(message.connID)
+        const instance = await store.getInstance(message.connID)
         isActive = instance.isActive
     }
     const instance = {
-        version: InfluxVersion.V2,
         id: message.connID || uuid(),
         name: message.connName,
         hostNport: message.connHost,
         token: message.connToken,
         org: message.connOrg,
         orgID: message.orgID,
-        user: message.connUser,
-        pass: message.connPass,
         isActive,
         disableTLS: message.connDisableTLS
     }
