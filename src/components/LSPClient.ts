@@ -1,6 +1,6 @@
 import { Transform } from 'stream'
 
-import { Server } from '@influxdata/flux-lsp-node'
+import { Lsp, initLog } from '@influxdata/flux-lsp-node'
 import * as vscode from 'vscode'
 import {
     LanguageClient,
@@ -13,69 +13,58 @@ import {
     RevealOutputChannelOn
 } from 'vscode-languageclient/node'
 
-// Handle writes to the LSP server
-//
-// The data comes across as a header (with terminating \r\n\r\n) or
-// the body. This transform joins those messages into a single message
-// to send down the pipe.
-class WriteTransform extends Transform {
-    private count : number
-    private data : string
+/* Handle writes and reads to the Lsp.
+ *
+ * This transform wraps the Lsp wasm interface in a node stream
+ * that can be consumed by LanguageClient.
+ *
+ * Much of the complexity here is that we are stripping out Content-Length headers
+ * on write and adding them back on in read. If the wasm interface gets a full LSP message,
+ * it will crash, and if the LanguageClient gets a straight json message, it will also crash,
+ * with all subsequent messages erroring with "the LanguageClient is not yet ready."
+ */
+class LspTransform extends Transform {
+    private lsp : Lsp
 
-    constructor(options : Record<string, unknown>) {
-        super(options)
-        this.count = 0
-        this.data = ''
+    constructor() {
+        super({})
+        initLog()
+        this.lsp = new Lsp()
+        this.lsp.onMessage(this.onMessage.bind(this))
+        this.lsp.run()
     }
 
-    _transform(chunk : string, _encoding : string, callback : (error ?: Error) => void) {
-        this.count += 1
-        this.data += chunk.toString()
-        if (this.count % 2 === 0) {
-            try {
-                this.push(this.data)
-            } catch (e) {
-                console.error(e)
-            } finally {
-                // Reset the state
-                this.count = 0
-                this.data = ''
-            }
-        }
-        callback()
-    }
-}
-
-class ReadTransform extends Transform {
-    private server : Server
-
-    constructor(options : Record<string, unknown>) {
-        super(options)
-
-        this.server = new Server(true, false)
+    /* Handle incoming messages from the server. */
+    private onMessage(message : string) : void {
+        console.debug(`<< ${message}`)
+        this.push(message)
     }
 
-    _transform(chunk : string, _encoding : string, callback : (error ?: Error) => void) {
-        const input = chunk.toString()
-        console.debug(`>\n${input}\n`)
+    /* Wrap `push` to append info headers that LanguageClient expects */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    push(chunk : any, encoding ?: BufferEncoding | undefined) : boolean {
+        const data = chunk.toString()
+        console.debug(`< ${data}`)
+        return super.push(`Content-Length: ${data.length}\r\n\r\n${data}`, encoding)
+    }
 
-        this.server.process(input)
-            .then((response) => {
-                const msg = response.get_message()
-                if (msg) {
-                    console.debug(`<\n${msg}\n`)
-                    this.push(msg)
-                }
-
-                const err = response.get_error()
-                if (err) {
-                    console.error(`LSP Error: ${err}`)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _transform(chunk : Buffer | string | any, _encoding : string, callback : (error ?: Error) => void) {
+        const data = chunk.toString()
+        if (data.startsWith('Content-Length')) {
+            callback()
+        } else {
+            console.debug(`> ${data}`)
+            this.lsp.send(data).then((message) => {
+                if (message !== undefined) {
+                    this.push(message)
                 }
                 callback()
+            }).catch((reason) => {
+                console.error(reason)
+                callback(reason)
             })
-            .catch((err) => {
-                callback(err)
-            })
+        }
     }
 }
 
@@ -96,14 +85,12 @@ export class LSPClient {
         }
 
         const streamInfo = () : Promise<StreamInfo> => {
-            const reader = new ReadTransform({})
-            const writer = new WriteTransform({})
-            writer.pipe(reader)
+            const transform = new LspTransform()
 
             return new Promise((resolve, _reject) => {
                 resolve({
-                    writer,
-                    reader
+                    writer: transform,
+                    reader: transform
                 })
             })
         }
