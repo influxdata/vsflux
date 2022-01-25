@@ -9,6 +9,7 @@ const InfluxDBMigrationsKey = 'influxdb.migrations'
  * An interface for querying and saving data to various Code data stores.
  */
 export class Store {
+    // eslint-disable-next-line no-use-before-define
     static store : Store | undefined
 
     constructor(private context : vscode.ExtensionContext) { }
