@@ -1,4 +1,5 @@
-import { AnnotatedCSVResponse, FluxResultObserver, FluxTableColumn, FluxTableMetaData, QueryApi } from '@influxdata/influxdb-client'
+import { FluxResultObserver, FluxTableColumn, FluxTableMetaData, QueryApi } from '@influxdata/influxdb-client'
+import { FluxScriptInvocationAPI } from '@influxdata/influxdb-client-apis'
 
 type TableHead = FluxTableColumn[]
 type TableRow = string[]
@@ -37,9 +38,9 @@ export class QueryResult {
         })
     }
 
-    static async parseCSVResponse(response : AnnotatedCSVResponse) : Promise<QueryResult> {
+    static async invokeScript(client : FluxScriptInvocationAPI, scriptID : string) : Promise<QueryResult> {
         return new Promise((resolve, reject) => {
-            response.consumeRows(queryResultObserver(resolve, reject))
+            client.invoke(scriptID).consumeRows(queryResultObserver(resolve, reject))
         })
     }
 }

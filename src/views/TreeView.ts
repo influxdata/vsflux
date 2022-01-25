@@ -478,7 +478,7 @@ export class Script extends vscode.TreeItem {
         const scriptsApi = new APIClient(this.instance).getScriptInvocationApi()
         try {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const results = await QueryResult.parseCSVResponse(scriptsApi.invoke(this.script.id!))
+            const results = await QueryResult.invokeScript(scriptsApi, this.script.id!)
             const tableView = new TableView(this.context)
             tableView.show(results, this.instance.name)
             vscode.window.showInformationMessage('Script invoked successfully.')
