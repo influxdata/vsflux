@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import { InfluxDB, QueryApi } from '@influxdata/influxdb-client'
-import { BucketsAPI, OrgsAPI, TasksAPI, ScriptsAPI } from '@influxdata/influxdb-client-apis'
+import { BucketsAPI, OrgsAPI, TasksAPI, ScriptsAPI, FluxScriptInvocationAPI } from '@influxdata/influxdb-client-apis'
 
 import { IInstance } from '../types'
 
@@ -46,5 +46,9 @@ export class APIClient {
 
     getScriptsApi() : ScriptsAPI {
         return new ScriptsAPI(this.getInfluxDB())
+    }
+
+    getScriptInvocationApi() : FluxScriptInvocationAPI {
+        return new FluxScriptInvocationAPI(this.getInfluxDB())
     }
 }

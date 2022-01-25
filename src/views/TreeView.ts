@@ -8,10 +8,12 @@ import { promises as fs } from 'fs'
 
 import { Store } from '../components/Store'
 import { AddTaskView } from './AddTaskView'
+import { TableView } from '../views/TableView'
 import { IInstance } from '../types'
 import { APIClient } from '../components/APIClient'
 import { AddScriptController } from '../controllers/AddScriptController'
 import { AddInstanceController } from '../controllers/AddInstanceController'
+import { QueryResult } from '../models'
 
 const version = vscode.extensions.getExtension('influxdata.flux')?.packageJSON.version
 const headers = {
@@ -473,10 +475,12 @@ export class Script extends vscode.TreeItem {
     }
 
     public async invokeScript() : Promise<void> {
-        const scriptsApi = new APIClient(this.instance).getScriptsApi()
+        const scriptsApi = new APIClient(this.instance).getScriptInvocationApi()
         try {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const _response = await scriptsApi.postScriptsIDInvoke({ scriptID: this.script.id!, body: {} })
+            const results = await QueryResult.invokeScript(scriptsApi, this.script.id!)
+            const tableView = new TableView(this.context)
+            tableView.show(results, this.instance.name)
             vscode.window.showInformationMessage('Script invoked successfully.')
         } catch (e) {
             vscode.window.showErrorMessage(`Could not invoke script. Got error: ${e}`)
