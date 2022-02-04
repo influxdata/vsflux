@@ -23,7 +23,7 @@
     "theme": "light"
   },
   "engines": {
-    "vscode": "^1.63.0"
+    "vscode": "^1.64.0"
   },
   "activationEvents": [
     "onLanguage:flux",
@@ -393,6 +393,7 @@
     "package": "webpack --mode production --devtool hidden-source-map && npm run copy-wasm",
     "vscode:prepublish": "npm run package",
     "publish": "vsce publish -p $AZURE_TOKEN",
+    "pre-release": "vsce publish -p $AZURE_TOKEN --pre-release",
     "watch": "webpack --watch",
     "compile-tests": "tsc -p . --outDir out",
     "pretest": "npm run compile-tests && npm run compile",
