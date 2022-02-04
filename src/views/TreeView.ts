@@ -581,7 +581,7 @@ export class Instance extends vscode.TreeItem {
     // Set the currently active instance.
     public async activate() : Promise<void> {
         const store = Store.getStore()
-        const instance = store.getInstance(this.instance.id)
+        const instance = await store.getInstance(this.instance.id)
         instance.isActive = true
         await store.saveInstance(instance)
 
@@ -602,11 +602,11 @@ export class InfluxDBTreeProvider implements vscode.TreeDataProvider<ITreeNode> 
         return element.getTreeItem()
     }
 
-    getChildren(element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
+    async getChildren(element ?: ITreeNode) : Promise<ITreeNode[]> {
         if (element) {
             return element.getChildren()
         }
-        const instances = Store.getStore().getInstances()
+        const instances = await Store.getStore().getInstances()
         const nodes = []
         for (const [id, instance] of Object.entries(instances)) {
             const node = new Instance(instance, this.context, this)

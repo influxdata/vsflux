@@ -1,8 +1,12 @@
+import { exec as _exec } from 'child_process'
+import * as util from 'util'
 import * as vscode from 'vscode'
 
 import { APIClient } from './APIClient'
 import { IMigration, InfluxVersion } from '../types'
 import { Store } from './Store'
+
+const exec = util.promisify(_exec)
 
 type MigrationFunc = (store : Store) => Promise<void>
 type Migration = {
@@ -28,12 +32,12 @@ export class MigrationManager {
                 try {
                     await func(this.store)
                     await this.store.setAppliedMigration(name)
+                    vscode.commands.executeCommand('influxdb.refresh')
                 } catch (e) {
                     console.error(e)
                 }
             }
         })
-        vscode.commands.executeCommand('influxdb.refresh')
     }
 }
 

@@ -28,6 +28,16 @@ Features:
 
 The extension can be installed through the [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=influxdata.flux).
 
+### Using the cli configurations
+
+Rather than using vscode to store information about influxdb instances fro the InfluxDB pane, vsflux can use existing `influx` cli configurations to populate the InfluxDB pane of connections. To do this, edit `%APP_DATA%/settings.json` to add the following:
+
+    {
+      "vsflux.datasource": "cli"
+    }
+
+To revert this setting, change `"cli"` to `"db"` or remove the line entirely.
+
 ## Contributing
 
 Contribution guidelines and instructions on how to build from source can be found in the [Contributing Guide](https://github.com/influxdata/vsflux/blob/master/CONTRIBUTING.md).

@@ -361,6 +361,9 @@
         "vsflux.defaultInfluxDBV1URL": {
           "default": "http://localhost:8086",
           "description": "The default URL when adding a new influxdb v1 connection"
+        },
+        "vsflux.datasource": {
+          "description": "The data source to use for connections. This could be either 'db' or 'cli'. If not specified, 'db' is assumed."
         }
       }
     },
