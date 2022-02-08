@@ -29,6 +29,14 @@ jobs:
           name: run tests
           command: npm test
 
+  prerelease:
+    docker:
+      - image: circleci/node:14
+    steps:
+      - checkout
+      - run: npm i
+      - run: npm run prerelease
+
   publish:
     docker:
       - image: circleci/node:14
@@ -43,6 +51,15 @@ workflows:
     jobs:
       - build-and-test
       - check
+
+  prerelease:
+    jobs:
+      - prerelease:
+          filters:
+            branches:
+              only: master
+            tags:
+              ignore: /.*/
 
   publish:
     jobs:

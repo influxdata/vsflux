@@ -22,11 +22,16 @@ cd $TEMPDIR
 git clone git@github.com:influxdata/vsflux.git > /dev/null 2>&1
 cd $TEMPDIR/vsflux
 
-npm add @influxdata/flux-lsp-node
-if [[ ! -z $(git status -s) ]]; then
-    echo "Please upgrade flux-lsp-node to the latest version prior to release."
-    rm -rf $TEMPDIR
-    exit
+# `npm outdated` only works with everything installed.
+npm i
+if [[ $(npm outdated @influxdata/flux-lsp-node) ]]; then
+	echo "flux-lsp can be upgraded. Please upgrade to `npm outdated @influxdata/flux-lsp-node | tail -n 1 | awk '{print $4}'` before release."
+	exit 1
+fi
+
+if [[ ! $(hub ci-status HEAD) ]]; then
+	echo "Build status on master is either incomplete or failing. Please try again after build status is complete."
+	exit 1
 fi
 
 new_version=`npm version patch --sign-git-tag`
