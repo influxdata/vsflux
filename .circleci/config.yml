@@ -35,7 +35,7 @@ jobs:
     steps:
       - checkout
       - run: npm i
-      - run: npm run prerelease
+      - run: ./.circleci/prerelease.sh
 
   publish:
     docker:

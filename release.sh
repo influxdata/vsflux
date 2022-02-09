@@ -37,8 +37,8 @@ fi
 new_version=`npm version patch --sign-git-tag`
 git push
 
-previous_version=`git describe --abbrev=0 ${new_version}^`
-commits=`git log --pretty=oneline ${previous_version}...${new_version} | tail -n +2 | awk '{$1="-"; print }'`
+previous_version=`git tag --sort=-creatordate | sed -n '2 p'`
+commits=`git log --pretty=oneline ${previous_version}..${new_version} | tail -n +2 | awk '{$1="-"; print }'`
 hub release create $new_version -m "Release $new_version
 
 ${commits}"
