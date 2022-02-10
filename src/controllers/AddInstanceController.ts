@@ -168,9 +168,11 @@ export class AddInstanceController {
                         queryApi.queryRows(query, {
                             next(_row : string[], _tableMeta : FluxTableMetaData) { }, // eslint-disable-line @typescript-eslint/no-empty-function
                             error(error : Error) {
+                                vscode.window.showErrorMessage('Failed to connect to database')
                                 reject(error)
                             },
                             complete() {
+                                vscode.window.showInformationMessage('Connection success')
                                 resolve()
                             }
                         })

@@ -62,12 +62,13 @@ class Actions {
   }
 
   getData() {
+    const disableTLSInput = document.querySelector('#connDisableTLS input')
     const result = {
       connID: document.querySelector('#connID').value,
       orgID: document.querySelector('#orgID').value,
       connName: document.querySelector('#connName input').value,
       connHost: document.querySelector('#connHost input').value,
-      connDisableTLS: document.querySelector('#connDisableTLS input').checked,
+      connDisableTLS: disableTLSInput !== null ? disableTLSInput.checked : false,
       connToken: '',
       connOrg: '',
       connUser: '',

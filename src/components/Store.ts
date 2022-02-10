@@ -89,10 +89,10 @@ export class Store {
         if (dataSource === InstanceDataSource.CLI) {
             if (connections[connection.id] === undefined) { // New instance
                 const createCommand = `influx config create \
-                    --config-name ${connection.name} \
+                    --config-name "${connection.name}" \
                     --host-url ${connection.hostNport} \
                     --token ${connection.token} \
-                    --org ${connection.org}`
+                    --org "${connection.org}"`
                 const { stdout, stderr } = await exec(createCommand)
                 if (stderr) {
                     console.error(`Error from influx cli: ${stdout}`)
@@ -100,10 +100,10 @@ export class Store {
                 }
             } else {
                 let updateCommand = `influx config update \
-                    --config-name ${connection.id} \
+                    --config-name "${connection.id}" \
                     --host-url ${connection.hostNport} \
                     --token ${connection.token} \
-                    --org ${connection.org}`
+                    --org "${connection.org}"`
                 if (connection.isActive) {
                     updateCommand = `${updateCommand} --active`
                 }
