@@ -10,10 +10,13 @@ import { APIClient } from './APIClient'
 export async function runQuery(query : string, context : vscode.ExtensionContext) : Promise<void> {
     try {
         const store = Store.getStore()
-        const instance = Object.values(store.getInstances()).filter((item : IInstance) => item.isActive)[0]
+
+        const instances = await store.getInstances()
+        const instance = Object.values(instances).filter((item : IInstance) => item.isActive)[0]
         if (instance === undefined) {
             vscode.window.showErrorMessage(
                 'No connection selected to query against. Please select a connection in the InfluxDB pane and try again.')
+            return
         }
         const queryApi = new APIClient(instance).getQueryApi()
         const results = await QueryResult.run(queryApi, query)
