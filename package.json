@@ -28,7 +28,6 @@
   "activationEvents": [
     "onLanguage:flux",
     "onView:influxdb",
-    "onCommand:influxdb.runQuery",
     "onCommand:influxdb.addInstance",
     "onCommand:influxdb.removeInstance",
     "onCommand:influxdb.editInstance",
@@ -57,13 +56,6 @@
         }
       ]
     },
-    "keybindings": [
-      {
-        "command": "influxdb.runQuery",
-        "key": "ctrl+alt+e",
-        "when": "editorLangId == flux"
-      }
-    ],
     "languages": [
       {
         "id": "flux",
@@ -80,11 +72,6 @@
       {
         "command": "influxdb.refresh",
         "title": "Refresh",
-        "category": "InfluxDB"
-      },
-      {
-        "command": "influxdb.runQuery",
-        "title": "Run Query",
         "category": "InfluxDB"
       },
       {
@@ -242,13 +229,6 @@
           "group": "navigation@1"
         }
       ],
-      "editor/context": [
-        {
-          "command": "influxdb.runQuery",
-          "when": "editorLangId == flux",
-          "group": "navigation"
-        }
-      ],
       "view/item/context": [
         {
           "command": "influxdb.editInstance",
@@ -367,18 +347,12 @@
         }
       }
     },
-    "breakpoints": [
-      {
-        "language": "flux"
-      }
-    ],
+    "breakpoints": [{"language": "flux"}],
     "debuggers": [
       {
         "type": "flux",
-        "languages": [
-          "flux"
-        ],
-        "label": "Flux Debugger",
+        "languages": ["flux"],
+        "label": "Flux",
         "runtime": "node"
       }
     ]

@@ -8,12 +8,14 @@ import { IInstance } from '../types'
 import { QueryResult } from '../models'
 import { TableView } from '../views/TableView'
 import { runQuery } from './QueryRunner'
+import { resolveCliArgsFromVSCodeExecutablePath } from '@vscode/test-electron'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { Subject } = require('await-notify') // await-notify doesn't provide types, and we don't allow implicit any
 
 interface ILaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     query : string;
+    instance : IInstance;
 }
 
 /*
@@ -85,7 +87,7 @@ class DebugSession extends LoggingDebugSession {
         await this.configurationDone.wait(1000)
 
         // Execute the flux
-        runQuery(args.query, this.context)
+        runQuery(args.query, args.instance, this.context)
 
         this.sendResponse(response)
 
@@ -108,7 +110,7 @@ class FluxDebugConfigurationProvider implements vscode.DebugConfigurationProvide
      * If launch.json doesn't exist or is empty (most cases), massage the config to contain all the needed
      * debug configuration information.
      */
-    resolveDebugConfiguration(_folder : vscode.WorkspaceFolder | undefined, config : vscode.DebugConfiguration, _token ?: vscode.CancellationToken) : vscode.ProviderResult<vscode.DebugConfiguration> {
+    async resolveDebugConfiguration(_folder : vscode.WorkspaceFolder | undefined, config : vscode.DebugConfiguration, _token ?: vscode.CancellationToken) : Promise<vscode.DebugConfiguration | undefined> {
         if (!config.type && !config.request && !config.name) {
             const editor = vscode.window.activeTextEditor
             if (editor && editor.document.languageId === 'flux') {
@@ -129,6 +131,23 @@ class FluxDebugConfigurationProvider implements vscode.DebugConfigurationProvide
                 config.query = query
             }
         }
+
+        const store = Store.getStore()
+
+        // Use "detail" to store the id, since we don't enforce names being unique.
+        const instances = await store.getInstances()
+        const items : vscode.QuickPickItem[] = Object.values(instances).map((item : IInstance) => {
+            return { label: item.name, detail: item.id } as vscode.QuickPickItem
+        })
+
+        const pick = await vscode.window.showQuickPick(
+            items,
+            { title: 'Select where to execute the query', canPickMany: false })
+
+        if (pick === undefined) {
+            return undefined
+        }
+        config.instance = Object.values(instances).filter((item : IInstance) => item.id === pick.detail)[0]
         return config
     }
 }

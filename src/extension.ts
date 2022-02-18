@@ -7,7 +7,6 @@ import { Store } from './components/Store'
 import { LSPClient } from './components/LSPClient'
 import { activateDebug } from './components/Debug'
 import { Bucket, Buckets, Instance, InfluxDBTreeProvider, Script, Scripts, Task, Tasks } from './views/TreeView'
-import { runQuery } from './components/QueryRunner'
 import { AddBucketController } from './controllers/AddBucketController'
 import { AddScriptController } from './controllers/AddScriptController'
 import { AddInstanceController } from './controllers/AddInstanceController'
@@ -42,30 +41,6 @@ export async function activate(context : vscode.ExtensionContext) : Promise<void
     context.subscriptions.push(
         vscode.commands.registerCommand(
             'influxdb.refresh', () => { treeProvider.refresh() }
-        )
-    )
-    context.subscriptions.push(
-        vscode.commands.registerCommand(
-            'influxdb.runQuery',
-            // XXX: rockstar (26 Aug 2021) - This should really live in a controller of some sort,
-            // but the current abstractions make it hard to see how that architecture should be.
-            async () => {
-                const { activeTextEditor } = vscode.window
-                if (!activeTextEditor) {
-                    return
-                }
-                let query = ''
-                if (activeTextEditor.selection.isEmpty) {
-                    query = activeTextEditor.document.getText()
-                } else {
-                    query = activeTextEditor.document.getText(activeTextEditor.selection)
-                }
-                if (!query) {
-                    vscode.window.showWarningMessage('No flux file selected')
-                    return
-                }
-                runQuery(query, context)
-            }
         )
     )
     context.subscriptions.push(
