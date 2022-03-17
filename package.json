@@ -1,6 +1,6 @@
 {
   "name": "flux",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "influxdata",
   "displayName": "Flux",
   "description": "Flux language extension for VSCode",
