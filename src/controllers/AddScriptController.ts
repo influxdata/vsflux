@@ -89,13 +89,23 @@ export class AddScriptController {
         const self = this // eslint-disable-line @typescript-eslint/no-this-alias
         const saveListener = vscode.workspace.onDidSaveTextDocument(async (saved : vscode.TextDocument) : Promise<void> => {
             if (saved === document) {
-                const saveText = 'Save and close'
+                enum SaveOptions {
+                    SaveAndClose = 'Save and close',
+                    Save = 'Save',
+                }
                 const confirmation = await vscode.window.showInformationMessage(
                     `Save ${script.name} in ${self.instance.name}?`, {
                     modal: true
-                }, saveText)
-                if (confirmation !== saveText) {
-                    return
+                }, SaveOptions.Save, SaveOptions.SaveAndClose)
+                switch (confirmation) {
+                    case SaveOptions.Save:
+                        break
+
+                    case SaveOptions.SaveAndClose:
+                        break
+
+                    default:
+                        return
                 }
                 // XXX: rockstar (22 Oct 2021) - trimEnd() because see this bug:
                 // https://github.com/influxdata/idpe/issues/12147
@@ -108,9 +118,11 @@ export class AddScriptController {
                         script: textContents
                     }
                 })
-                saveListener.dispose()
-                await fs.rmdir(tmpdir, { recursive: true })
-                vscode.commands.executeCommand('workbench.action.closeActiveEditor')
+                if (confirmation === SaveOptions.SaveAndClose) {
+                    saveListener.dispose()
+                    await fs.rmdir(tmpdir, { recursive: true })
+                    vscode.commands.executeCommand('workbench.action.closeActiveEditor')
+                }
                 vscode.commands.executeCommand('influxdb.refresh')
             }
         })
