@@ -40,10 +40,120 @@ class MeasurementFieldModel {
         private measurement : MeasurementModel
     ) { }
 }
+class MeasurementTagModel {
+    constructor(
+        readonly name : string,
+        readonly measurement : MeasurementModel
+    ) { }
+}
+class MeasurementTagValueModel {
+    constructor(
+        readonly name : string,
+        private tag : MeasurementTagModel
+    ) { }
+}
 
 interface ITreeNode {
     getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem;
     getChildren(element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[];
+}
+class TagValue extends vscode.TreeItem {
+    constructor(
+        private instance : IInstance,
+        private tagValue : MeasurementTagValueModel
+    ) {
+        super(tagValue.name, vscode.TreeItemCollapsibleState.None)
+    }
+
+    getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
+        return {
+            label: this.tagValue.name,
+            collapsibleState: vscode.TreeItemCollapsibleState.None
+        }
+    }
+
+    getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
+        return []
+    }
+}
+class Tag extends vscode.TreeItem {
+    constructor(
+        private instance : IInstance,
+        private tag : MeasurementTagModel
+    ) {
+        super(tag.name, vscode.TreeItemCollapsibleState.Collapsed)
+    }
+
+    getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
+        return {
+            label: this.tag.name,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
+        }
+    }
+
+    getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
+        const queryApi = new APIClient(this.instance).getQueryApi()
+        const query = `import "influxdata/influxdb/schema"
+schema.measurementTagValues(bucket: "${this.tag.measurement.bucket.name}", measurement: "${this.tag.measurement.name}", tag: "${this.tag.name}")`
+        const self = this // eslint-disable-line @typescript-eslint/no-this-alias
+        return new Promise((resolve, reject) => {
+            const children : TagValue[] = []
+            queryApi.queryRows(query, {
+                next(row : string[], tableMeta : FluxTableMetaData) {
+                    const object = tableMeta.toObject(row)
+                    const tag = new MeasurementTagValueModel(object._value, self.tag)
+                    const node = new TagValue(self.instance, tag)
+                    children.push(node)
+                },
+                error(error : Error) {
+                    reject(error)
+                },
+                complete() {
+                    resolve(children)
+                }
+            })
+        })
+    }
+}
+class Tags extends vscode.TreeItem {
+    constructor(
+        private instance : IInstance,
+        private measurement : MeasurementModel
+    ) {
+        super('Tags', vscode.TreeItemCollapsibleState.Collapsed)
+    }
+
+    getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
+        return {
+            label: 'Tags',
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
+        }
+    }
+
+    getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
+        const queryApi = new APIClient(this.instance).getQueryApi()
+        const query = `import "influxdata/influxdb/schema"
+schema.measurementTagKeys(bucket: "${this.measurement.bucket.name}", measurement: "${this.measurement.name}")`
+        const self = this // eslint-disable-line @typescript-eslint/no-this-alias
+        return new Promise((resolve, reject) => {
+            const children : Tag[] = []
+            queryApi.queryRows(query, {
+                next(row : string[], tableMeta : FluxTableMetaData) {
+                    const object = tableMeta.toObject(row)
+                    if (object._value.startsWith('_')) { return }
+                    const tag = new MeasurementTagModel(object._value, self.measurement)
+                    const node = new Tag(self.instance, tag)
+                    children.push(node)
+                },
+                error(error : Error) {
+                    reject(error)
+                },
+                complete() {
+                    resolve(children)
+                }
+            })
+        })
+    }
 }
 class Field extends vscode.TreeItem {
     constructor(
@@ -64,19 +174,19 @@ class Field extends vscode.TreeItem {
         return []
     }
 }
-class Measurement extends vscode.TreeItem {
+class Fields extends vscode.TreeItem {
     private HIDDEN_MEASUREMENTS = ['_start', '_stop', '_measurement']
 
     constructor(
         private instance : IInstance,
         private measurement : MeasurementModel
     ) {
-        super(instance.name, vscode.TreeItemCollapsibleState.Collapsed)
+        super('Fields', vscode.TreeItemCollapsibleState.Collapsed)
     }
 
     getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
         return {
-            label: this.measurement.name,
+            label: 'Fields',
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
         }
     }
@@ -106,6 +216,28 @@ schema.measurementFieldKeys(bucket: "${this.measurement.bucket.name}", measureme
                 }
             })
         })
+    }
+}
+class Measurement extends vscode.TreeItem {
+    constructor(
+        private instance : IInstance,
+        private measurement : MeasurementModel
+    ) {
+        super(instance.name, vscode.TreeItemCollapsibleState.Collapsed)
+    }
+
+    getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
+        return {
+            label: this.measurement.name,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
+        }
+    }
+
+    getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
+        return [
+            new Fields(this.instance, this.measurement),
+            new Tags(this.instance, this.measurement)
+        ]
     }
 }
 export class Bucket extends vscode.TreeItem {
