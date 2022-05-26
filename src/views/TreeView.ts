@@ -42,14 +42,14 @@ class MeasurementFieldModel {
 }
 class MeasurementTagModel {
     constructor(
-        readonly name: string,
+        readonly name : string,
         readonly measurement : MeasurementModel
     ) { }
 }
 class MeasurementTagValueModel {
     constructor(
-        readonly name: string,
-        private tag: MeasurementTagModel,
+        readonly name : string,
+        private tag : MeasurementTagModel
     ) { }
 }
 
@@ -59,8 +59,8 @@ interface ITreeNode {
 }
 class TagValue extends vscode.TreeItem {
     constructor(
-        private instance: IInstance,
-        private tagValue: MeasurementTagValueModel,
+        private instance : IInstance,
+        private tagValue : MeasurementTagValueModel
     ) {
         super(tagValue.name, vscode.TreeItemCollapsibleState.None)
     }
@@ -117,16 +117,16 @@ schema.measurementTagValues(bucket: "${this.tag.measurement.bucket.name}", measu
 }
 class Tags extends vscode.TreeItem {
     constructor(
-        private instance: IInstance,
+        private instance : IInstance,
         private measurement : MeasurementModel
     ) {
-        super("Tags", vscode.TreeItemCollapsibleState.Collapsed)
+        super('Tags', vscode.TreeItemCollapsibleState.Collapsed)
     }
 
-    getTreeItem(): Thenable<vscode.TreeItem> | vscode.TreeItem {
+    getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
         return {
-            label: "Tags",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            label: 'Tags',
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
         }
     }
 
@@ -140,7 +140,7 @@ schema.measurementTagKeys(bucket: "${this.measurement.bucket.name}", measurement
             queryApi.queryRows(query, {
                 next(row : string[], tableMeta : FluxTableMetaData) {
                     const object = tableMeta.toObject(row)
-                    if (object._value.startsWith("_")) { return }
+                    if (object._value.startsWith('_')) { return }
                     const tag = new MeasurementTagModel(object._value, self.measurement)
                     const node = new Tag(self.instance, tag)
                     children.push(node)
@@ -178,16 +178,16 @@ class Fields extends vscode.TreeItem {
     private HIDDEN_MEASUREMENTS = ['_start', '_stop', '_measurement']
 
     constructor(
-        private instance: IInstance,
+        private instance : IInstance,
         private measurement : MeasurementModel
     ) {
-        super("Fields", vscode.TreeItemCollapsibleState.Collapsed)
+        super('Fields', vscode.TreeItemCollapsibleState.Collapsed)
     }
 
-    getTreeItem(): Thenable<vscode.TreeItem> | vscode.TreeItem {
+    getTreeItem() : Thenable<vscode.TreeItem> | vscode.TreeItem {
         return {
-            label: "Fields",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            label: 'Fields',
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
         }
     }
 
@@ -219,7 +219,6 @@ schema.measurementFieldKeys(bucket: "${this.measurement.bucket.name}", measureme
     }
 }
 class Measurement extends vscode.TreeItem {
-
     constructor(
         private instance : IInstance,
         private measurement : MeasurementModel
@@ -237,7 +236,7 @@ class Measurement extends vscode.TreeItem {
     getChildren(_element ?: ITreeNode) : Thenable<ITreeNode[]> | ITreeNode[] {
         return [
             new Fields(this.instance, this.measurement),
-            new Tags(this.instance, this.measurement),
+            new Tags(this.instance, this.measurement)
         ]
     }
 }
@@ -552,7 +551,6 @@ export class Scripts extends vscode.TreeItem {
     async getChildren(_element ?: ITreeNode) : Promise<ITreeNode[]> {
         const scriptsApi = new APIClient(this.instance).getScriptsApi()
         const response = await scriptsApi.getScripts()
-        console.log(response)
         const nodes : ITreeNode[] = []
         if (response.scripts !== undefined) {
             response.scripts.forEach((script, _idx) => {
