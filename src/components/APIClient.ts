@@ -25,7 +25,12 @@ export class APIClient {
     }
 
     private getInfluxDB() : InfluxDB {
-        return new InfluxDB({ url: this.instance.hostNport, token: this.instance.token, transportOptions: this.transportOptions })
+        return new InfluxDB({
+            url: this.instance.hostNport,
+            token: this.instance.token,
+            timeout: 30 * 1000, // Match the web UI
+            transportOptions: this.transportOptions
+        })
     }
 
     getQueryApi() : QueryApi {
