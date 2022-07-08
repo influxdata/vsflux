@@ -352,6 +352,11 @@ export class Task extends vscode.TreeItem {
     }
 
     public async editTask() : Promise<void> {
+        // Refetch the task, as it may be stale.
+        const scriptsAPI = new APIClient(this.instance).getTasksApi()
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        this.task = await scriptsAPI.getTasksID({ taskID: this.task.id! })
+
         // XXX: rockstar (3 Sep 2021) - fs.rm doesn't exist until node 14.x, but the current
         // node environment is node 12.x. As such, we must create an entire dir to put the temp
         // file, and then remove the entire dir with fs.rmdir.
@@ -603,6 +608,12 @@ export class Script extends vscode.TreeItem {
 
     public async editScript() : Promise<void> {
         const controller = new AddScriptController(this.instance, this.context)
+
+        // Refetch the script, as it may be stale.
+        const scriptsAPI = new APIClient(this.instance).getScriptsApi()
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        this.script = await scriptsAPI.getScriptsID({ scriptID: this.script.id! })
+
         await controller.editScript(this.script)
     }
 
