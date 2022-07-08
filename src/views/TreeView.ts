@@ -15,6 +15,8 @@ import { AddScriptController } from '../controllers/AddScriptController'
 import { AddInstanceController } from '../controllers/AddInstanceController'
 import { QueryResult } from '../models'
 
+const LIMIT = 500
+
 const version = vscode.extensions.getExtension('influxdata.flux')?.packageJSON.version
 const headers = {
     'User-agent': `influxdb-client-vscode/${version}`
@@ -452,13 +454,19 @@ export class Tasks extends vscode.TreeItem {
     // We should tell the user this.
     async getChildren(_element ?: ITreeNode) : Promise<ITreeNode[]> {
         const tasksApi = new APIClient(this.instance).getTasksApi()
-        const response = await tasksApi.getTasks(undefined, { headers: headers })
         const nodes : ITreeNode[] = []
-        if (response.tasks !== undefined) {
-            // Why would this ever be undefined?
-            response.tasks.forEach((task, _idx) => {
-                nodes.push(new Task(this.instance, task))
-            })
+
+        let after
+        while (true) {
+            const response = await tasksApi.getTasks({ after: after, limit: LIMIT }, { headers: headers })
+            if (response.tasks !== undefined && response.tasks.length > 0) {
+                response.tasks.forEach((task, _idx) => {
+                    nodes.push(new Task(this.instance, task))
+                    after = task.id
+                })
+            } else {
+                break
+            }
         }
         return nodes
     }
@@ -550,12 +558,19 @@ export class Scripts extends vscode.TreeItem {
 
     async getChildren(_element ?: ITreeNode) : Promise<ITreeNode[]> {
         const scriptsApi = new APIClient(this.instance).getScriptsApi()
-        const response = await scriptsApi.getScripts()
         const nodes : ITreeNode[] = []
-        if (response.scripts !== undefined) {
-            response.scripts.forEach((script, _idx) => {
-                nodes.push(new Script(this.instance, this.context, script))
-            })
+
+        let offset = 0
+        while (true) {
+            const response = await scriptsApi.getScripts({ offset: offset, limit: LIMIT })
+            if (response.scripts !== undefined && response.scripts.length > 0) {
+                response.scripts.forEach((script, _idx) => {
+                    nodes.push(new Script(this.instance, this.context, script))
+                })
+                offset = offset + response.scripts.length
+            } else {
+                break
+            }
         }
         return nodes
     }
