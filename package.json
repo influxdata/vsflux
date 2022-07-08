@@ -336,14 +336,14 @@
             "https://westeurope-1.azure.cloud2.influxdata.com",
             "https://eastus-1.azure.cloud2.influxdata.com"
           ],
-          "description": "The URL lists of influxdb 2. Cloud instance list found at https://docs.influxdata.com/influxdb/cloud/reference/regions/"
-        },
-        "vsflux.defaultInfluxDBV1URL": {
-          "default": "http://localhost:8086",
-          "description": "The default URL when adding a new influxdb v1 connection"
+          "description": "The URL lists of influxdb 2. Cloud instance list found at https://docs.influxdata.com/influxdb/cloud/reference/regions/",
+          "type": ["string"]
         },
         "vsflux.datasource": {
-          "description": "The data source to use for connections. This could be either 'db' or 'cli'. If not specified, 'db' is assumed."
+          "default": "db",
+          "description": "The data source to use for connections. ['cli' or default 'db']",
+          "enum": ["db", "cli"],
+          "type": "string"
         }
       }
     },
