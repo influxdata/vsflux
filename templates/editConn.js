@@ -13,21 +13,7 @@ class Actions {
     })
   }
 
-  test() {
-    if (!this.validate()) {
-      return
-    }
-    this.vscode.postMessage({
-      command: 'testConn',
-      ...this.getData()
-    })
-  }
-
   bind() {
-    document.querySelector('#testConn').addEventListener('click', () => {
-      this.test()
-    })
-
     document.querySelector('#save').addEventListener('click', () => {
       this.save()
     })

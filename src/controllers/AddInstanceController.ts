@@ -116,14 +116,18 @@ async function convertMessageToInstance(
         isActive,
         disableTLS: message.connDisableTLS
     }
-    if (message.orgID === '') {
-        const orgsAPI = new APIClient(instance).getOrgsApi()
-        const organizations = await orgsAPI.getOrgs({ org: instance.org })
-        if (!organizations || !organizations.orgs || !organizations.orgs.length || organizations.orgs[0].id === undefined) {
-            console.error(`No organization named "${instance.org}" found!`)
-        } else {
-            instance.orgID = organizations.orgs[0].id
+    try {
+        if (message.orgID === '') {
+            const orgsAPI = new APIClient(instance).getOrgsApi()
+            const organizations = await orgsAPI.getOrgs({ org: instance.org })
+            if (!organizations || !organizations.orgs || !organizations.orgs.length || organizations.orgs[0].id === undefined) {
+                console.error(`No organization named "${instance.org}" found!`)
+            } else {
+                instance.orgID = organizations.orgs[0].id
+            }
         }
+    } catch (e) {
+        console.error(e)
     }
     return instance
 }
@@ -144,9 +148,13 @@ export class AddInstanceController {
     }
 
     public async handleMessage(message : Message) : Promise<void> {
-        const instance : IInstance = await convertMessageToInstance(message)
         switch (message.command) {
             case MessageType.Save: {
+                const instance : IInstance = await convertMessageToInstance(message)
+                if (instance.orgID === '') {
+                    vscode.window.showErrorMessage('Could not fetch resources from database. Please check your connection and try again.')
+                    return
+                }
                 const store = Store.getStore()
                 const activeInstance = Object.values(store.getInstances()).filter((item : IInstance) => item.isActive)[0]
                 if (activeInstance === undefined) {
@@ -158,29 +166,6 @@ export class AddInstanceController {
 
                 this.view.close()
                 vscode.commands.executeCommand('influxdb.refresh')
-                break
-            }
-            case MessageType.Test: {
-                try {
-                    const queryApi = new APIClient(instance).getQueryApi()
-                    const query = 'buckets()'
-                    await new Promise<void>((resolve, reject) => {
-                        queryApi.queryRows(query, {
-                            next(_row : string[], _tableMeta : FluxTableMetaData) { }, // eslint-disable-line @typescript-eslint/no-empty-function
-                            error(error : Error) {
-                                vscode.window.showErrorMessage('Failed to connect to database')
-                                reject(error)
-                            },
-                            complete() {
-                                vscode.window.showInformationMessage('Connection success')
-                                resolve()
-                            }
-                        })
-                    })
-                } catch (e) {
-                    vscode.window.showErrorMessage('Failed to connect to database')
-                    console.error(e)
-                }
                 break
             }
             default:
