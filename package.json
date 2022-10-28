@@ -415,7 +415,7 @@
     "webpack-cli": "^4.9.2"
   },
   "dependencies": {
-    "@influxdata/flux-lsp-node": "^0.8.35",
+    "@influxdata/flux-lsp-node": "^0.8.36",
     "@influxdata/influxdb-client": "^1.23.0",
     "@influxdata/influxdb-client-apis": "^1.23.0",
     "await-notify": "^1.0.1",
