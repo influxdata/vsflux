@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This plugin is no longer maintained and will be removed. The [Flux](https://github.com/influxdata/flux) language is no longer actively developed and is in maintenance mode.
+
 # Flux
 
 [![VSCode](https://img.shields.io/visual-studio-marketplace/i/influxdata.flux)](https://marketplace.visualstudio.com/items?itemName=influxdata.flux)
